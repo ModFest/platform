@@ -11,6 +11,7 @@ import discord4j.core.event.domain.interaction.ModalSubmitInteractionEvent;
 import discord4j.core.event.domain.lifecycle.ReadyEvent;
 import discord4j.gateway.intent.IntentSet;
 import io.javalin.Javalin;
+import io.javalin.http.Context;
 import net.modfest.platform.data.DataManager;
 import net.modfest.platform.data.StorageManager;
 import net.modfest.platform.json.GsonMapper;
@@ -60,30 +61,19 @@ public class ModFestPlatform {
         StorageManager.init();
 
         Javalin app = Javalin.create(config -> {
+            config.defaultContentType = "";
             config.jsonMapper(new GsonMapper(GSON));
             config.enableCorsForAllOrigins();
         }).start(PORT);
-        app.get("/events", ctx -> ctx.json(DataManager.getEventList()));
-        app.get("/active_event", ctx -> ctx.json(DataManager.getActiveEvent()));
-        app.get("/event/{id}", ctx -> {
-            var id = ctx.pathParam("id");
-            ctx.json(DataManager.getEvents().get(id));
-        });
-        app.get("/users", ctx -> ctx.json(DataManager.getUserList()));
-        app.get("/user/{id}", ctx -> {
-            var id = ctx.pathParam("id");
-            ctx.json(DataManager.getUsers().get(id));
-        });
-        app.get("/badges", ctx -> ctx.json(DataManager.getBadgeList()));
-        app.get("/badge/{id}", ctx -> {
-            var id = ctx.pathParam("id");
-            ctx.json(DataManager.getBadges().get(id));
-        });
-        app.get("/submissions", ctx -> ctx.json(DataManager.getSubmissionList()));
-        app.get("/submission/{id}", ctx -> {
-            var id = ctx.pathParam("id");
-            ctx.json(DataManager.getSubmissions().get(id));
-        });
+        app.get("/events", ctx -> json(ctx, DataManager.getEventList()));
+        app.get("/active_event", ctx -> json(ctx, DataManager.getActiveEvent()));
+        app.get("/event/{id}", ctx -> json(ctx, DataManager.getEvents().get(ctx.pathParam("id"))));
+        app.get("/users", ctx -> json(ctx, DataManager.getUserList()));
+        app.get("/user/{id}", ctx -> json(ctx, DataManager.getUsers().get(ctx.pathParam("id"))));
+        app.get("/badges", ctx -> json(ctx, DataManager.getBadgeList()));
+        app.get("/badge/{id}", ctx -> json(ctx, DataManager.getBadges().get(ctx.pathParam("id"))));
+        app.get("/submissions", ctx -> json(ctx, DataManager.getSubmissionList()));
+        app.get("/submission/{id}", ctx -> json(ctx, DataManager.getSubmissions().get(ctx.pathParam("id"))));
 
         final String token = System.getenv("DISCORD_BOT_TOKEN");
         DiscordClient.create(token)
@@ -99,5 +89,9 @@ public class ModFestPlatform {
                 .block();
 
         ModFestLog.close();
+    }
+
+    private static Context json(Context ctx, Object object) {
+        return ctx.json(object).contentType("application/json;charset=utf-8");
     }
 }
