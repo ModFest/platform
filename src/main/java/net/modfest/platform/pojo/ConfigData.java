@@ -5,4 +5,10 @@ public class ConfigData {
     public String userRoleId = "";
     public String activeEvent = "";
 
+    public String logLifecycleChannelId = "";
+    public String logInfoChannelId = "";
+    public String logDebugChannelId = "";
+    public String logErrorChannelId = "";
+    public String logAllChannelId = "";
+
 }

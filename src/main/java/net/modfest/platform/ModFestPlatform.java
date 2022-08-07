@@ -14,44 +14,55 @@ import io.javalin.Javalin;
 import net.modfest.platform.data.DataManager;
 import net.modfest.platform.data.StorageManager;
 import net.modfest.platform.json.GsonMapper;
+import net.modfest.platform.log.ModFestLog;
 import net.modfest.platform.pojo.EventData;
-import reactor.util.Logger;
-import reactor.util.Loggers;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 public class ModFestPlatform {
-    private static final Logger LOGGER = Loggers.getLogger(ModFestPlatform.class);
     public static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setPrettyPrinting()
             .create();
-    public static int port;
+    public static final int PORT = 7069;
     public static File workingDir;
+    public static File logDir;
 
     public static EventData activeEvent = null;
 
-    public static void main(String[] args) {
-        port = 7069;
+    private static final String PATTERN_FORMAT = "yyy-MM-dd hh:mm:ss:SS";
+    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(PATTERN_FORMAT)
+            .withZone(ZoneId.systemDefault());
 
+    public static void main(String[] args) {
         Path workingDir = null;
+        Path logDir = null;
 
         try {
             workingDir = Files.createDirectories(Path.of(System.getProperty("user.dir") + "/storage"));
+            logDir = Files.createDirectories(Path.of(System.getProperty("user.dir") + "/logs/" + FORMATTER.format(Instant.now())
+                    .replaceAll("[^a-zA-Z\\d.-]", "_")));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        ModFestPlatform.workingDir = new File(System.getProperty("user.dir") + "/storage");
-        LOGGER.info("Current working directory is: %s", workingDir);
+        ModFestPlatform.workingDir = workingDir.toFile();
+        ModFestPlatform.logDir = logDir.toFile();
+
+        ModFestLog.lifecycle("ModFestPlatform is starting...");
+
+        ModFestLog.info("Current working directory is: %s", workingDir);
         StorageManager.init();
 
         Javalin app = Javalin.create(config -> {
             config.jsonMapper(new GsonMapper(GSON));
             config.enableCorsForAllOrigins();
-        }).start(port);
+        }).start(PORT);
         app.get("/events", ctx -> ctx.json(DataManager.getEventList()));
         app.get("/active_event", ctx -> ctx.json(DataManager.getActiveEvent()));
         app.get("/event/{id}", ctx -> {
@@ -86,5 +97,7 @@ public class ModFestPlatform {
                         .and(gateway.on(ButtonInteractionEvent.class, Events.ON_BUTTON_INTERACTION))
                         .and(gateway.on(ModalSubmitInteractionEvent.class, Events.ON_MODAL_SUBMIT)))
                 .block();
+
+        ModFestLog.close();
     }
 }

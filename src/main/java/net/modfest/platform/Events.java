@@ -18,6 +18,7 @@ import discord4j.core.spec.MessageCreateSpec;
 import net.modfest.platform.data.DataManager;
 import net.modfest.platform.data.StorageManager;
 import net.modfest.platform.discord.modal.Modals;
+import net.modfest.platform.log.ModFestLog;
 import net.modfest.platform.pojo.EventData;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
@@ -33,17 +34,25 @@ public class Events {
     public static final Function<MemberJoinEvent, Publisher<Void>> ON_MEMEBER_JOIN = event -> {
         if (event.getGuildId().toString().equals(DataManager.getGuildId())) {
             var member = event.getMember();
+            ModFestLog.debug("[Events/ON_MEMEBER_JOIN] Member joined (" + member.getUsername() + "/" + member.getId()
+                    .asString() + ")");
             var data = DataManager.getUserData(member.getId());
             var userRole = DataManager.getUserRole();
             if (data != null) {
+                ModFestLog.debug("[Events/ON_MEMEBER_JOIN] Member has data (" + member.getUsername() + "/" + member.getId()
+                        .asString() + ")");
                 var publisher = member.addRole(userRole);
                 for (EventData eventData : DataManager.getEventList()) {
                     var participantData = eventData.participants.get(member.getId().asString());
                     if (participantData != null) {
+                        ModFestLog.debug("[Events/ON_MEMEBER_JOIN] Member has participant data for event '" + eventData.id + "', granting role (" + member.getUsername() + "/" + member.getId()
+                                .asString() + ")");
                         publisher = publisher.and(member.addRole(Snowflake.of(eventData.participantRoleId)));
                         for (String submission : participantData.submissions) {
                             var submissionData = DataManager.getSubmissions().get(submission);
                             if (submissionData.awarded) {
+                                ModFestLog.debug("[Events/ON_MEMEBER_JOIN] Member has award for event '" + eventData.id + "', granting role (" + member.getUsername() + "/" + member.getId()
+                                        .asString() + ")");
                                 publisher = publisher.and(member.addRole(Snowflake.of(eventData.awardRoleId)));
                                 break;
                             }
@@ -57,16 +66,19 @@ public class Events {
     };
     public static final Function<ReadyEvent, Publisher<Void>> ON_READY = event -> {
         var client = event.getClient();
+        ModFestLog.debug("[Events/ON_READY] Registering guild commands");
         var registerGuildCommands = GuildCommandRegistrar.create(client.getRestClient(), Commands.getGuildCommands())
                 .registerCommands()
                 .doOnError(e -> LOGGER.warn("Unable to create guild command", e))
                 .onErrorResume(e -> Mono.empty());
 
+        ModFestLog.debug("[Events/ON_READY] Registering global commands");
         var registerGlobalCommands = GlobalCommandRegistrar.create(client.getRestClient(), Commands.getGlobalCommands())
                 .registerCommands()
                 .doOnError(e -> LOGGER.warn("Unable to create global command", e))
                 .onErrorResume(e -> Mono.empty());
 
+        ModFestLog.debug("[Events/ON_READY] Updating presence");
         return client.updatePresence(ClientPresence.of(Status.ONLINE, ClientActivity.playing(ModFestPlatform.activeEvent.name)))
                 .and(registerGuildCommands)
                 .and(registerGlobalCommands);
@@ -74,14 +86,23 @@ public class Events {
     public static Function<ChatInputInteractionEvent, Publisher<Void>> ON_CHAT_INPUT_INTERACTION = event -> {
         InteractionApplicationCommandCallbackReplyMono NOT_REGISTERED_MESSAGE = event.reply("You have not yet registered for ModFest. Register with the `/register` command.")
                 .withEphemeral(true);
+        var member = event.getInteraction().getMember().get();
         if (event.getCommandName().equals("unregister")) {
-            return DataManager.unregister(event.getInteraction().getMember().get(), DataManager.getActiveEvent().id)
+            ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/unregister] Unregistering member (" + member.getUsername() + "/" + member.getId()
+                    .asString() + ") from event '" + DataManager.getActiveEvent().id + "'");
+            return DataManager.unregister(member, DataManager.getActiveEvent().id)
                     .and(event.reply("You are no longer registered for " + DataManager.getActiveEvent().name)
                             .withEphemeral(true));
         } else if (event.getCommandName().equals("admin")) {
+            ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin] Running admin command (" + member.getUsername() + "/" + member.getId()
+                    .asString() + ")");
             if (event.getOption("reload").isPresent()) {
+                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/reload] Running reload command (" + member.getUsername() + "/" + member.getId()
+                        .asString() + ")");
                 StorageManager.loadAll();
                 if (ModFestPlatform.activeEvent != null) {
+                    ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/reload] Updating presence (" + member.getUsername() + "/" + member.getId()
+                            .asString() + ")");
                     return event.reply("Reloaded!")
                             .withEphemeral(true)
                             .and(event.getClient()
@@ -89,13 +110,14 @@ public class Events {
                 }
                 return event.reply("Reloaded!").withEphemeral(true);
             } else if (event.getOption("openregistration").isPresent()) {
+                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/openregistration] Opening registration (" + member.getUsername() + "/" + member.getId()
+                        .asString() + ")");
                 if (ModFestPlatform.activeEvent != null) {
 
                     Button registerButton = Button.primary("modfest-registration-button", "Register");
 
-                    return event.getInteraction()
-                            .getChannel()
-                            .ofType(GuildMessageChannel.class)
+                    var openInChannel = event.getInteraction().getChannel();
+                    return openInChannel.ofType(GuildMessageChannel.class)
                             .flatMap(channel -> channel.createMessage(MessageCreateSpec.builder()
                                     .addEmbed(EmbedCreateSpec.builder()
                                             .title("Register for " + ModFestPlatform.activeEvent.name + "!")
@@ -106,50 +128,65 @@ public class Events {
                             .then();
                 }
             } else if (event.getOption("fixroles").isPresent()) {
+                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Initiating fixroles (" + member.getUsername() + "/" + member.getId()
+                        .asString() + ")");
                 var fixRoles = event.getClient()
                         .getGuildMembers(Snowflake.of(DataManager.getGuildId()))
-                        .flatMap(member -> {
+                        .flatMap(guildMember -> {
                             Mono<Void> publisher;
-                            var userData = DataManager.getUserData(member.getId());
+                            var userData = DataManager.getUserData(guildMember.getId());
                             var userRole = DataManager.getUserRole();
                             if (userData != null) {
-                                publisher = member.addRole(userRole);
+                                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Assigning user role to " + guildMember.getUsername() + "/" + guildMember.getId()
+                                        .asString());
+                                publisher = guildMember.addRole(userRole);
                             } else {
-                                publisher = member.removeRole(userRole);
+                                publisher = guildMember.removeRole(userRole);
                             }
                             for (EventData eventData : DataManager.getEventList()) {
                                 var participantRole = Snowflake.of(eventData.participantRoleId);
                                 var awardRole = Snowflake.of(eventData.awardRoleId);
 
-                                var participantData = eventData.participants.get(member.getId().asString());
+                                var participantData = eventData.participants.get(guildMember.getId().asString());
                                 if (participantData != null) {
-                                    publisher = publisher.and(member.addRole(participantRole));
+                                    ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Assigning '" + eventData.id + "' participant role to " + guildMember.getUsername() + "/" + guildMember.getId()
+                                            .asString());
+                                    publisher = publisher.and(guildMember.addRole(participantRole));
                                     for (String submission : participantData.submissions) {
                                         var submissionData = DataManager.getSubmissions().get(submission);
                                         if (submissionData.awarded) {
-                                            publisher = publisher.and(member.addRole(awardRole));
+                                            ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Assigning '" + eventData.id + "' award role to " + guildMember.getUsername() + "/" + guildMember.getId()
+                                                    .asString());
+                                            publisher = publisher.and(guildMember.addRole(awardRole));
                                             break;
                                         }
                                     }
                                 } else {
-                                    publisher = publisher.and(member.removeRole(participantRole))
-                                            .and(member.removeRole(awardRole));
+                                    publisher = publisher.and(guildMember.removeRole(participantRole))
+                                            .and(guildMember.removeRole(awardRole));
                                 }
                             }
                             return publisher;
                         });
+                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Fixroles complete (" + member.getUsername() + "/" + member.getId()
+                        .asString() + ")");
                 return fixRoles.then(event.reply("Fixed any incorrect roles").withEphemeral(true));
             }
         } else if (event.getCommandName().equals("user")) {
-            var userId = event.getInteraction().getMember().get().getId();
+            var userId = member.getId();
+            ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/user] Running user command (" + member.getUsername() + "/" + userId.asString() + ")");
             if (DataManager.getUserData(userId) == null) {
+                ModFestLog.error("[Events/ON_CHAT_INPUT_INTERACTION/user] User does not have data on file, should not have been able to run command (" + member.getUsername() + "/" + userId.asString() + ")");
                 return NOT_REGISTERED_MESSAGE;
             }
             if (event.getOption("syncdata").isPresent()) {
+                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/user/syncdata] Syncing user data (" + member.getUsername() + "/" + userId.asString() + ")");
                 var error = DataManager.updateUserData(userId);
                 if (error != null) {
+                    ModFestLog.error("[Events/ON_CHAT_INPUT_INTERACTION/user/syncdata] Error syncing user data (" + member.getUsername() + "/" + userId.asString() + "): " + error);
                     return event.reply("Error updating data: " + error).withEphemeral(true);
                 }
+                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/user/syncdata] Synced user data (" + member.getUsername() + "/" + userId.asString() + ")");
                 return event.reply("Updated your user data from Modrinth").withEphemeral(true);
             } else {
                 var setOption = event.getOption("set");
@@ -159,12 +196,16 @@ public class Events {
                     boolean plural = false;
                     var name = set.getOption("name");
                     if (name.isPresent()) {
-                        DataManager.updateUserDisplayName(userId, name.get().getValue().get().asString());
+                        var newName = name.get().getValue().get().asString();
+                        ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/user/set/name] Updating display name to '" + name + "' (" + member.getUsername() + "/" + userId.asString() + ")");
+                        DataManager.updateUserDisplayName(userId, newName);
                         updated.add("display name");
                     }
                     var pronouns = set.getOption("pronouns");
                     if (pronouns.isPresent()) {
-                        DataManager.updateUserPronouns(userId, pronouns.get().getValue().get().asString());
+                        var newPronouns = pronouns.get().getValue().get().asString();
+                        DataManager.updateUserPronouns(userId, newPronouns);
+                        ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/user/set/pronouns] Updating pronouns to '" + newPronouns + "' (" + member.getUsername() + "/" + userId.asString() + ")");
                         updated.add("pronouns");
                         plural = true;
                     }

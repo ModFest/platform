@@ -18,4 +18,9 @@ public class UserData {
         this.pronouns = pronouns;
         this.modrinthUserId = modrinthUserId;
     }
+
+    @Override
+    public String toString() {
+        return "UserData{" + "id='" + id + '\'' + ", displayName='" + displayName + '\'' + ", pronouns='" + pronouns + '\'' + ", modrinthUserId='" + modrinthUserId + '\'' + ", username='" + username + '\'' + ", bio='" + bio + '\'' + ", iconUrl='" + iconUrl + '\'' + ", badges=" + badges + '}';
+    }
 }

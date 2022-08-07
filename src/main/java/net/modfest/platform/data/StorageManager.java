@@ -2,6 +2,7 @@ package net.modfest.platform.data;
 
 import com.google.gson.reflect.TypeToken;
 import net.modfest.platform.ModFestPlatform;
+import net.modfest.platform.log.ModFestLog;
 import net.modfest.platform.pojo.*;
 
 import java.io.*;
@@ -38,14 +39,17 @@ public class StorageManager {
     }
 
     public static void init() {
+        ModFestLog.lifecycle("[StorageManager] Initializing stores...");
         // Statically init everything
     }
 
     public static void loadAll() {
+        ModFestLog.lifecycle("[StorageManager] Loading all stores");
         STORES.forEach(Store::load);
     }
 
     public static void saveAll() {
+        ModFestLog.lifecycle("[StorageManager] Saving all stores");
         STORES.forEach(Store::save);
     }
 
@@ -54,10 +58,6 @@ public class StorageManager {
         private final Consumer<T> onLoad;
         private final Type type;
         private T value;
-
-        public Store(String name, T object, Type type) {
-            this(name, object, type, null);
-        }
 
         public Store(String name, T defaultValue, Type type, Consumer<T> onLoad) {
             this.file = new File(ModFestPlatform.workingDir, name + ".json");
@@ -74,28 +74,34 @@ public class StorageManager {
         }
 
         private void initFile() {
+            ModFestLog.info("[StorageManager/Store] Initializing " + file.getName());
             try (FileWriter writer = new FileWriter(file)) {
                 ModFestPlatform.GSON.toJson(value, writer);
             } catch (IOException e) {
+                ModFestLog.info("[StorageManager/Store] Error initializing " + file.getName() + "; " + e);
                 e.printStackTrace();
             }
         }
 
         public void load() {
+            ModFestLog.info("[StorageManager/Store] Loading " + file.getName());
             try {
                 this.value = ModFestPlatform.GSON.fromJson(new FileReader(file), type);
                 if (onLoad != null) {
                     onLoad.accept(this.value);
                 }
             } catch (FileNotFoundException e) {
+                ModFestLog.info("[StorageManager/Store] Error loading " + file.getName() + "; " + e);
                 e.printStackTrace();
             }
         }
 
         public void save() {
+            ModFestLog.info("[StorageManager/Store] Saving " + file.getName());
             try (FileWriter writer = new FileWriter(file)) {
                 ModFestPlatform.GSON.toJson(this.value, writer);
             } catch (IOException e) {
+                ModFestLog.info("[StorageManager/Store] Error saving " + file.getName() + "; " + e);
                 e.printStackTrace();
             }
         }

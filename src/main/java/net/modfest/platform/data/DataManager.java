@@ -4,6 +4,7 @@ import discord4j.common.util.Snowflake;
 import discord4j.core.object.entity.Member;
 import fr.minemobs.modrinthjavalib.Modrinth;
 import fr.minemobs.modrinthjavalib.user.User;
+import net.modfest.platform.log.ModFestLog;
 import net.modfest.platform.pojo.*;
 import reactor.core.publisher.Mono;
 
@@ -27,6 +28,7 @@ public class DataManager {
     }
 
     public static void addUserData(Snowflake id, UserData data) {
+        ModFestLog.debug("[DataManager] Adding new user: " + data);
         platformData.users.put(id.asString(), data);
         StorageManager.USERS.save();
     }
@@ -120,5 +122,30 @@ public class DataManager {
         user.iconUrl = modrinthData.avatarUrl;
         user.bio = modrinthData.bio;
         StorageManager.USERS.save();
+    }
+
+    public static void setLogInfoChannel(Snowflake channelId) {
+        configData.logInfoChannelId = channelId.asString();
+        StorageManager.CONFIG.save();
+    }
+
+    public static void setLogDebugChannel(Snowflake channelId) {
+        configData.logDebugChannelId = channelId.asString();
+        StorageManager.CONFIG.save();
+    }
+
+    public static void setLogLifecycleChannel(Snowflake channelId) {
+        configData.logLifecycleChannelId = channelId.asString();
+        StorageManager.CONFIG.save();
+    }
+
+    public static void setLogErrorChannel(Snowflake channelId) {
+        configData.logErrorChannelId = channelId.asString();
+        StorageManager.CONFIG.save();
+    }
+
+    public static void setLogAllChannel(Snowflake channelId) {
+        configData.logAllChannelId = channelId.asString();
+        StorageManager.CONFIG.save();
     }
 }
