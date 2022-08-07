@@ -8,6 +8,7 @@ import discord4j.core.event.domain.interaction.ModalSubmitInteractionEvent;
 import discord4j.core.event.domain.lifecycle.ReadyEvent;
 import discord4j.core.object.component.ActionRow;
 import discord4j.core.object.component.Button;
+import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.channel.GuildMessageChannel;
 import discord4j.core.object.presence.ClientActivity;
 import discord4j.core.object.presence.ClientPresence;
@@ -33,34 +34,40 @@ public class Events {
             var member = event.getMember();
             ModFestLog.debug("[Events/ON_MEMEBER_JOIN] Member joined (" + member.getUsername() + "/" + member.getId()
                     .asString() + ")");
-            var data = DataManager.getUserData(member.getId());
-            var userRole = DataManager.getUserRole();
-            if (data != null) {
-                ModFestLog.debug("[Events/ON_MEMEBER_JOIN] Member has data (" + member.getUsername() + "/" + member.getId()
-                        .asString() + ")");
-                var publisher = member.addRole(userRole);
-                for (EventData eventData : DataManager.getEventList()) {
-                    var participantData = eventData.participants.get(member.getId().asString());
-                    if (participantData != null) {
-                        ModFestLog.debug("[Events/ON_MEMEBER_JOIN] Member has participant data for event '" + eventData.id + "', granting role (" + member.getUsername() + "/" + member.getId()
-                                .asString() + ")");
-                        publisher = publisher.and(member.addRole(Snowflake.of(eventData.participantRoleId)));
-                        for (String submission : participantData.submissions) {
-                            var submissionData = DataManager.getSubmissions().get(submission);
-                            if (submissionData.awarded) {
-                                ModFestLog.debug("[Events/ON_MEMEBER_JOIN] Member has award for event '" + eventData.id + "', granting role (" + member.getUsername() + "/" + member.getId()
-                                        .asString() + ")");
-                                publisher = publisher.and(member.addRole(Snowflake.of(eventData.awardRoleId)));
-                                break;
-                            }
-                        }
-                    }
-                }
-                return publisher;
-            }
+            return fixMemberRoles(member);
         }
         return Mono.empty();
     };
+
+    public static Mono<Void> fixMemberRoles(Member member) {
+        var data = DataManager.getUserData(member.getId());
+        var userRole = DataManager.getUserRole();
+        if (data != null) {
+            ModFestLog.debug("[Events/ON_MEMEBER_JOIN] Member has data (" + member.getUsername() + "/" + member.getId()
+                    .asString() + ")");
+            var publisher = member.addRole(userRole);
+            for (EventData eventData : DataManager.getEventList()) {
+                var participantData = eventData.participants.get(member.getId().asString());
+                if (participantData != null) {
+                    ModFestLog.debug("[Events/ON_MEMEBER_JOIN] Member has participant data for event '" + eventData.id + "', granting role (" + member.getUsername() + "/" + member.getId()
+                            .asString() + ")");
+                    publisher = publisher.and(member.addRole(Snowflake.of(eventData.participantRoleId)));
+                    for (String submission : participantData.submissions) {
+                        var submissionData = DataManager.getSubmissions().get(submission);
+                        if (submissionData.awarded) {
+                            ModFestLog.debug("[Events/ON_MEMEBER_JOIN] Member has award for event '" + eventData.id + "', granting role (" + member.getUsername() + "/" + member.getId()
+                                    .asString() + ")");
+                            publisher = publisher.and(member.addRole(Snowflake.of(eventData.awardRoleId)));
+                            break;
+                        }
+                    }
+                }
+            }
+            return publisher;
+        }
+        return Mono.empty();
+    }
+
     public static final Function<ReadyEvent, Publisher<Void>> ON_READY = event -> {
         var client = event.getClient();
         ModFestLog.debug("[Events/ON_READY] Registering guild commands");
@@ -184,7 +191,11 @@ public class Events {
                 ModFestLog.error("[Events/ON_CHAT_INPUT_INTERACTION/user] User does not have data on file, should not have been able to run command (" + member.getUsername() + "/" + userId.asString() + ")");
                 return NOT_REGISTERED_MESSAGE;
             }
-            if (event.getOption("syncdata").isPresent()) {
+            if (event.getOption("fixroles").isPresent()) {
+                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/user/fixroles] Fixing roles for (" + member.getUsername() + "/" + userId.asString() + ")");
+                return fixMemberRoles(member).then(event.reply("Your roles have been fixed.")
+                        .withEphemeral(true));
+            } else if (event.getOption("syncdata").isPresent()) {
                 ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/user/syncdata] Syncing user data (" + member.getUsername() + "/" + userId.asString() + ")");
                 var error = DataManager.updateUserData(userId);
                 if (error != null) {
