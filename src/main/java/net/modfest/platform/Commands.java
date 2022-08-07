@@ -21,6 +21,11 @@ public class Commands {
                 .description("Unregister yourself from " + DataManager.getActiveEvent().name)
                 .build();
 
+        ApplicationCommandRequest fixrolesCommand = ApplicationCommandRequest.builder()
+                .name("fixroles")
+                .description("Corrects any errors with your roles. Use after re-joining the server.")
+                .build();
+
         ApplicationCommandRequest userCommand = ApplicationCommandRequest.builder()
                 .name("user")
                 .description("Make changes to your user account")
@@ -28,11 +33,6 @@ public class Commands {
                 .addOption(ApplicationCommandOptionData.builder()
                         .name("syncdata")
                         .description("Updates your profile with the latest information from Modrinth")
-                        .type(ApplicationCommandOption.Type.SUB_COMMAND.getValue())
-                        .build())
-                .addOption(ApplicationCommandOptionData.builder()
-                        .name("fixroles")
-                        .description("Corrects any errors with your roles. Use after re-joining the server.")
                         .type(ApplicationCommandOption.Type.SUB_COMMAND.getValue())
                         .build())
                 .addOption(ApplicationCommandOptionData.builder()
@@ -104,7 +104,7 @@ public class Commands {
                 .description("ModFest's admin dashboard")
                 .build();
 
-        return List.of(registerCommand, unregisterCommand, userCommand, adminCommand);
+        return List.of(registerCommand, unregisterCommand, fixrolesCommand, userCommand, adminCommand);
     }
 
     public static List<ApplicationCommandRequest> getGlobalCommands() {

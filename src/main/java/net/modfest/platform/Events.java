@@ -43,19 +43,19 @@ public class Events {
         var data = DataManager.getUserData(member.getId());
         var userRole = DataManager.getUserRole();
         if (data != null) {
-            ModFestLog.debug("[Events/ON_MEMEBER_JOIN] Member has data (" + member.getUsername() + "/" + member.getId()
+            ModFestLog.debug("[Events/fixMemberRoles] Member has data (" + member.getUsername() + "/" + member.getId()
                     .asString() + ")");
             var publisher = member.addRole(userRole);
             for (EventData eventData : DataManager.getEventList()) {
                 var participantData = eventData.participants.get(member.getId().asString());
                 if (participantData != null) {
-                    ModFestLog.debug("[Events/ON_MEMEBER_JOIN] Member has participant data for event '" + eventData.id + "', granting role (" + member.getUsername() + "/" + member.getId()
+                    ModFestLog.debug("[Events/fixMemberRoles] Member has participant data for event '" + eventData.id + "', granting role (" + member.getUsername() + "/" + member.getId()
                             .asString() + ")");
                     publisher = publisher.and(member.addRole(Snowflake.of(eventData.participantRoleId)));
                     for (String submission : participantData.submissions) {
                         var submissionData = DataManager.getSubmissions().get(submission);
                         if (submissionData.awarded) {
-                            ModFestLog.debug("[Events/ON_MEMEBER_JOIN] Member has award for event '" + eventData.id + "', granting role (" + member.getUsername() + "/" + member.getId()
+                            ModFestLog.debug("[Events/fixMemberRoles] Member has award for event '" + eventData.id + "', granting role (" + member.getUsername() + "/" + member.getId()
                                     .asString() + ")");
                             publisher = publisher.and(member.addRole(Snowflake.of(eventData.awardRoleId)));
                             break;
@@ -99,6 +99,11 @@ public class Events {
             return DataManager.unregister(member, DataManager.getActiveEvent().id)
                     .and(event.reply("You are no longer registered for " + DataManager.getActiveEvent().name)
                             .withEphemeral(true));
+        } else if (event.getCommandName().equals("fixroles")) {
+            ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/user/fixroles] Fixing roles for (" + member.getUsername() + "/" + member.getId()
+                    .asString() + ")");
+            return fixMemberRoles(member).then(event.reply("Your roles have been fixed.")
+                    .withEphemeral(true));
         } else if (event.getCommandName().equals("admin")) {
             ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin] Running admin command (" + member.getUsername() + "/" + member.getId()
                     .asString() + ")");
@@ -133,7 +138,7 @@ public class Events {
                                     .build()))
                             .then();
                 }
-            } else if (event.getOption("fixroles").isPresent()) {
+            } else if (event.getOption("fixallroles").isPresent()) {
                 ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Initiating fixroles (" + member.getUsername() + "/" + member.getId()
                         .asString() + ")");
                 var fixRoles = event.getClient()
@@ -190,11 +195,6 @@ public class Events {
             if (DataManager.getUserData(userId) == null) {
                 ModFestLog.error("[Events/ON_CHAT_INPUT_INTERACTION/user] User does not have data on file, should not have been able to run command (" + member.getUsername() + "/" + userId.asString() + ")");
                 return NOT_REGISTERED_MESSAGE;
-            }
-            if (event.getOption("fixroles").isPresent()) {
-                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/user/fixroles] Fixing roles for (" + member.getUsername() + "/" + userId.asString() + ")");
-                return fixMemberRoles(member).then(event.reply("Your roles have been fixed.")
-                        .withEphemeral(true));
             } else if (event.getOption("syncdata").isPresent()) {
                 ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/user/syncdata] Syncing user data (" + member.getUsername() + "/" + userId.asString() + ")");
                 var error = DataManager.updateUserData(userId);
