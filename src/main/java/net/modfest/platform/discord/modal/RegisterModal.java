@@ -4,8 +4,9 @@ import discord4j.core.event.domain.interaction.DeferrableInteractionEvent;
 import discord4j.core.event.domain.interaction.ModalSubmitInteractionEvent;
 import discord4j.core.object.component.TextInput;
 import fr.minemobs.modrinthjavalib.Modrinth;
-import net.modfest.platform.data.DataManager;
 import net.modfest.platform.ModFestPlatform;
+import net.modfest.platform.data.DataManager;
+import net.modfest.platform.log.ModFestLog;
 import net.modfest.platform.pojo.UserData;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
@@ -36,12 +37,15 @@ public class RegisterModal extends Modal {
         if (conditions != null) {
             return conditions;
         }
-        var userId = event.getInteraction().getMember().get().getId();
+        var member = event.getInteraction().getMember().get();
+        var userId = member.getId();
         if (DataManager.getUserData(userId) != null) {
             if (DataManager.isRegistered(userId, ModFestPlatform.activeEvent.id)) {
                 return event.reply("You're already registered for " + ModFestPlatform.activeEvent.name)
                         .withEphemeral(true);
             } else {
+                ModFestLog.debug("[RegisterModal] Registering member (" + member.getUsername() + "/" + member.getId()
+                        .asString() + ") to event '" + DataManager.getActiveEvent().id + "'");
                 return register(event);
             }
         }

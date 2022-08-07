@@ -22,15 +22,12 @@ import net.modfest.platform.log.ModFestLog;
 import net.modfest.platform.pojo.EventData;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
-import reactor.util.Logger;
-import reactor.util.Loggers;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
 public class Events {
-    private static final Logger LOGGER = Loggers.getLogger(ModFestPlatform.class);
     public static final Function<MemberJoinEvent, Publisher<Void>> ON_MEMEBER_JOIN = event -> {
         if (event.getGuildId().toString().equals(DataManager.getGuildId())) {
             var member = event.getMember();
@@ -69,13 +66,13 @@ public class Events {
         ModFestLog.debug("[Events/ON_READY] Registering guild commands");
         var registerGuildCommands = GuildCommandRegistrar.create(client.getRestClient(), Commands.getGuildCommands())
                 .registerCommands()
-                .doOnError(e -> LOGGER.warn("Unable to create guild command", e))
+                .doOnError(e -> ModFestLog.error("Unable to create guild command", e))
                 .onErrorResume(e -> Mono.empty());
 
         ModFestLog.debug("[Events/ON_READY] Registering global commands");
         var registerGlobalCommands = GlobalCommandRegistrar.create(client.getRestClient(), Commands.getGlobalCommands())
                 .registerCommands()
-                .doOnError(e -> LOGGER.warn("Unable to create global command", e))
+                .doOnError(e -> ModFestLog.error("Unable to create global command", e))
                 .onErrorResume(e -> Mono.empty());
 
         ModFestLog.debug("[Events/ON_READY] Updating presence");
@@ -87,6 +84,8 @@ public class Events {
         InteractionApplicationCommandCallbackReplyMono NOT_REGISTERED_MESSAGE = event.reply("You have not yet registered for ModFest. Register with the `/register` command.")
                 .withEphemeral(true);
         var member = event.getInteraction().getMember().get();
+        ModFestLog.debug("Command received from " + member.getUsername() + "/" + member.getId()
+                .asString() + ": " + event.getCommandName());
         if (event.getCommandName().equals("unregister")) {
             ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/unregister] Unregistering member (" + member.getUsername() + "/" + member.getId()
                     .asString() + ") from event '" + DataManager.getActiveEvent().id + "'");
@@ -132,7 +131,10 @@ public class Events {
                         .asString() + ")");
                 var fixRoles = event.getClient()
                         .getGuildMembers(Snowflake.of(DataManager.getGuildId()))
+                        .parallel()
                         .flatMap(guildMember -> {
+                            ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Checking " + guildMember.getUsername() + "/" + guildMember.getId()
+                                    .asString());
                             Mono<Void> publisher;
                             var userData = DataManager.getUserData(guildMember.getId());
                             var userRole = DataManager.getUserRole();
@@ -168,9 +170,12 @@ public class Events {
                             }
                             return publisher;
                         });
-                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Fixroles complete (" + member.getUsername() + "/" + member.getId()
-                        .asString() + ")");
-                return fixRoles.then(event.reply("Fixed any incorrect roles").withEphemeral(true));
+                return event.reply("Initiated a rolefix, this may take a while.")
+                        .withEphemeral(true)
+                        .and(fixRoles.doOnComplete(() -> ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Fixroles complete (" + member.getUsername() + "/" + member.getId()
+                                        .asString() + ")"))
+                                .doOnError(error -> ModFestLog.error("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Error running fixroles (" + member.getUsername() + "/" + member.getId()
+                                        .asString() + "): " + error)));
             }
         } else if (event.getCommandName().equals("user")) {
             var userId = member.getId();
