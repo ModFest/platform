@@ -10,7 +10,6 @@ import net.modfest.platform.data.DataManager;
 import net.modfest.platform.pojo.SubmissionData;
 import org.reactivestreams.Publisher;
 
-import java.io.IOException;
 import java.util.regex.Pattern;
 
 public class SubmitModal extends Modal {
@@ -95,9 +94,12 @@ public class SubmitModal extends Modal {
 
                 return event.reply("Mod '" + project.title + "' submitted successfully for " + ModFestPlatform.activeEvent.name)
                         .withEphemeral(true);
-            } catch (IOException e) {
+            } catch (NullPointerException e) {
                 e.printStackTrace();
-                return event.reply("An error has occurred finding Modrinth project from URL '" + modrinthProjectUrl + "':" + e.getMessage())
+                return event.reply("Your Modrinth project could not be found. This either means your URL was invalid or your project has not yet been approved by Modrinth moderators. Re-submit to ModFest after it has been approved.").withEphemeral(true);
+            } catch (Throwable e) {
+                e.printStackTrace();
+                return event.reply("An error has occurred finding Modrinth project from URL '" + modrinthProjectUrl + "': " + e.getMessage())
                         .withEphemeral(true);
             }
         }

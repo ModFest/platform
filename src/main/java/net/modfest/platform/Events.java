@@ -154,7 +154,7 @@ public class Events {
                                 .flatMap(channel -> channel.createMessage(MessageCreateSpec.builder()
                                         .addEmbed(EmbedCreateSpec.builder()
                                                 .title("Submit a mod for " + ModFestPlatform.activeEvent.name + "!")
-                                                .description("Submissions are now open! Click on the button below (or use the `/submit` command) to submit a mod for " + ModFestPlatform.activeEvent.name + ".\n\nIf you change your mind about submitting, you can use the `/unsubmit` command to retract your submission. Use `/event updateversion` or `/event setversion` to update the version of your mod that will be included in the ModFest modpack.")
+                                                .description("Submissions are now open! Click on the button below (or use the `/event submit` command) to submit a mod for " + ModFestPlatform.activeEvent.name + ".\n\nIf you change your mind about submitting, you can use the `/event unsubmit` command to retract your submission. Use `/event updateversion` or `/event setversion` to update the version of your mod that will be included in the ModFest modpack.")
                                                 .build())
                                         .addComponent(ActionRow.of(submitButton))
                                         .build()))

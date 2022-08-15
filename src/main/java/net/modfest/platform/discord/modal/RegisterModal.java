@@ -91,9 +91,9 @@ public class RegisterModal extends Modal {
                 DataManager.updateUserData(snowflake, user);
 
                 return register(event);
-            } catch (IOException e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
-                return event.reply("An error has occurred finding Modrinth user '" + modrinthUsername + "':" + e.getMessage())
+                return event.reply("An error has occurred finding Modrinth user '" + modrinthUsername + "': " + e.getMessage())
                         .withEphemeral(true);
             }
         }
