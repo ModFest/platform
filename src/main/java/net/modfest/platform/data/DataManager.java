@@ -35,14 +35,18 @@ public class DataManager {
         StorageManager.USERS.save();
     }
 
-    public static void addSubmission(Snowflake userId, SubmissionData newSubmission, String event) {
+    public static void addSubmission(Snowflake userSnowflake, SubmissionData newSubmission, String event) {
         ModFestLog.debug("[DataManager] Adding new submission: %s", newSubmission.toString());
         var existingSubmission = platformData.submissions.get(newSubmission.id);
-        if (existingSubmission != null) {
-            existingSubmission.members.add(userId.asString());
-        } else {
+        var userId = userSnowflake.asString();
+        if (existingSubmission == null) {
             platformData.submissions.put(newSubmission.id, newSubmission);
-            platformData.events.get(event).participants.get(userId.asString()).submissions.add(newSubmission.id);
+        } else if (!existingSubmission.members.contains(userId)) {
+            existingSubmission.members.add(userId);
+        }
+        var submissions = platformData.events.get(event).participants.get(userId).submissions;
+        if (!submissions.contains(newSubmission.id)) {
+            submissions.add(newSubmission.id);
         }
         StorageManager.SUBMISSIONS.save();
         StorageManager.EVENTS.save();
@@ -62,11 +66,7 @@ public class DataManager {
             var submission = getSubmissions().get(submissionId);
             var version = Modrinth.getProject(submissionId).getVersion(versionId);
             submission.versionId = versionId;
-            submission.downloadUrl = version.getFiles()
-                    .stream()
-                    .filter(FilesItem::isPrimary)
-                    .findFirst()
-                    .get().url;
+            submission.downloadUrl = version.getFiles().stream().filter(FilesItem::isPrimary).findFirst().get().url;
             return null;
         } catch (IOException e) {
             return e.getMessage();
@@ -80,27 +80,29 @@ public class DataManager {
         submission.summary = modrinthData.description;
         submission.description = modrinthData.body;
         submission.iconUrl = modrinthData.iconUrl;
-        var primaryGallery = modrinthData.gallery.stream()
-                .filter(item -> item.featured)
-                .findFirst();
+        var primaryGallery = modrinthData.gallery.stream().filter(item -> item.featured).findFirst();
         primaryGallery.ifPresent(galleryItem -> submission.galleryUrl = galleryItem.url);
         submission.sourceUrl = modrinthData.sourceUrl;
-        StorageManager.USERS.save();
+        StorageManager.SUBMISSIONS.save();
     }
 
     public static void removeSubmission(Snowflake userId, String submissionId, String event) {
         var submissions = platformData.events.get(event).participants.get(userId.asString()).submissions;
         submissions.remove(submissionId);
-        platformData.submissions.get(submissionId).members.remove(userId.asString());
+        var members = platformData.submissions.get(submissionId).members;
+        members.remove(userId.asString());
         ModFestLog.debug("[DataManager] Removed submission '%s' from user '%s' for event '%s'", submissionId, userId.asString(), event);
 
-        if (platformData.events.values()
-                .stream()
-                .noneMatch(eventData -> eventData.participants.values()
-                        .stream()
-                        .anyMatch(participantData -> participantData.submissions.contains(submissionId)))) {
+        if (members.isEmpty()) {
+            platformData.events.forEach((eventId, eventData) -> {
+                eventData.participants.forEach((participantId, participantData) -> {
+                    if (participantData.submissions.contains(submissionId)) {
+                        ModFestLog.error("WTF Error: Somehow participant " + participantId + " has submission " + submissionId + " even though it has no members.");
+                    }
+                });
+            });
             platformData.submissions.remove(submissionId);
-            ModFestLog.debug("[DataManager] Removed submission '%s' entirely because it does not exist in any event", submissionId);
+            ModFestLog.debug("[DataManager] Removed submission '%s' entirely because it does not have any members", submissionId);
         }
 
         StorageManager.SUBMISSIONS.save();
