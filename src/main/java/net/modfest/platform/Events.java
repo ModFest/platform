@@ -2,12 +2,13 @@ package net.modfest.platform;
 
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.guild.MemberJoinEvent;
-import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
-import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
-import discord4j.core.event.domain.interaction.ModalSubmitInteractionEvent;
+import discord4j.core.event.domain.interaction.*;
 import discord4j.core.event.domain.lifecycle.ReadyEvent;
+import discord4j.core.object.command.ApplicationCommandInteractionOption;
+import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
 import discord4j.core.object.component.ActionRow;
 import discord4j.core.object.component.Button;
+import discord4j.core.object.component.SelectMenu;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.channel.GuildMessageChannel;
 import discord4j.core.object.presence.ClientActivity;
@@ -16,6 +17,8 @@ import discord4j.core.object.presence.Status;
 import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.core.spec.InteractionApplicationCommandCallbackReplyMono;
 import discord4j.core.spec.MessageCreateSpec;
+import discord4j.discordjson.json.ApplicationCommandOptionChoiceData;
+import fr.minemobs.modrinthjavalib.Modrinth;
 import net.modfest.platform.data.DataManager;
 import net.modfest.platform.data.StorageManager;
 import net.modfest.platform.discord.modal.Modals;
@@ -24,8 +27,10 @@ import net.modfest.platform.pojo.EventData;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 
 public class Events {
@@ -93,17 +98,10 @@ public class Events {
         var member = event.getInteraction().getMember().get();
         ModFestLog.debug("Command received from " + member.getUsername() + "/" + member.getId()
                 .asString() + ": " + event.getCommandName());
-        if (event.getCommandName().equals("unregister")) {
-            ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/unregister] Unregistering member (" + member.getUsername() + "/" + member.getId()
-                    .asString() + ") from event '" + DataManager.getActiveEvent().id + "'");
-            return DataManager.unregister(member, DataManager.getActiveEvent().id)
-                    .and(event.reply("You are no longer registered for " + DataManager.getActiveEvent().name)
-                            .withEphemeral(true));
-        } else if (event.getCommandName().equals("fixroles")) {
-            ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/user/fixroles] Fixing roles for (" + member.getUsername() + "/" + member.getId()
+        if (event.getCommandName().equals("fixmyroles")) {
+            ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/user/fixmyroles] Fixing roles for (" + member.getUsername() + "/" + member.getId()
                     .asString() + ")");
-            return fixMemberRoles(member).then(event.reply("Your roles have been fixed.")
-                    .withEphemeral(true));
+            return fixMemberRoles(member).then(event.reply("Your roles have been fixed.").withEphemeral(true));
         } else if (event.getCommandName().equals("admin")) {
             ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin] Running admin command (" + member.getUsername() + "/" + member.getId()
                     .asString() + ")");
@@ -120,74 +118,49 @@ public class Events {
                                     .updatePresence(ClientPresence.of(Status.ONLINE, ClientActivity.playing(ModFestPlatform.activeEvent.name))));
                 }
                 return event.reply("Reloaded!").withEphemeral(true);
-            } else if (event.getOption("openregistration").isPresent()) {
-                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/openregistration] Opening registration (" + member.getUsername() + "/" + member.getId()
-                        .asString() + ")");
-                if (ModFestPlatform.activeEvent != null) {
-
+            } else {
+                var fixroles = event.getOption("fixroles");
+                if (fixroles.isPresent()) {
+                    var selectedUser = fixroles.get().getOption("user");
+                    if (selectedUser.isPresent()) {
+                        var value = selectedUser.get().getValue();
+                        if (value.isPresent()) {
+                            return value.get()
+                                    .asUser()
+                                    .flatMap(fixUser -> fixUser.asMember(Snowflake.of(DataManager.getGuildId()))
+                                            .flatMap(fixMember -> fixMemberRoles(fixMember).then(event.reply(fixMember.getDisplayName() + "'s roles have been fixed.")
+                                                    .withEphemeral(true))));
+                        }
+                    }
+                } else if (event.getOption("sendregistrationmessage").isPresent()) {
                     Button registerButton = Button.primary("modfest-registration-button", "Register");
-
-                    var openInChannel = event.getInteraction().getChannel();
-                    return openInChannel.ofType(GuildMessageChannel.class)
-                            .flatMap(channel -> channel.createMessage(MessageCreateSpec.builder()
-                                    .addEmbed(EmbedCreateSpec.builder()
-                                            .title("Register for " + ModFestPlatform.activeEvent.name + "!")
-                                            .description("Registrations are now open! Click on the button below (or use the `/register` command) to register yourself for " + ModFestPlatform.activeEvent.name + ". If this is your first time registering, you will be prompted with a form to collect your preferred name, pronouns, and your Modrinth username.\n\nIf you change your mind about participating, you can use the `/unregister` command to remove yourself from " + ModFestPlatform.activeEvent.name + ".")
-                                            .build())
-                                    .addComponent(ActionRow.of(registerButton))
-                                    .build()))
-                            .then();
+                    var currentChannel = event.getInteraction().getChannel();
+                    if (ModFestPlatform.activeEvent != null) {
+                        return currentChannel.ofType(GuildMessageChannel.class)
+                                .flatMap(channel -> channel.createMessage(MessageCreateSpec.builder()
+                                        .addEmbed(EmbedCreateSpec.builder()
+                                                .title("Register for " + ModFestPlatform.activeEvent.name + "!")
+                                                .description("Registrations are now open! Click on the button below (or use the `/register` command) to register yourself for " + ModFestPlatform.activeEvent.name + ". If this is your first time registering, you will be prompted with a form to collect your preferred name, pronouns, and your Modrinth username.\n\nIf you change your mind about participating, you can use the `/unregister` command to remove yourself from " + ModFestPlatform.activeEvent.name + ".")
+                                                .build())
+                                        .addComponent(ActionRow.of(registerButton))
+                                        .build()))
+                                .then(event.reply("Sent the registration message").withEphemeral(true));
+                    }
+                } else if (event.getOption("sendsubmissionmessage").isPresent()) {
+                    Button submitButton = Button.primary("modfest-submission-button", "Submit a mod");
+                    if (ModFestPlatform.activeEvent != null) {
+                        var currentChannel = event.getInteraction().getChannel();
+                        return currentChannel.ofType(GuildMessageChannel.class)
+                                .flatMap(channel -> channel.createMessage(MessageCreateSpec.builder()
+                                        .addEmbed(EmbedCreateSpec.builder()
+                                                .title("Submit a mod for " + ModFestPlatform.activeEvent.name + "!")
+                                                .description("Submissions are now open! Click on the button below (or use the `/submit` command) to submit a mod for " + ModFestPlatform.activeEvent.name + ".\n\nIf you change your mind about submitting, you can use the `/unsubmit` command to retract your submission. Use `/event updateversion` or `/event setversion` to update the version of your mod that will be included in the ModFest modpack.")
+                                                .build())
+                                        .addComponent(ActionRow.of(submitButton))
+                                        .build()))
+                                .then(event.reply("Sent the submission message").withEphemeral(true));
+                    }
                 }
-            } else if (event.getOption("fixallroles").isPresent()) {
-                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Initiating fixroles (" + member.getUsername() + "/" + member.getId()
-                        .asString() + ")");
-                var fixRoles = event.getClient()
-                        .getGuildMembers(Snowflake.of(DataManager.getGuildId()))
-                        .parallel()
-                        .flatMap(guildMember -> {
-                            ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Checking " + guildMember.getUsername() + "/" + guildMember.getId()
-                                    .asString());
-                            Mono<Void> publisher;
-                            var userData = DataManager.getUserData(guildMember.getId());
-                            var userRole = DataManager.getUserRole();
-                            if (userData != null) {
-                                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Assigning user role to " + guildMember.getUsername() + "/" + guildMember.getId()
-                                        .asString());
-                                publisher = guildMember.addRole(userRole);
-                            } else {
-                                publisher = guildMember.removeRole(userRole);
-                            }
-                            for (EventData eventData : DataManager.getEventList()) {
-                                var participantRole = Snowflake.of(eventData.participantRoleId);
-                                var awardRole = Snowflake.of(eventData.awardRoleId);
-
-                                var participantData = eventData.participants.get(guildMember.getId().asString());
-                                if (participantData != null) {
-                                    ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Assigning '" + eventData.id + "' participant role to " + guildMember.getUsername() + "/" + guildMember.getId()
-                                            .asString());
-                                    publisher = publisher.and(guildMember.addRole(participantRole));
-                                    for (String submission : participantData.submissions) {
-                                        var submissionData = DataManager.getSubmissions().get(submission);
-                                        if (submissionData.awarded) {
-                                            ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Assigning '" + eventData.id + "' award role to " + guildMember.getUsername() + "/" + guildMember.getId()
-                                                    .asString());
-                                            publisher = publisher.and(guildMember.addRole(awardRole));
-                                            break;
-                                        }
-                                    }
-                                } else {
-                                    publisher = publisher.and(guildMember.removeRole(participantRole))
-                                            .and(guildMember.removeRole(awardRole));
-                                }
-                            }
-                            return publisher;
-                        });
-                return event.reply("Initiated a rolefix, this may take a while.")
-                        .withEphemeral(true)
-                        .and(fixRoles.doOnComplete(() -> ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Fixroles complete (" + member.getUsername() + "/" + member.getId()
-                                        .asString() + ")"))
-                                .doOnError(error -> ModFestLog.error("[Events/ON_CHAT_INPUT_INTERACTION/admin/fixroles] Error running fixroles (" + member.getUsername() + "/" + member.getId()
-                                        .asString() + "): " + error)));
             }
         } else if (event.getCommandName().equals("user")) {
             var userId = member.getId();
@@ -250,6 +223,99 @@ public class Events {
                             .withEphemeral(true);
                 }
             }
+        } else if (event.getCommandName().equals("event")) {
+            if (event.getOption("unregister").isPresent()) {
+                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/unregister] Unregistering member (" + member.getUsername() + "/" + member.getId()
+                        .asString() + ") from event '" + (DataManager.hasActiveEvent() ? DataManager.getActiveEvent().id : "ModFest") + "'");
+                return DataManager.unregister(member, DataManager.getActiveEvent().id)
+                        .and(event.reply("You are no longer registered for " + DataManager.getActiveEvent().name)
+                                .withEphemeral(true));
+            } else if (event.getOption("submit").isPresent()) {
+                return Modals.SUBMIT.onCommand(event);
+            } else if (event.getOption("unsubmit").isPresent()) {
+                var submissionId = event.getOption("unsubmit")
+                        .get()
+                        .getOption("submission")
+                        .flatMap(ApplicationCommandInteractionOption::getValue)
+                        .get()
+                        .asString();
+                var submission = DataManager.getSubmissions().get(submissionId);
+                if (submission == null) {
+                    return event.reply("Error: Could not find submission with ID " + submissionId).withEphemeral(true);
+                }
+                DataManager.removeSubmission(member.getId(), submissionId, DataManager.getActiveEvent().id);
+                return event.reply("Successfully unsubmitted " + submission.name).withEphemeral(true);
+            } else if (event.getOption("setversion").isPresent()) {
+                var submissionId = event.getOption("setversion")
+                        .get()
+                        .getOption("submission")
+                        .flatMap(ApplicationCommandInteractionOption::getValue)
+                        .get()
+                        .asString();
+                var submission = DataManager.getSubmissions().get(submissionId);
+                if (submission == null) {
+                    return event.reply("Error: Could not find submission with ID " + submissionId).withEphemeral(true);
+                }
+                try {
+                    var versions = Modrinth.getProject(submissionId).getVersions();
+
+                    var options = new ArrayList<SelectMenu.Option>();
+                    for (int i = 0; i < Math.min(25, versions.length); i++) {
+                        var version = versions[i];
+                        options.add(SelectMenu.Option.of(version.getName(), submissionId + "/" + version.getId())
+                                .withDescription("v" + version.getVersionNumber() + " (ID: " + version.id + ")"));
+                    }
+                    return event.reply("Select a version of " + submission.name + ".")
+                            .withComponents(ActionRow.of(SelectMenu.of("modfest-setversion-version-select-menu", options)))
+                            .withEphemeral(true);
+                } catch (IOException e) {
+                    ModFestLog.error("[Events/event/setversion] Error fetching version data from Modrinth: ", e);
+                    return event.reply("Error fetching version data from Modrinth: " + e.getMessage())
+                            .withEphemeral(true);
+                }
+            } else if (event.getOption("updateversion").isPresent()) {
+                var submissionId = event.getOption("updateversion")
+                        .get()
+                        .getOption("submission")
+                        .flatMap(ApplicationCommandInteractionOption::getValue)
+                        .get()
+                        .asString();
+                var submission = DataManager.getSubmissions().get(submissionId);
+                if (submission == null) {
+                    return event.reply("Error: Could not find submission with ID " + submissionId).withEphemeral(true);
+                }
+                try {
+                    var version = Modrinth.getProject(submissionId).getVersions()[0];
+                    var error = DataManager.setVersion(submissionId, version.id);
+                    if (error != null) {
+                        return event.reply("An error occurred: " + error).withEphemeral(true);
+                    }
+                    return event.reply("Set the version of " + submission.name + " to the latest version: " + version.name + " (v" + version.versionNumber + " / ID: " + version.id + ")")
+                            .withEphemeral(true);
+                } catch (IOException e) {
+                    ModFestLog.error("[Events/event/setversion] Error fetching version data from Modrinth: ", e);
+                    return event.reply("Error fetching version data from Modrinth: " + e.getMessage())
+                            .withEphemeral(true);
+                }
+            } else if (event.getOption("updatedata").isPresent()) {
+                var submissionId = event.getOption("updatedata")
+                        .get()
+                        .getOption("submission")
+                        .flatMap(ApplicationCommandInteractionOption::getValue)
+                        .get()
+                        .asString();
+                var submission = DataManager.getSubmissions().get(submissionId);
+                if (submission == null) {
+                    return event.reply("Error: Could not find submission with ID " + submissionId).withEphemeral(true);
+                }
+                var error = DataManager.updateSubmissionData(submissionId);
+                if (error != null) {
+                    return event.reply("An error occurred fetching project data from Modrinth: " + error)
+                            .withEphemeral(true);
+                } else {
+                    return event.reply("Updated the data of " + submission.name + " successfully").withEphemeral(true);
+                }
+            }
         }
         var modal = Modals.MODAL_COMMANDS.get(event.getCommandName());
         if (modal != null) {
@@ -264,10 +330,61 @@ public class Events {
         }
         return Mono.empty();
     };
+    public static Function<SelectMenuInteractionEvent, Publisher<Void>> ON_SELECT_MENU = event -> {
+        if (event.getCustomId().equals("modfest-setversion-version-select-menu")) {
+            var option = event.getValues().get(0);
+            var split = option.split("/");
+            var error = DataManager.setVersion(split[0], split[1]);
+            if (error != null) {
+                return event.reply("An error occurred: " + error).withEphemeral(true);
+            }
+            return event.reply("Updated version").withEphemeral(true);
+        }
+        return Mono.empty();
+    };
     public static Function<ButtonInteractionEvent, Publisher<Void>> ON_BUTTON_INTERACTION = event -> {
         if (event.getCustomId().equals("modfest-registration-button")) {
-            return Modals.MODAL_COMMANDS.get("register").onCommand(event);
+            return Modals.REGISTER.onCommand(event);
+        } else if (event.getCustomId().equals("modfest-submission-button")) {
+            return Modals.SUBMIT.onCommand(event);
         }
+        return Mono.empty();
+    };
+
+    public static Function<ChatInputAutoCompleteEvent, Publisher<Void>> ON_CHAT_AUTOCOMPLETE = event -> {
+        String typing = event.getFocusedOption()
+                .getValue()
+                .map(ApplicationCommandInteractionOptionValue::asString)
+                .orElse("");
+
+        if (event.getCommandName().equals("event")) {
+            if (event.getOption("unsubmit").isPresent() || event.getOption("setversion")
+                    .isPresent() || event.getOption("updateversion").isPresent() || event.getOption("updatedata")
+                    .isPresent() && event.getFocusedOption().getName().equals("submission")) {
+                List<ApplicationCommandOptionChoiceData> suggestions = new ArrayList<>();
+
+                var member = event.getInteraction().getMember();
+                if (member.isPresent()) {
+                    var participantData = DataManager.getActiveEvent().participants.get(member.get()
+                            .getId()
+                            .asString());
+
+                    participantData.submissions.forEach(submissionId -> {
+                        var submissionData = DataManager.getSubmissions().get(submissionId);
+                        if (typing.isEmpty() || submissionData.name.toLowerCase(Locale.ROOT)
+                                .startsWith(typing.toLowerCase(Locale.ROOT))) {
+                            suggestions.add(ApplicationCommandOptionChoiceData.builder()
+                                    .name(submissionData.name)
+                                    .value(submissionId)
+                                    .build());
+                        }
+                    });
+
+                    return event.respondWithSuggestions(suggestions);
+                }
+            }
+        }
+
         return Mono.empty();
     };
 }

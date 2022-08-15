@@ -15,19 +15,24 @@ import java.util.List;
 public abstract class Modal {
     public final String id;
     public final String title;
-    public final String command;
-
     private final List<LayoutComponent> buildComponents = new LinkedList<>();
 
     public Modal(String id, String title) {
-        this.command = id;
         this.id = "modfest-" + id + "-modal";
         this.title = title;
     }
 
     public String textInput(String id, String label, boolean required, int minLength, int maxLength) {
+        return textInput(id, label, required, minLength, maxLength, null);
+    }
+
+    public String textInput(String id, String label, boolean required, int minLength, int maxLength, String placeholder) {
         id = this.id + "-" + id;
-        buildComponents.add(ActionRow.of(TextInput.small(id, label, minLength, maxLength).required(required)));
+        var textInput = TextInput.small(id, label, minLength, maxLength);
+        if (placeholder != null) {
+            textInput = textInput.placeholder(placeholder);
+        }
+        buildComponents.add(ActionRow.of(textInput.required(required)));
         return id;
     }
 
@@ -42,13 +47,13 @@ public abstract class Modal {
 
     public Publisher<Void> checkConditions(DeferrableInteractionEvent event) {
         if (ModFestPlatform.activeEvent == null && this.requiresActiveEvent()) {
-            return event.reply("An error has occurred: There is no active ModFest event.");
+            return event.reply("An error has occurred: There is no active ModFest event.").withEphemeral(true);
         }
         return null;
     }
 
     public Publisher<Void> openModal(DeferrableInteractionEvent event) {
-        var builder = InteractionPresentModalSpec.builder().title(this.command).customId(this.id);
+        var builder = InteractionPresentModalSpec.builder().title(this.title).customId(this.id);
         for (LayoutComponent component : this.buildComponents) {
             builder.addComponent(component);
         }

@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import discord4j.core.DiscordClient;
 import discord4j.core.event.domain.guild.MemberJoinEvent;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
+import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.event.domain.interaction.ModalSubmitInteractionEvent;
 import discord4j.core.event.domain.lifecycle.ReadyEvent;
@@ -85,13 +86,15 @@ public class ModFestPlatform {
                         .and(gateway.on(MemberJoinEvent.class, Events.ON_MEMEBER_JOIN))
                         .and(gateway.on(ChatInputInteractionEvent.class, Events.ON_CHAT_INPUT_INTERACTION))
                         .and(gateway.on(ButtonInteractionEvent.class, Events.ON_BUTTON_INTERACTION))
-                        .and(gateway.on(ModalSubmitInteractionEvent.class, Events.ON_MODAL_SUBMIT)))
+                        .and(gateway.on(ModalSubmitInteractionEvent.class, Events.ON_MODAL_SUBMIT))
+                        .and(gateway.on(ChatInputAutoCompleteEvent.class, Events.ON_CHAT_AUTOCOMPLETE))
+                )
                 .block();
 
         ModFestLog.close();
     }
 
-    private static Context json(Context ctx, Object object) {
-        return ctx.json(object).contentType("application/json;charset=utf-8");
+    private static void json(Context ctx, Object object) {
+        ctx.json(object).contentType("application/json;charset=utf-8");
     }
 }

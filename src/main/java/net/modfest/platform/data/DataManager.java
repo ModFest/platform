@@ -3,6 +3,8 @@ package net.modfest.platform.data;
 import discord4j.common.util.Snowflake;
 import discord4j.core.object.entity.Member;
 import fr.minemobs.modrinthjavalib.Modrinth;
+import fr.minemobs.modrinthjavalib.project.Project;
+import fr.minemobs.modrinthjavalib.project.version.FilesItem;
 import fr.minemobs.modrinthjavalib.user.User;
 import net.modfest.platform.log.ModFestLog;
 import net.modfest.platform.pojo.*;
@@ -33,12 +35,88 @@ public class DataManager {
         StorageManager.USERS.save();
     }
 
+    public static void addSubmission(Snowflake userId, SubmissionData newSubmission, String event) {
+        ModFestLog.debug("[DataManager] Adding new submission: %s", newSubmission.toString());
+        var existingSubmission = platformData.submissions.get(newSubmission.id);
+        if (existingSubmission != null) {
+            existingSubmission.members.add(userId.asString());
+        } else {
+            platformData.submissions.put(newSubmission.id, newSubmission);
+            platformData.events.get(event).participants.get(userId.asString()).submissions.add(newSubmission.id);
+        }
+        StorageManager.SUBMISSIONS.save();
+        StorageManager.EVENTS.save();
+    }
+
+    public static String updateSubmissionData(String submissionId) {
+        try {
+            updateSubmissionData(submissionId, Modrinth.getProject(submissionId));
+            return null;
+        } catch (IOException e) {
+            return e.getMessage();
+        }
+    }
+
+    public static String setVersion(String submissionId, String versionId) {
+        try {
+            var submission = getSubmissions().get(submissionId);
+            var version = Modrinth.getProject(submissionId).getVersion(versionId);
+            submission.versionId = versionId;
+            submission.downloadUrl = version.getFiles()
+                    .stream()
+                    .filter(FilesItem::isPrimary)
+                    .findFirst()
+                    .get().url;
+            return null;
+        } catch (IOException e) {
+            return e.getMessage();
+        }
+    }
+
+    public static void updateSubmissionData(String submissionId, Project modrinthData) {
+        var submission = getSubmissions().get(submissionId);
+        submission.slug = modrinthData.slug;
+        submission.name = modrinthData.title;
+        submission.summary = modrinthData.description;
+        submission.description = modrinthData.body;
+        submission.iconUrl = modrinthData.iconUrl;
+        var primaryGallery = modrinthData.gallery.stream()
+                .filter(item -> item.featured)
+                .findFirst();
+        primaryGallery.ifPresent(galleryItem -> submission.galleryUrl = galleryItem.url);
+        submission.sourceUrl = modrinthData.sourceUrl;
+        StorageManager.USERS.save();
+    }
+
+    public static void removeSubmission(Snowflake userId, String submissionId, String event) {
+        var submissions = platformData.events.get(event).participants.get(userId.asString()).submissions;
+        submissions.remove(submissionId);
+        platformData.submissions.get(submissionId).members.remove(userId.asString());
+        ModFestLog.debug("[DataManager] Removed submission '%s' from user '%s' for event '%s'", submissionId, userId.asString(), event);
+
+        if (platformData.events.values()
+                .stream()
+                .noneMatch(eventData -> eventData.participants.values()
+                        .stream()
+                        .anyMatch(participantData -> participantData.submissions.contains(submissionId)))) {
+            platformData.submissions.remove(submissionId);
+            ModFestLog.debug("[DataManager] Removed submission '%s' entirely because it does not exist in any event", submissionId);
+        }
+
+        StorageManager.SUBMISSIONS.save();
+        StorageManager.EVENTS.save();
+    }
+
     public static Map<String, EventData> getEvents() {
         return platformData.events;
     }
 
     public static List<EventData> getEventList() {
         return new ArrayList<>(platformData.events.values());
+    }
+
+    public static boolean hasActiveEvent() {
+        return configData.activeEvent == null || configData.activeEvent.isEmpty();
     }
 
     public static EventData getActiveEvent() {

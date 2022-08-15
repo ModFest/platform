@@ -2,6 +2,7 @@ package fr.minemobs.modrinthjavalib.project.version;
 
 import java.util.List;
 import com.google.gson.annotations.SerializedName;
+import fr.minemobs.modrinthjavalib.project.Dependency;
 
 public class Version {
 
@@ -18,7 +19,7 @@ public class Version {
 	@SerializedName("changelog_url")
 	public String changelogUrl;
 
-	public List<String> dependencies;
+	public List<Dependency> dependencies;
 	public List<String> loaders;
 
 	@SerializedName("project_id")
@@ -68,7 +69,7 @@ public class Version {
 	/**
 	 * @return A list of specific versions of projects that this version depends on
 	 */
-	public List<String> getDependencies() {
+	public List<Dependency> getDependencies() {
 		return dependencies;
 	}
 
