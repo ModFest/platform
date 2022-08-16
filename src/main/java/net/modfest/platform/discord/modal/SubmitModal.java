@@ -47,7 +47,7 @@ public class SubmitModal extends Modal {
                     modrinthProjectUrl = component.getValue().orElse("");
                 }
             }
-            var regex = Pattern.compile(".*modrinth\\.com/mod/(\\w+)/?.*");
+            var regex = Pattern.compile(".*modrinth\\.com/mod/([\\w\\-_]+)/?.*");
             var matcher = regex.matcher(modrinthProjectUrl);
 
             if (!matcher.find()) {
