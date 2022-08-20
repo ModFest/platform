@@ -9,6 +9,7 @@ public class EventData {
     public boolean oneOff;
     public boolean archived;
     public boolean published;
+    public boolean submissionsOpen;
     public String logo;
     public String backgroundColor;
     public String primaryColor;

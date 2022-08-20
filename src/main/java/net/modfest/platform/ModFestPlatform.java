@@ -5,10 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import discord4j.core.DiscordClient;
 import discord4j.core.event.domain.guild.MemberJoinEvent;
-import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
-import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent;
-import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
-import discord4j.core.event.domain.interaction.ModalSubmitInteractionEvent;
+import discord4j.core.event.domain.interaction.*;
 import discord4j.core.event.domain.lifecycle.ReadyEvent;
 import discord4j.gateway.intent.IntentSet;
 import io.javalin.Javalin;
@@ -88,6 +85,7 @@ public class ModFestPlatform {
                         .and(gateway.on(ButtonInteractionEvent.class, Events.ON_BUTTON_INTERACTION))
                         .and(gateway.on(ModalSubmitInteractionEvent.class, Events.ON_MODAL_SUBMIT))
                         .and(gateway.on(ChatInputAutoCompleteEvent.class, Events.ON_CHAT_AUTOCOMPLETE))
+                        .and(gateway.on(SelectMenuInteractionEvent.class, Events.ON_SELECT_MENU))
                 )
                 .block();
 

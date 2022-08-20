@@ -161,9 +161,13 @@ public class DataManager {
     }
 
     public static Mono<Void> unregister(Member member, String eventId) {
-        platformData.events.get(eventId).participants.remove(member.getId().asString());
-        StorageManager.EVENTS.save();
+        unregister(member.getId().asString(), eventId);
         return member.removeRole(Snowflake.of(platformData.events.get(configData.activeEvent).participantRoleId));
+    }
+
+    public static void unregister(String id, String eventId) {
+        platformData.events.get(eventId).participants.remove(id);
+        StorageManager.EVENTS.save();
     }
 
     public static boolean isRegistered(Snowflake id, String eventId) {
@@ -202,6 +206,15 @@ public class DataManager {
         user.iconUrl = modrinthData.avatarUrl;
         user.bio = modrinthData.bio;
         StorageManager.USERS.save();
+    }
+
+    public static void setSubmissions(boolean open) {
+        getActiveEvent().submissionsOpen = open;
+        StorageManager.EVENTS.save();
+    }
+
+    public static boolean areSubmissionsOpen() {
+        return getActiveEvent().submissionsOpen;
     }
 
     public static void setLogInfoChannel(Snowflake channelId) {

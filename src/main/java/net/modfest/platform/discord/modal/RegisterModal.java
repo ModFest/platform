@@ -11,8 +11,6 @@ import net.modfest.platform.pojo.UserData;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-
 public class RegisterModal extends Modal {
     public final String displayNameInput = textInput("display-name", "What name would you like on your profile?", true, 3, 24);
     public final String modrinthUsernameInput = textInput("modrinth-username", "What's your Modrinth username?", true, 3, 24);
@@ -36,6 +34,10 @@ public class RegisterModal extends Modal {
         var conditions = super.checkConditions(event);
         if (conditions != null) {
             return conditions;
+        }
+        if (ModFestPlatform.activeEvent != null && !ModFestPlatform.activeEvent.submissionsOpen) {
+            return event.reply("ModFest registrations are not currently open. Make sure @everyone mentions are enabled to be notified when the next ModFest event goes live.")
+                    .withEphemeral(true);
         }
         var member = event.getInteraction().getMember().get();
         var userId = member.getId();

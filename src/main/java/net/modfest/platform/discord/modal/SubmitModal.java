@@ -10,6 +10,9 @@ import net.modfest.platform.data.DataManager;
 import net.modfest.platform.pojo.SubmissionData;
 import org.reactivestreams.Publisher;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 public class SubmitModal extends Modal {
@@ -24,6 +27,10 @@ public class SubmitModal extends Modal {
         var conditions = super.checkConditions(event);
         if (conditions != null) {
             return conditions;
+        }
+        if (ModFestPlatform.activeEvent != null && !ModFestPlatform.activeEvent.submissionsOpen) {
+            return event.reply("ModFest registrations are not currently open. Make sure @everyone mentions are enabled to be notified when the next ModFest event goes live.")
+                    .withEphemeral(true);
         }
         var member = event.getInteraction().getMember().get();
         var userId = member.getId();
@@ -47,8 +54,15 @@ public class SubmitModal extends Modal {
                     modrinthProjectUrl = component.getValue().orElse("");
                 }
             }
-            var regex = Pattern.compile(".*modrinth\\.com/mod/([\\w\\-_]+)/?.*");
-            var matcher = regex.matcher(modrinthProjectUrl);
+
+            String decodedUrl;
+            try {
+                decodedUrl = URLDecoder.decode(modrinthProjectUrl, StandardCharsets.UTF_8.toString());
+            } catch (UnsupportedEncodingException e) {
+                return event.reply("An error has occurred decoding URL.");
+            }
+            var regex = Pattern.compile(".*modrinth\\.com/mod/([\\w!@$()`.+,\"\\-']{3,64})/?.*");
+            var matcher = regex.matcher(decodedUrl);
 
             if (!matcher.find()) {
                 return event.reply("An error has occurred: Could not parse Modrinth project URL.").withEphemeral(true);
@@ -99,7 +113,7 @@ public class SubmitModal extends Modal {
                 return event.reply("Your Modrinth project could not be found. This either means your URL was invalid or your project has not yet been approved by Modrinth moderators. Re-submit to ModFest after it has been approved.").withEphemeral(true);
             } catch (Throwable e) {
                 e.printStackTrace();
-                return event.reply("An error has occurred finding Modrinth project from URL '" + modrinthProjectUrl + "': " + e.getMessage())
+                return event.reply("An error has occurred finding Modrinth project from URL '" + decodedUrl + "': " + e.getMessage())
                         .withEphemeral(true);
             }
         }

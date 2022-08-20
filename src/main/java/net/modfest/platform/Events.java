@@ -118,6 +118,37 @@ public class Events {
                                     .updatePresence(ClientPresence.of(Status.ONLINE, ClientActivity.playing(ModFestPlatform.activeEvent.name))));
                 }
                 return event.reply("Reloaded!").withEphemeral(true);
+            } else if (event.getOption("opensubmissions").isPresent()) {
+                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/opensubmissions] Running closesubmissions command (" + member.getUsername() + "/" + member.getId()
+                        .asString() + ")");
+                if (ModFestPlatform.activeEvent == null) {
+                    return event.reply("There is no active event to open submissions for")
+                            .withEphemeral(true);
+                }
+                DataManager.setSubmissions(true);
+                return event.reply("Opened submissions for " + ModFestPlatform.activeEvent.name).withEphemeral(true);
+            } else if (event.getOption("closesubmissions").isPresent()) {
+                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/closesubmissions] Running closesubmissions command (" + member.getUsername() + "/" + member.getId()
+                        .asString() + ")");
+                if (ModFestPlatform.activeEvent == null) {
+                    return event.reply("There is no active event to close submissions for")
+                            .withEphemeral(true);
+                }
+                DataManager.setSubmissions(false);
+                List<Mono<Void>> fixRoles = DataManager.getActiveEvent().participants.entrySet()
+                        .stream()
+                        .filter(entry -> entry.getValue().submissions.isEmpty())
+                        .map(entry -> event.getClient()
+                                .getMemberById(Snowflake.of(DataManager.getGuildId()), Snowflake.of(entry.getKey()))
+                                .doOnError((throwable) -> DataManager.unregister(entry.getKey(), DataManager.getActiveEvent().id))
+                                .flatMap(participantMember -> DataManager.unregister(participantMember, DataManager.getActiveEvent().id)))
+                        .toList();
+                Mono<Void> mono = event.reply("Closed submissions for " + ModFestPlatform.activeEvent.name)
+                        .withEphemeral(true);
+                for (Publisher<?> fixRole : fixRoles) {
+                    mono = mono.and(fixRole);
+                }
+                return mono;
             } else {
                 var fixroles = event.getOption("fixroles");
                 if (fixroles.isPresent()) {
@@ -140,7 +171,7 @@ public class Events {
                                 .flatMap(channel -> channel.createMessage(MessageCreateSpec.builder()
                                         .addEmbed(EmbedCreateSpec.builder()
                                                 .title("Register for " + ModFestPlatform.activeEvent.name + "!")
-                                                .description("Registrations are now open! Click on the button below (or use the `/register` command) to register yourself for " + ModFestPlatform.activeEvent.name + ". If this is your first time registering, you will be prompted with a form to collect your preferred name, pronouns, and your Modrinth username.\n\nIf you change your mind about participating, you can use the `/unregister` command to remove yourself from " + ModFestPlatform.activeEvent.name + ".")
+                                                .description("Registrations are now open! Click on the button below (or use the `/register` command) to register yourself for " + ModFestPlatform.activeEvent.name + ". If this is your first time registering, you will be prompted with a form to collect your preferred name, pronouns, and your Modrinth username.\n\nIf you change your mind about participating, you can use the `/event unregister` command to remove yourself from " + ModFestPlatform.activeEvent.name + ".")
                                                 .build())
                                         .addComponent(ActionRow.of(registerButton))
                                         .build()))
@@ -262,8 +293,10 @@ public class Events {
                     var options = new ArrayList<SelectMenu.Option>();
                     for (int i = 0; i < Math.min(25, versions.length); i++) {
                         var version = versions[i];
+                        var versionNumber = version.getVersionNumber();
+                        var prefix = versionNumber.startsWith("v") ? "" : "v";
                         options.add(SelectMenu.Option.of(version.getName(), submissionId + "/" + version.getId())
-                                .withDescription("v" + version.getVersionNumber() + " (ID: " + version.id + ")"));
+                                .withDescription(prefix + versionNumber + " (ID: " + version.id + ")"));
                     }
                     return event.reply("Select a version of " + submission.name + ".")
                             .withComponents(ActionRow.of(SelectMenu.of("modfest-setversion-version-select-menu", options)))
@@ -334,11 +367,12 @@ public class Events {
         if (event.getCustomId().equals("modfest-setversion-version-select-menu")) {
             var option = event.getValues().get(0);
             var split = option.split("/");
-            var error = DataManager.setVersion(split[0], split[1]);
+            var version = split[1];
+            var error = DataManager.setVersion(split[0], version);
             if (error != null) {
                 return event.reply("An error occurred: " + error).withEphemeral(true);
             }
-            return event.reply("Updated version").withEphemeral(true);
+            return event.reply("Updated version to " + version).withEphemeral(true);
         }
         return Mono.empty();
     };
