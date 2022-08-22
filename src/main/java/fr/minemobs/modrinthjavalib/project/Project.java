@@ -30,7 +30,7 @@ public class Project {
 	public String bodyUrl;
 
 	@SerializedName("moderator_message")
-	public String moderatorMessage;
+	public ModeratorMessage moderatorMessage;
 
 	public int downloads;
 
@@ -155,7 +155,7 @@ public class Project {
 	 * @return A message that a moderator sent regarding the project
 	 */
 	@Nullable
-	public String getModeratorMessage() {
+	public ModeratorMessage getModeratorMessage() {
 		return moderatorMessage;
 	}
 
