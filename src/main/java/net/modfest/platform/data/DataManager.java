@@ -83,6 +83,7 @@ public class DataManager {
         var primaryGallery = modrinthData.gallery.stream().filter(item -> item.featured).findFirst();
         primaryGallery.ifPresent(galleryItem -> submission.galleryUrl = galleryItem.url);
         submission.sourceUrl = modrinthData.sourceUrl;
+        submission.modrinthUrl = "https://modrinth.com/mod/" + modrinthData.slug;
         StorageManager.SUBMISSIONS.save();
     }
 

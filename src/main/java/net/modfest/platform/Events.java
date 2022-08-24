@@ -121,7 +121,7 @@ public class Events {
             } else if (event.getOption("migrate").isPresent()) {
                 ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/migrate] Running migrate command (" + member.getUsername() + "/" + member.getId()
                         .asString() + ")");
-                StorageManager.loadAll();
+                StorageManager.USERS.load();
 
                 // Fix existing users missing ids stored
                 DataManager.getUsers().forEach((id, userData) -> {
