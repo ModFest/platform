@@ -89,7 +89,7 @@ public class RegisterModal extends Modal {
 
             try {
                 var user = Modrinth.getUser(modrinthUsername);
-                DataManager.addUserData(snowflake, new UserData(displayName, pronouns, user.getId()));
+                DataManager.addUserData(snowflake, new UserData(snowflake.asString(), displayName, pronouns, user.getId()));
                 DataManager.updateUserData(snowflake, user);
 
                 return register(event);

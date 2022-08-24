@@ -13,7 +13,8 @@ public class UserData {
     public String iconUrl;
     public List<String> badges = new ArrayList<>();
 
-    public UserData(String displayName, String pronouns, String modrinthUserId) {
+    public UserData(String id, String displayName, String pronouns, String modrinthUserId) {
+        this.id = id;
         this.displayName = displayName;
         this.pronouns = pronouns;
         this.modrinthUserId = modrinthUserId;

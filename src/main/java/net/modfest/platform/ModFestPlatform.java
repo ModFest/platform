@@ -63,14 +63,38 @@ public class ModFestPlatform {
             config.jsonMapper(new GsonMapper(GSON));
             config.enableCorsForAllOrigins();
         }).start(PORT);
-        app.get("/events", ctx -> json(ctx, DataManager.getEventList()));
+        app.get("/events", ctx -> {
+            if (ctx.queryParamMap().containsKey("map")) {
+                json(ctx, DataManager.getEvents());
+            } else {
+                json(ctx, DataManager.getEventList());
+            }
+        });
         app.get("/active_event", ctx -> json(ctx, DataManager.getActiveEvent()));
         app.get("/event/{id}", ctx -> json(ctx, DataManager.getEvents().get(ctx.pathParam("id"))));
-        app.get("/users", ctx -> json(ctx, DataManager.getUserList()));
+        app.get("/users", ctx -> {
+            if (ctx.queryParamMap().containsKey("map")) {
+                json(ctx, DataManager.getUsers());
+            } else {
+                json(ctx, DataManager.getUserList());
+            }
+        });
         app.get("/user/{id}", ctx -> json(ctx, DataManager.getUsers().get(ctx.pathParam("id"))));
-        app.get("/badges", ctx -> json(ctx, DataManager.getBadgeList()));
+        app.get("/badges", ctx -> {
+            if (ctx.queryParamMap().containsKey("map")) {
+                json(ctx, DataManager.getBadges());
+            } else {
+                json(ctx, DataManager.getBadgeList());
+            }
+        });
         app.get("/badge/{id}", ctx -> json(ctx, DataManager.getBadges().get(ctx.pathParam("id"))));
-        app.get("/submissions", ctx -> json(ctx, DataManager.getSubmissionList()));
+        app.get("/submissions", ctx -> {
+            if (ctx.queryParamMap().containsKey("map")) {
+                json(ctx, DataManager.getSubmissions());
+            } else {
+                json(ctx, DataManager.getSubmissionList());
+            }
+        });
         app.get("/submission/{id}", ctx -> json(ctx, DataManager.getSubmissions().get(ctx.pathParam("id"))));
 
         final String token = System.getenv("DISCORD_BOT_TOKEN");
@@ -85,8 +109,7 @@ public class ModFestPlatform {
                         .and(gateway.on(ButtonInteractionEvent.class, Events.ON_BUTTON_INTERACTION))
                         .and(gateway.on(ModalSubmitInteractionEvent.class, Events.ON_MODAL_SUBMIT))
                         .and(gateway.on(ChatInputAutoCompleteEvent.class, Events.ON_CHAT_AUTOCOMPLETE))
-                        .and(gateway.on(SelectMenuInteractionEvent.class, Events.ON_SELECT_MENU))
-                )
+                        .and(gateway.on(SelectMenuInteractionEvent.class, Events.ON_SELECT_MENU)))
                 .block();
 
         ModFestLog.close();

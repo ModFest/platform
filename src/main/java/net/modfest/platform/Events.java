@@ -118,6 +118,20 @@ public class Events {
                                     .updatePresence(ClientPresence.of(Status.ONLINE, ClientActivity.playing(ModFestPlatform.activeEvent.name))));
                 }
                 return event.reply("Reloaded!").withEphemeral(true);
+            } else if (event.getOption("migrate").isPresent()) {
+                ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/migrate] Running migrate command (" + member.getUsername() + "/" + member.getId()
+                        .asString() + ")");
+                StorageManager.loadAll();
+
+                // Fix existing users missing ids stored
+                DataManager.getUsers().forEach((id, userData) -> {
+                    if (userData.id == null || userData.id.isEmpty()) {
+                        userData.id = id;
+                    }
+                });
+                StorageManager.USERS.save();
+
+                return event.reply("Migration complete").withEphemeral(true);
             } else if (event.getOption("opensubmissions").isPresent()) {
                 ModFestLog.debug("[Events/ON_CHAT_INPUT_INTERACTION/admin/opensubmissions] Running closesubmissions command (" + member.getUsername() + "/" + member.getId()
                         .asString() + ")");
