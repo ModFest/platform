@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 
 public class RegisterModal extends Modal {
     public final String displayNameInput = textInput("display-name", "What name would you like on your profile?", true, 3, 24);
-    public final String modrinthUsernameInput = textInput("modrinth-username", "What's your Modrinth username?", true, 3, 24);
+    public final String modrinthUsernameInput = textInput("modrinth-username", "What's your Modrinth username?", true, 1, 24);
     public final String pronounsInput = textInput("pronouns", "What are your preferred pronouns?", false, 1, 24);
 
     public RegisterModal() {
