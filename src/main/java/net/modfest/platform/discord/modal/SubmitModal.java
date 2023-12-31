@@ -13,6 +13,7 @@ import org.reactivestreams.Publisher;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class SubmitModal extends Modal {
@@ -87,6 +88,7 @@ public class SubmitModal extends Modal {
                     galleryUrl = primaryGallery.get().url;
                 }
                 var version = project.getVersions()[0];
+                List<FilesItem> files = version.getFiles();
                 DataManager.addSubmission(snowflake, new SubmissionData(
                         project.id,
                         project.slug,
@@ -98,11 +100,11 @@ public class SubmitModal extends Modal {
                         galleryUrl,
                         "https://modrinth.com/mod/" + project.slug,
                         version.id,
-                        version.getFiles()
+                        files
                                 .stream()
                                 .filter(FilesItem::isPrimary)
                                 .findFirst()
-                                .get().url,
+                                .orElseGet(() -> files.get(0)).url,
                         project.sourceUrl
                 ), DataManager.getActiveEvent().id);
 
