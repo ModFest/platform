@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'net.modfest'
-version '0.1.0'
+version '1.0.0-alpha.1'
 
 repositories {
     mavenCentral()
@@ -16,12 +16,14 @@ repositories {
 dependencies {
     implementation 'io.javalin:javalin:4.6.4'
     implementation 'org.slf4j:slf4j-simple:1.7.32'
-    implementation 'com.google.code.gson:gson:2.9.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'commons-codec:commons-codec:1.15'
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
     implementation "com.discord4j:discord4j-core:3.2.2"
-//    implementation 'com.github.Minemobs:ModrinthJavaLib:main-SNAPSHOT'
     implementation "com.squareup.okhttp3:okhttp:4.10.0"
+
+    annotationProcessor 'io.soabase.record-builder:record-builder-processor:41'
+    compileOnly 'io.soabase.record-builder:record-builder-core:41'
 }
 
 jar {

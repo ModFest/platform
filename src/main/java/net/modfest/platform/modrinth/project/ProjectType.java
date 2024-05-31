@@ -1,4 +1,4 @@
-package fr.minemobs.modrinthjavalib.project;
+package net.modfest.platform.modrinth.project;
 
 import com.google.gson.annotations.SerializedName;
 

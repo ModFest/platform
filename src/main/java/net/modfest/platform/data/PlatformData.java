@@ -11,7 +11,7 @@ import java.util.Map;
 public class PlatformData {
     public Map<String, UserData> users = new HashMap<>();
     public Map<String, EventData> events = new HashMap<>();
-    public Map<String, SubmissionData> submissions = new HashMap<>();
+    public Map<String, Map<String, SubmissionData>> submissions = new HashMap<>();
     public Map<String, BadgeData> badges = new HashMap<>();
 
 }

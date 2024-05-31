@@ -1,8 +1,8 @@
-package fr.minemobs.modrinthjavalib.project.version;
+package net.modfest.platform.modrinth.project.version;
 
 import java.util.List;
 import com.google.gson.annotations.SerializedName;
-import fr.minemobs.modrinthjavalib.project.Dependency;
+import net.modfest.platform.modrinth.project.Dependency;
 
 public class Version {
 

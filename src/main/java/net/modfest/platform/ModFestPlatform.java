@@ -12,9 +12,12 @@ import io.javalin.Javalin;
 import io.javalin.http.Context;
 import net.modfest.platform.data.DataManager;
 import net.modfest.platform.data.StorageManager;
+import net.modfest.platform.json.EnumToLowerCaseJsonConverter;
 import net.modfest.platform.json.GsonMapper;
 import net.modfest.platform.log.ModFestLog;
 import net.modfest.platform.pojo.EventData;
+import net.modfest.platform.pojo.SubmissionData;
+import net.modfest.platform.pojo.UserData;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,10 +26,19 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ModFestPlatform {
-    public static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .setPrettyPrinting()
+    private static final GsonBuilder RAW_GSON_BUILDER = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .registerTypeHierarchyAdapter(Enum.class, new EnumToLowerCaseJsonConverter())
+            .setPrettyPrinting();
+    public static final Gson RAW_GSON = RAW_GSON_BUILDER.create();
+    public static final Gson GSON = RAW_GSON_BUILDER.registerTypeAdapter(EventData.DescriptionItem.class,
+                    new EventData.DescriptionItem.TypeAdapter())
+            .registerTypeAdapter(SubmissionData.Platform.class, new SubmissionData.Platform.TypeAdapter())
             .create();
     public static final int PORT = 7069;
     public static File workingDir;
@@ -44,8 +56,8 @@ public class ModFestPlatform {
 
         try {
             workingDir = Files.createDirectories(Path.of(System.getProperty("user.dir") + "/storage"));
-            logDir = Files.createDirectories(Path.of(System.getProperty("user.dir") + "/logs/" + FORMATTER.format(Instant.now())
-                    .replaceAll("[^a-zA-Z\\d.-]", "_")));
+            logDir = Files.createDirectories(Path.of(System.getProperty("user.dir") + "/logs/" + FORMATTER.format(
+                    Instant.now()).replaceAll("[^a-zA-Z\\d.-]", "_")));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -57,6 +69,7 @@ public class ModFestPlatform {
 
         ModFestLog.info("Current working directory is: %s", workingDir);
         StorageManager.init();
+        StorageManager.loadAll();
 
         Javalin app = Javalin.create(config -> {
             config.defaultContentType = "";
@@ -64,14 +77,13 @@ public class ModFestPlatform {
             config.enableCorsForAllOrigins();
         }).start(PORT);
         app.get("/events", ctx -> {
-            if (ctx.queryParamMap().containsKey("map")) {
-                json(ctx, DataManager.getEvents());
-            } else {
-                json(ctx, DataManager.getEventList());
-            }
+            List<EventData> events = DataManager.getEventList();
+            events.sort(Comparator.comparing(event -> event.dates().getFirst().start()));
+            json(ctx, events);
         });
-        app.get("/active_event", ctx -> json(ctx, DataManager.getActiveEvent()));
+//        app.get("/active_event", ctx -> json(ctx, DataManager.getActiveEvent()));
         app.get("/event/{id}", ctx -> json(ctx, DataManager.getEvents().get(ctx.pathParam("id"))));
+        app.get("/event/{id}/submissions", ctx -> json(ctx, DataManager.getSubmissions(ctx.pathParam("id")).values()));
         app.get("/users", ctx -> {
             if (ctx.queryParamMap().containsKey("map")) {
                 json(ctx, DataManager.getUsers());
@@ -79,7 +91,16 @@ public class ModFestPlatform {
                 json(ctx, DataManager.getUserList());
             }
         });
-        app.get("/user/{id}", ctx -> json(ctx, DataManager.getUsers().get(ctx.pathParam("id"))));
+        app.get("/user/{id}", ctx -> {
+            UserData user = DataManager.getUsers().get(ctx.pathParam("id"));
+            var json = GSON.toJsonTree(user).getAsJsonObject();
+            var submissions = DataManager.getSubmissionList()
+                    .stream()
+                    .filter(submissionData -> submissionData.authors().contains(user.id()))
+                    .toList();
+            json.add("submissions", GSON.toJsonTree(submissions));
+            json(ctx, json);
+        });
         app.get("/badges", ctx -> {
             if (ctx.queryParamMap().containsKey("map")) {
                 json(ctx, DataManager.getBadges());
@@ -89,15 +110,14 @@ public class ModFestPlatform {
         });
         app.get("/badge/{id}", ctx -> json(ctx, DataManager.getBadges().get(ctx.pathParam("id"))));
         app.get("/submissions", ctx -> {
-            if (ctx.queryParamMap().containsKey("map")) {
-                json(ctx, DataManager.getSubmissions());
-            } else {
-                json(ctx, DataManager.getSubmissionList());
-            }
+            Map<String, Map<String, SubmissionData>> submissionsMap = DataManager.getSubmissions();
+            Map<String, List<SubmissionData>> listMap = new HashMap<>();
+            submissionsMap.forEach((event, submissions) -> listMap.put(event, submissions.values().stream().toList()));
+            json(ctx, listMap);
         });
         app.get("/submission/{id}", ctx -> json(ctx, DataManager.getSubmissions().get(ctx.pathParam("id"))));
 
-        final String token = System.getenv("DISCORD_BOT_TOKEN");
+        final String token = "MTAwNzgwNzQ1MjkwMjg1ODgxMg.GfmW4a.gyEty8xfxk8fZlurbBvx7kS1TTl7sJoLItbFAk";
         DiscordClient.create(token)
                 .gateway()
                 .setEnabledIntents(IntentSet.all())

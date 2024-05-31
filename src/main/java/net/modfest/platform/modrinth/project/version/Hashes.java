@@ -1,4 +1,4 @@
-package fr.minemobs.modrinthjavalib.project.version;
+package net.modfest.platform.modrinth.project.version;
 
 public class Hashes {
 

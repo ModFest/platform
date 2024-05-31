@@ -1,8 +1,8 @@
-package fr.minemobs.modrinthjavalib.user;
+package net.modfest.platform.modrinth.user;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import fr.minemobs.modrinthjavalib.Modrinth;
+import net.modfest.platform.modrinth.Modrinth;
 
 import java.util.Date;
 

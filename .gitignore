@@ -28,3 +28,8 @@ build
 .idea
 storage
 logs
+/all.txt
+/debug.txt
+/error.txt
+/info.txt
+/lifecycle.txt

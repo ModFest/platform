@@ -1,6 +1,6 @@
-package fr.minemobs.modrinthjavalib.project;
+package net.modfest.platform.modrinth.project;
 
-import fr.minemobs.modrinthjavalib.project.version.Version;
+import net.modfest.platform.modrinth.project.version.Version;
 
 public class Dependencies {
 

@@ -1,9 +1,9 @@
-package fr.minemobs.modrinthjavalib;
+package net.modfest.platform.modrinth;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import fr.minemobs.modrinthjavalib.project.Project;
-import fr.minemobs.modrinthjavalib.user.User;
+import net.modfest.platform.modrinth.project.Project;
+import net.modfest.platform.modrinth.user.User;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 

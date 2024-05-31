@@ -2,19 +2,20 @@ package net.modfest.platform.data;
 
 import discord4j.common.util.Snowflake;
 import discord4j.core.object.entity.Member;
-import fr.minemobs.modrinthjavalib.Modrinth;
-import fr.minemobs.modrinthjavalib.project.Project;
-import fr.minemobs.modrinthjavalib.project.version.FilesItem;
-import fr.minemobs.modrinthjavalib.user.User;
 import net.modfest.platform.log.ModFestLog;
+import net.modfest.platform.modrinth.Modrinth;
+import net.modfest.platform.modrinth.project.Project;
+import net.modfest.platform.modrinth.project.version.FilesItem;
+import net.modfest.platform.modrinth.user.User;
 import net.modfest.platform.pojo.*;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class DataManager {
 
@@ -32,82 +33,100 @@ public class DataManager {
     public static void addUserData(Snowflake id, UserData data) {
         ModFestLog.debug("[DataManager] Adding new user: " + data);
         platformData.users.put(id.asString(), data);
-        StorageManager.USERS.save();
+        StorageManager.saveUser(data);
     }
 
-    public static void addSubmission(Snowflake userSnowflake, SubmissionData newSubmission, String event) {
+    public static void addSubmission(String userId, SubmissionData newSubmission, String eventId) {
         ModFestLog.debug("[DataManager] Adding new submission: %s", newSubmission.toString());
-        var existingSubmission = platformData.submissions.get(newSubmission.id);
-        var userId = userSnowflake.asString();
-        if (existingSubmission == null) {
-            platformData.submissions.put(newSubmission.id, newSubmission);
-        } else if (!existingSubmission.members.contains(userId)) {
-            existingSubmission.members.add(userId);
-        }
-        var submissions = platformData.events.get(event).participants.get(userId).submissions;
-        if (!submissions.contains(newSubmission.id)) {
-            submissions.add(newSubmission.id);
-        }
-        StorageManager.SUBMISSIONS.save();
-        StorageManager.EVENTS.save();
+
+        platformData.submissions.putIfAbsent(eventId, new HashMap<>());
+        SubmissionData submission = platformData.submissions.get(eventId)
+                .compute(newSubmission.id(), (id, existing) -> {
+                    if (existing == null) {
+                        return newSubmission;
+                    }
+
+                    existing.authors().add(userId);
+                    return existing;
+                });
+        StorageManager.saveSubmission(eventId, submission);
     }
 
     public static String updateSubmissionData(String submissionId) {
         try {
-            updateSubmissionData(submissionId, Modrinth.getProject(submissionId));
-            return null;
-        } catch (IOException e) {
+            SubmissionData submission = getSubmission(submissionId);
+            if (submission == null) {
+                throw new RuntimeException("Could not find submission with ID: " + submissionId);
+            }
+            switch (submission.platform()) {
+                case SubmissionData.Platform.Modrinth(String projectId, String versionId) ->
+                        updateSubmissionData(submission, Modrinth.getProject(projectId));
+                default -> {
+                    return null;
+                }
+            }
+            throw new RuntimeException("Submisson " + submissionId + " is not a Modrinth submission.");
+        } catch (Throwable e) {
             return e.getMessage();
         }
     }
 
     public static String setVersion(String submissionId, String versionId) {
         try {
-            var submission = getSubmissions().get(submissionId);
-            var version = Modrinth.getProject(submissionId).getVersion(versionId);
-            submission.versionId = versionId;
-            submission.downloadUrl = version.getFiles().stream().filter(FilesItem::isPrimary).findFirst().get().url;
+            var submission = getSubmission(submissionId);
+
+            switch(submission.platform()) {
+                case SubmissionData.Platform.Modrinth modrinth -> {
+                    String projectId = modrinth.projectId();
+                    var version = Modrinth.getProject(projectId).getVersion(versionId);
+                    submission.setPlatform(new SubmissionData.Platform.Modrinth(projectId, versionId));
+                    submission.setDownload(version.getFiles()
+                            .stream()
+                            .filter(FilesItem::isPrimary)
+                            .findFirst()
+                            .orElseGet(() -> version.getFiles().getFirst()).url);
+                }
+                default -> throw new RuntimeException("Submission is not associated with a Modrinth project.");
+            }
             return null;
-        } catch (IOException e) {
+        } catch (Throwable e) {
             return e.getMessage();
         }
     }
 
-    public static void updateSubmissionData(String submissionId, Project modrinthData) {
-        var submission = getSubmissions().get(submissionId);
-        submission.slug = modrinthData.slug;
-        submission.name = modrinthData.title;
-        submission.summary = modrinthData.description;
-        submission.description = modrinthData.body;
-        submission.iconUrl = modrinthData.iconUrl;
-        var primaryGallery = modrinthData.gallery.stream().filter(item -> item.featured).findFirst();
-        primaryGallery.ifPresent(galleryItem -> submission.galleryUrl = galleryItem.url);
-        submission.sourceUrl = modrinthData.sourceUrl;
-        submission.modrinthUrl = "https://modrinth.com/mod/" + modrinthData.slug;
-        StorageManager.SUBMISSIONS.save();
+    public static SubmissionData getSubmissionFromModrinthId(String modrinthId) {
+        return getSubmissionList().stream()
+                .filter(submission -> switch (submission.platform()) {
+                    case SubmissionData.Platform.Modrinth(String projectId, String versionId) ->
+                            modrinthId.equals(projectId);
+                    default -> false;
+                })
+                .findAny()
+                .orElseThrow(() -> new RuntimeException("Could not find submission with Modrinth ID: " + modrinthId));
     }
 
-    public static void removeSubmission(Snowflake userId, String submissionId, String event) {
-        var submissions = platformData.events.get(event).participants.get(userId.asString()).submissions;
-        submissions.remove(submissionId);
-        var members = platformData.submissions.get(submissionId).members;
-        members.remove(userId.asString());
-        ModFestLog.debug("[DataManager] Removed submission '%s' from user '%s' for event '%s'", submissionId, userId.asString(), event);
+    public static void updateSubmissionData(SubmissionData submission, Project modrinthProject) {
+        submission.setName(modrinthProject.title);
+        submission.setDescription(modrinthProject.description);
+        submission.setImages(modrinthProject.getImages());
+        submission.setSource(modrinthProject.sourceUrl);
+        StorageManager.saveSubmission(submission.getEvent().id(), submission);
+    }
 
-        if (members.isEmpty()) {
-            platformData.events.forEach((eventId, eventData) -> {
-                eventData.participants.forEach((participantId, participantData) -> {
-                    if (participantData.submissions.contains(submissionId)) {
-                        ModFestLog.error("WTF Error: Somehow participant " + participantId + " has submission " + submissionId + " even though it has no members.");
-                    }
-                });
-            });
+    public static void removeSubmission(Snowflake discordId, String submissionId, String eventId) {
+        SubmissionData submission = platformData.submissions.get(eventId).get(submissionId);
+        UserData user = getUser(discordId);
+        submission.authors().remove(user.id());
+        ModFestLog.debug("[DataManager] Removed submission '%s' from user '%s' for event '%s'",
+                submissionId,
+                discordId.asString(),
+                eventId);
+        if (submission.authors().isEmpty()) {
             platformData.submissions.remove(submissionId);
-            ModFestLog.debug("[DataManager] Removed submission '%s' entirely because it does not have any members", submissionId);
+            ModFestLog.debug("[DataManager] Removed submission '%s' entirely because it does not have any authors",
+                    submissionId);
         }
-
-        StorageManager.SUBMISSIONS.save();
-        StorageManager.EVENTS.save();
+        StorageManager.saveSubmission(eventId, submissionId);
     }
 
     public static Map<String, EventData> getEvents() {
@@ -142,47 +161,78 @@ public class DataManager {
         return new ArrayList<>(platformData.badges.values());
     }
 
-    public static Map<String, SubmissionData> getSubmissions() {
+    public static Map<String, Map<String, SubmissionData>> getSubmissions() {
         return platformData.submissions;
     }
 
+    public static SubmissionData getSubmission(String id) {
+        return getSubmissionList().stream()
+                .filter(submissionData -> submissionData.id().equals(id))
+                .findAny()
+                .orElseThrow(() -> new RuntimeException("Could not find submission with ID: " + id));
+    }
+
+    public static Map<String, SubmissionData> getSubmissions(String event) {
+        return platformData.submissions.getOrDefault(event, new HashMap<>());
+    }
+
     public static List<SubmissionData> getSubmissionList() {
-        return new ArrayList<>(platformData.submissions.values());
+        return platformData.submissions.values()
+                .stream()
+                .flatMap(submissionMap -> submissionMap.values().stream())
+                .toList();
     }
 
-    public static UserData getUserData(Snowflake id) {
-        return platformData.users.get(id.asString());
+    public static Map<String, SubmissionData> getSubmissionsFlat() {
+        return platformData.submissions.values()
+                .stream()
+                .flatMap(submissionMap -> submissionMap.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    public static Mono<Void> register(Member member, String eventId) {
-        platformData.events.get(eventId).participants.put(member.getId().asString(), new EventParticipantData());
-        StorageManager.EVENTS.save();
-        return member.addRole(Snowflake.of(platformData.events.get(configData.activeEvent).participantRoleId))
-                .and(member.addRole(getUserRole()));
+    public static Mono<Void> register(Member discordMember, String eventId) {
+        UserData user = getUser(discordMember);
+        user.registered().add(eventId);
+        StorageManager.saveUser(user);
+        return discordMember.addRole(Snowflake.of(platformData.events.get(eventId).discordRoles().participant()))
+                .and(discordMember.addRole(getUserRole()));
     }
 
-    public static Mono<Void> unregister(Member member, String eventId) {
-        unregister(member.getId().asString(), eventId);
-        return member.removeRole(Snowflake.of(platformData.events.get(configData.activeEvent).participantRoleId));
+    public static Mono<Void> unregister(Member discordMember, String eventId) {
+        var user = getUser(discordMember);
+        unregister(user, eventId);
+        return discordMember.removeRole(Snowflake.of(platformData.events.get(eventId).discordRoles().participant()));
     }
 
-    public static void unregister(String id, String eventId) {
-        platformData.events.get(eventId).participants.remove(id);
-        StorageManager.EVENTS.save();
+    public static UserData getUser(Member discordMember) {
+        return getUser(discordMember.getId());
     }
 
-    public static boolean isRegistered(Snowflake id, String eventId) {
-        return getEventParticipationData(id, eventId) != null;
+    public static UserData getUser(Snowflake discordId) {
+        String discordIdString = discordId.asString();
+        return platformData.users.values()
+                .stream()
+                .filter(userData -> userData.discordId().equals(discordIdString))
+                .findAny()
+                .orElseThrow(() -> new RuntimeException("Could not find user with Discord ID: " + discordIdString));
     }
 
-    public static EventParticipantData getEventParticipationData(Snowflake id, String eventId) {
-        return platformData.events.get(eventId).participants.get(id.asString());
+    public static void unregister(UserData user, String eventId) {
+        user.registered().remove(eventId);
+        StorageManager.saveUser(user);
     }
 
-    public static String updateUserData(Snowflake id) {
-        var user = getUserData(id);
+    public static boolean isRegistered(Snowflake discordId, String eventId) {
+        return getUser(discordId).registered().contains(eventId);
+    }
+
+    public static String updateUserData(Snowflake discordId) {
+        var user = getUser(discordId);
+        if (user.modrinthId() == null) {
+            throw new RuntimeException("User '" + user.id() + "' does not have modrinth ID, cannot update user data from Modrinth");
+        }
         try {
-            updateUserData(id, Modrinth.getUser(user.modrinthUserId));
+            updateUserData(discordId, Modrinth.getUser(user.modrinthId()));
             return null;
         } catch (IOException e) {
             return e.getMessage();
@@ -190,32 +240,31 @@ public class DataManager {
     }
 
     public static void updateUserDisplayName(Snowflake id, String displayName) {
-        var user = getUserData(id);
-        user.displayName = displayName;
-        StorageManager.USERS.save();
+        var user = getUser(id);
+        user.setName(displayName);
+        StorageManager.saveUser(user);
     }
 
     public static void updateUserPronouns(Snowflake id, String pronouns) {
-        var user = getUserData(id);
-        user.pronouns = pronouns;
-        StorageManager.USERS.save();
+        var user = getUser(id);
+        user.setPronouns(pronouns);
+        StorageManager.saveUser(user);
     }
 
     public static void updateUserData(Snowflake id, User modrinthData) {
-        var user = getUserData(id);
-        user.username = modrinthData.username.toLowerCase(Locale.ROOT).replace(" ", "-");
-        user.iconUrl = modrinthData.avatarUrl;
-        user.bio = modrinthData.bio;
-        StorageManager.USERS.save();
+        var user = getUser(id);
+        user.setIcon(modrinthData.avatarUrl);
+        user.setBio(modrinthData.bio);
+        StorageManager.saveUser(user);
     }
 
-    public static void setSubmissions(boolean open) {
-        getActiveEvent().submissionsOpen = open;
-        StorageManager.EVENTS.save();
+    public static void setPhase(EventData.Phase phase) {
+        getActiveEvent().setPhase(phase);
+        StorageManager.saveEvents();
     }
 
     public static boolean areSubmissionsOpen() {
-        return getActiveEvent().submissionsOpen;
+        return getActiveEvent().phase().submissionsAndRegistrationsOpen();
     }
 
     public static void setLogInfoChannel(Snowflake channelId) {

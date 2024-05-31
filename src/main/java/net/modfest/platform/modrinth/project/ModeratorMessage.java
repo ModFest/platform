@@ -1,4 +1,4 @@
-package fr.minemobs.modrinthjavalib.project;
+package net.modfest.platform.modrinth.project;
 
 public class ModeratorMessage {
     public String message;

@@ -3,21 +3,28 @@ package net.modfest.platform.discord.modal;
 import discord4j.core.event.domain.interaction.DeferrableInteractionEvent;
 import discord4j.core.event.domain.interaction.ModalSubmitInteractionEvent;
 import discord4j.core.object.component.TextInput;
-import fr.minemobs.modrinthjavalib.Modrinth;
-import fr.minemobs.modrinthjavalib.project.version.FilesItem;
 import net.modfest.platform.ModFestPlatform;
 import net.modfest.platform.data.DataManager;
+import net.modfest.platform.data.StorageManager;
+import net.modfest.platform.modrinth.Modrinth;
+import net.modfest.platform.modrinth.project.version.FilesItem;
 import net.modfest.platform.pojo.SubmissionData;
+import net.modfest.platform.pojo.UserData;
 import org.reactivestreams.Publisher;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class SubmitModal extends Modal {
-    public final String modrinthProjectUrlInput = textInput("modrinth-project-url", "Enter your project's Modrinth URL", true, 10, 128);
+    public final String modrinthProjectUrlInput = textInput("modrinth-project-url",
+            "Enter your project's Modrinth URL",
+            true,
+            10,
+            128,
+            "https://modrinth.com/mod/your-mod");
 
     public SubmitModal() {
         super("submit", "Submit a mod");
@@ -29,14 +36,17 @@ public class SubmitModal extends Modal {
         if (conditions != null) {
             return conditions;
         }
-        if (ModFestPlatform.activeEvent != null && !ModFestPlatform.activeEvent.submissionsOpen) {
-            return event.reply("ModFest registrations are not currently open. Make sure @everyone mentions are enabled to be notified when the next ModFest event goes live.")
+        if (ModFestPlatform.activeEvent != null && !ModFestPlatform.activeEvent.phase()
+                .submissionsAndRegistrationsOpen()) {
+            return event.reply(
+                            "ModFest registrations are not currently open. Make sure @everyone mentions are enabled to be notified when the next ModFest event goes live.")
                     .withEphemeral(true);
         }
         var member = event.getInteraction().getMember().get();
         var userId = member.getId();
-        if (DataManager.getUserData(userId) == null || !DataManager.isRegistered(userId, ModFestPlatform.activeEvent.id)) {
-            return event.reply("Error: You are not registered for " + ModFestPlatform.activeEvent.name)
+        if (DataManager.getUser(userId) == null || !DataManager.isRegistered(userId,
+                ModFestPlatform.activeEvent.id())) {
+            return event.reply("Error: You are not registered for " + ModFestPlatform.activeEvent.name())
                     .withEphemeral(true);
         }
         return null;
@@ -57,11 +67,7 @@ public class SubmitModal extends Modal {
             }
 
             String decodedUrl;
-            try {
-                decodedUrl = URLDecoder.decode(modrinthProjectUrl, StandardCharsets.UTF_8.toString());
-            } catch (UnsupportedEncodingException e) {
-                return event.reply("An error has occurred decoding URL.");
-            }
+            decodedUrl = URLDecoder.decode(modrinthProjectUrl, StandardCharsets.UTF_8);
             var regex = Pattern.compile(".*modrinth\\.com/mod/([\\w!@$()`.+,\"\\-']{3,64})/?.*");
             var matcher = regex.matcher(decodedUrl);
 
@@ -74,45 +80,35 @@ public class SubmitModal extends Modal {
                     .orElseThrow(() -> new NullPointerException("Member is null for SubmitModal submission."));
 
             var snowflake = member.getId();
-            if (DataManager.getUserData(snowflake) == null) {
+            if (DataManager.getUser(snowflake) == null) {
                 return event.reply("An error has occurred: you do not have a ModFest account.").withEphemeral(true);
             }
 
             try {
                 var project = Modrinth.getProject(matcher.group(1));
-                var primaryGallery = project.gallery.stream()
-                        .filter(item -> item.featured)
-                        .findFirst();
-                var galleryUrl = "";
-                if (primaryGallery.isPresent()) {
-                    galleryUrl = primaryGallery.get().url;
-                }
                 var version = project.getVersions()[0];
                 List<FilesItem> files = version.getFiles();
-                DataManager.addSubmission(snowflake, new SubmissionData(
-                        project.id,
-                        project.slug,
-                        project.title,
-                        project.description,
-                        project.body,
-                        snowflake.asString(),
-                        project.iconUrl,
-                        galleryUrl,
-                        "https://modrinth.com/mod/" + project.slug,
-                        version.id,
-                        files
-                                .stream()
-                                .filter(FilesItem::isPrimary)
-                                .findFirst()
-                                .orElseGet(() -> files.get(0)).url,
-                        project.sourceUrl
-                ), DataManager.getActiveEvent().id);
+                UserData user = DataManager.getUser(snowflake);
+                DataManager.addSubmission(user.id(),
+                        new SubmissionData(StorageManager.uniqueify(project.slug,
+                                str -> DataManager.getSubmissionsFlat().containsKey(str)),
+                                project.title,
+                                project.description,
+                                Set.of(user.id()),
+                                new SubmissionData.Platform.Modrinth(project.id, version.id),
+                                project.getImages(),
+                                files.stream().filter(FilesItem::isPrimary).findFirst().orElseGet(files::getFirst).url,
+                                project.sourceUrl,
+                                null),
+                        DataManager.getActiveEvent().id());
 
-                return event.reply("Mod '" + project.title + "' submitted successfully for " + ModFestPlatform.activeEvent.name)
+                return event.reply("Mod '" + project.title + "' submitted successfully for " + ModFestPlatform.activeEvent.name())
                         .withEphemeral(true);
             } catch (NullPointerException e) {
                 e.printStackTrace();
-                return event.reply("Your Modrinth project could not be found. This either means your URL was invalid or your project has not yet been approved by Modrinth moderators. Re-submit to ModFest after it has been approved.").withEphemeral(true);
+                return event.reply(
+                                "Your Modrinth project could not be found. This either means your URL was invalid or your project has not yet been approved by Modrinth moderators. Re-submit to ModFest after it has been approved.")
+                        .withEphemeral(true);
             } catch (Throwable e) {
                 e.printStackTrace();
                 return event.reply("An error has occurred finding Modrinth project from URL '" + decodedUrl + "': " + e.getMessage())
