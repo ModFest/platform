@@ -118,7 +118,7 @@ public class ModFestPlatform {
         });
         app.get("/submission/{id}", ctx -> json(ctx, DataManager.getSubmissions().get(ctx.pathParam("id"))));
 
-        final String token = "MTAwNzgwNzQ1MjkwMjg1ODgxMg.GfmW4a.gyEty8xfxk8fZlurbBvx7kS1TTl7sJoLItbFAk";
+        final String token = System.getenv("DISCORD_BOT_TOKEN");
         DiscordClient.create(token)
                 .gateway()
                 .setEnabledIntents(IntentSet.all())
@@ -137,6 +137,10 @@ public class ModFestPlatform {
     }
 
     private static void json(Context ctx, Object object) {
-        ctx.json(object).contentType("application/json;charset=utf-8");
+        try{
+            ctx.json(object).contentType("application/json;charset=utf-8");
+        } catch (Throwable e) {
+            ModFestLog.debug("Could not jsonify", e);
+        }
     }
 }
