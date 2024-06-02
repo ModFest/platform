@@ -263,8 +263,13 @@ public class DataManager {
         StorageManager.saveEvents();
     }
 
+    public static void setActiveEvent(String id) {
+        configData.activeEvent = id;
+        StorageManager.saveConfig();
+    }
+
     public static boolean areSubmissionsOpen() {
-        return getActiveEvent().phase().submissionsAndRegistrationsOpen();
+        return getActiveEvent().phase().canSubmit();
     }
 
     public static void setLogInfoChannel(Snowflake channelId) {

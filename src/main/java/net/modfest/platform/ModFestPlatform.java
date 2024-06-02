@@ -70,6 +70,7 @@ public class ModFestPlatform {
         ModFestLog.info("Current working directory is: %s", workingDir);
         StorageManager.init();
         StorageManager.loadAll();
+        activeEvent = DataManager.getActiveEvent();
 
         Javalin app = Javalin.create(config -> {
             config.defaultContentType = "";

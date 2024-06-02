@@ -36,10 +36,10 @@ public class SubmitModal extends Modal {
         if (conditions != null) {
             return conditions;
         }
-        if (ModFestPlatform.activeEvent != null && !ModFestPlatform.activeEvent.phase()
-                .submissionsAndRegistrationsOpen()) {
+        if (ModFestPlatform.activeEvent == null || !ModFestPlatform.activeEvent.phase()
+                .canSubmit()) {
             return event.reply(
-                            "ModFest registrations are not currently open. Make sure @everyone mentions are enabled to be notified when the next ModFest event goes live.")
+                            "ModFest submissions are not currently open. Make sure @everyone mentions are enabled to be notified when the next ModFest event goes live.")
                     .withEphemeral(true);
         }
         var member = event.getInteraction().getMember().get();

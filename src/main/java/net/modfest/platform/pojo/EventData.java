@@ -123,26 +123,32 @@ public final class EventData {
     }
 
     public enum Phase {
-        PLANNING(false, false),
-        MODDING(true, true),
-        BUILDING(false, true),
-        SHOWCASE(false, false),
-        COMPLETE(false, false);
+        PLANNING(true, false, false),
+        MODDING(true, true, true),
+        BUILDING(false, false, true),
+        SHOWCASE(false, false, false),
+        COMPLETE(false, false, false);
 
-        private final boolean submissionsOpen;
-        private final boolean updatesAllowed;
+        private final boolean registrations;
+        private final boolean submissions;
+        private final boolean updates;
 
-        Phase(boolean submissionsOpen, boolean updatesAllowed) {
-            this.submissionsOpen = submissionsOpen;
-            this.updatesAllowed = updatesAllowed;
+        Phase(boolean registrations, boolean submissions, boolean updates) {
+            this.registrations = registrations;
+            this.submissions = submissions;
+            this.updates = updates;
         }
 
-        public boolean submissionsAndRegistrationsOpen() {
-            return submissionsOpen;
+        public boolean canRegister() {
+            return registrations;
         }
 
-        public boolean updatesAllowed() {
-            return updatesAllowed;
+        public boolean canSubmit() {
+            return submissions;
+        }
+
+        public boolean canUpdateSubmission() {
+            return updates;
         }
     }
 

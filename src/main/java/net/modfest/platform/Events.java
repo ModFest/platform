@@ -137,6 +137,12 @@ public class Events {
 //                StorageManager.USERS.save();
 //
 //                return event.reply("Migration complete").withEphemeral(true);
+            } else if (event.getOption("setactiveevent").isPresent()) {
+                ModFestLog.debug(
+                        "[Events/ON_CHAT_INPUT_INTERACTION/admin/setactiveevent] Running setactiveevent command (" + member.getUsername() + "/" + member.getId()
+                                .asString() + ")");
+
+                return event.reply("Command not yet implemented").withEphemeral(true);
             } else if (event.getOption("setphasemodding").isPresent()) {
                 ModFestLog.debug(
                         "[Events/ON_CHAT_INPUT_INTERACTION/admin/setphasemodding] Running setphasemodding command (" + member.getUsername() + "/" + member.getId()
@@ -460,7 +466,8 @@ public class Events {
         String typing = event.getFocusedOption()
                 .getValue()
                 .map(ApplicationCommandInteractionOptionValue::asString)
-                .orElse("");
+                .orElse("")
+                .toLowerCase(Locale.ROOT);
 
         if (event.getCommandName().equals("event")) {
             if (event.getOption("unsubmit").isPresent() || event.getOption("setversion").isPresent() || event.getOption(
@@ -491,6 +498,16 @@ public class Events {
                     return event.respondWithSuggestions(suggestions);
                 }
             }
+        } else if (event.getCommandName().equals("admin") && event.getOption("setactiveevent").isPresent()) {
+            return event.respondWithSuggestions(new ArrayList<>(DataManager.getEventList()
+                    .stream()
+                    .filter(eventData -> typing.isEmpty() || eventData.name()
+                            .toLowerCase(Locale.ROOT)
+                            .startsWith(typing))
+                    .map(eventData -> ApplicationCommandOptionChoiceData.builder()
+                            .name(eventData.name())
+                            .value(eventData.id())
+                            .build()).toList()));
         }
 
         return Mono.empty();

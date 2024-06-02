@@ -23,29 +23,6 @@ public class StorageManager {
             DataManager.configData,
             ConfigData.class,
             data -> DataManager.configData = data);
-
-    //    @Deprecated
-//    public static final Store<Map<String, EventDataV1>> EVENTS = new Store<>("events",
-//            DataManager.platformData.eventsV1,
-//            new TypeToken<Map<String, EventDataV1>>() {
-//            }.getType(),
-//            data -> {
-//                DataManager.platformData.eventsV1 = data;
-//                ModFestPlatform.activeEvent = data.get(DataManager.configData.activeEvent);
-//            });
-//
-//    @Deprecated
-//    public static final Store<Map<String, SubmissionDataV1>> SUBMISSIONS = new Store<>("submissions",
-//            DataManager.platformData.submissionsV1,
-//            new TypeToken<Map<String, SubmissionDataV1>>() {
-//            }.getType(),
-//            data -> DataManager.platformData.submissionsV1 = data);
-//    @Deprecated
-//    public static final Store<Map<String, UserDataV1>> USERS = new Store<>("users",
-//            DataManager.platformData.usersV1,
-//            new TypeToken<Map<String, UserDataV1>>() {
-//            }.getType(),
-//            data -> DataManager.platformData.usersV1 = data);
     private static final List<Store<?>> STORES = new ArrayList<>();
 
     static {
@@ -308,6 +285,10 @@ public class StorageManager {
             Path filePath = Path.of(ModFestPlatform.workingDir.getPath(), "badges", fileName);
             saveDataToFile(filePath, badge, "[StorageManager/Badges]");
         });
+    }
+
+    public static void saveConfig() {
+        CONFIG.save();
     }
 
     private static <T> void saveDataToFile(Path file, T data, String logPrefix) {

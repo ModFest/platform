@@ -3,8 +3,8 @@ package net.modfest.platform.pojo;
 import com.google.gson.annotations.SerializedName;
 import net.modfest.platform.data.DataManager;
 
+import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 public final class UserData {
@@ -45,6 +45,10 @@ public final class UserData {
         this.icon = icon;
         this.badges = badges;
         this.registered = registered;
+
+        if (this.registered == null) {
+            this.registered = new HashSet<>();
+        }
     }
 
     public List<SubmissionData> getSubmissions() {
@@ -93,7 +97,7 @@ public final class UserData {
     }
 
     public Set<String> registered() {
-        return registered;
+        return registered != null ? registered : new HashSet<>();
     }
 
     public void setId(String id) {
@@ -133,33 +137,10 @@ public final class UserData {
     }
 
     public void setRegistered(Set<String> registered) {
+        if (registered == null) {
+            registered = new HashSet<>();
+        }
         this.registered = registered;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj == null || obj.getClass() != this.getClass()) {
-            return false;
-        }
-        var that = (UserData) obj;
-        return Objects.equals(this.id, that.id) &&
-                Objects.equals(this.slug, that.slug) &&
-                Objects.equals(this.name, that.name) &&
-                Objects.equals(this.pronouns, that.pronouns) &&
-                Objects.equals(this.modrinthId, that.modrinthId) &&
-                Objects.equals(this.discordId, that.discordId) &&
-                Objects.equals(this.bio, that.bio) &&
-                Objects.equals(this.icon, that.icon) &&
-                Objects.equals(this.badges, that.badges) &&
-                Objects.equals(this.registered, that.registered);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, slug, name, pronouns, modrinthId, discordId, bio, icon, badges, registered);
     }
 
     @Override

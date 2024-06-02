@@ -39,8 +39,8 @@ public class RegisterModal extends Modal {
         if (conditions != null) {
             return conditions;
         }
-        if (ModFestPlatform.activeEvent != null && !ModFestPlatform.activeEvent.phase()
-                .submissionsAndRegistrationsOpen()) {
+        if (ModFestPlatform.activeEvent == null || !ModFestPlatform.activeEvent.phase()
+                .canRegister()) {
             return event.reply(
                             "ModFest registrations are not currently open. Make sure @everyone mentions are enabled to be notified when the next ModFest event goes live.")
                     .withEphemeral(true);
