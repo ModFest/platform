@@ -16,7 +16,7 @@ public class RegisterModal extends Modal {
     public final String displayNameInput = textInput("display-name",
             "What name would you like on your profile?",
             true,
-            3,
+            2,
             24);
     public final String modrinthUsernameInput = textInput("modrinth-slug", "What's your Modrinth slug?", true, 1, 24);
     public final String pronounsInput = textInput("pronouns", "What are your preferred pronouns?", false, 1, 24);
