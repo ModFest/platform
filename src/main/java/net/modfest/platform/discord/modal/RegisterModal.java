@@ -18,7 +18,7 @@ public class RegisterModal extends Modal {
             true,
             2,
             24);
-    public final String modrinthUsernameInput = textInput("modrinth-slug", "What's your Modrinth slug?", true, 1, 24);
+    public final String modrinthUsernameInput = textInput("modrinth-slug", "What's your Modrinth username?", true, 1, 24);
     public final String pronounsInput = textInput("pronouns", "What are your preferred pronouns?", false, 1, 24);
 
     public RegisterModal() {
@@ -66,7 +66,7 @@ public class RegisterModal extends Modal {
             return event.reply("An error has occurred: There is no active ModFest event.").withEphemeral(true);
         } else {
             String displayName = "";
-            String modrinthUsername = "";
+            String modrinthSlug = "";
             String pronouns = "";
 
             for (TextInput component : event.getComponents(TextInput.class)) {
@@ -76,7 +76,7 @@ public class RegisterModal extends Modal {
                 } else if (pronounsInput.equals(customId)) {
                     pronouns = component.getValue().orElse("");
                 } else if (modrinthUsernameInput.equals(customId)) {
-                    modrinthUsername = component.getValue().orElse("");
+                    modrinthSlug = component.getValue().orElse("");
                 }
             }
 
@@ -94,7 +94,8 @@ public class RegisterModal extends Modal {
             }
 
             try {
-                var modrinthUser = Modrinth.getUser(modrinthUsername);
+                var modrinthUser = Modrinth.getUser(modrinthSlug);
+                var modrinthUsername = modrinthUser.username;
                 DataManager.addUserData(snowflake,
                         new UserData(StorageManager.uniqueify(modrinthUsername,
                                 str -> DataManager.getUsers().containsKey(str)),
@@ -115,7 +116,7 @@ public class RegisterModal extends Modal {
                 return register(event);
             } catch (Throwable e) {
                 e.printStackTrace();
-                return event.reply("An error has occurred finding Modrinth user '" + modrinthUsername + "': " + e.getMessage())
+                return event.reply("An error has occurred finding Modrinth user '" + modrinthSlug + "': " + e.getMessage())
                         .withEphemeral(true);
             }
         }
