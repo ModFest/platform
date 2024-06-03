@@ -75,7 +75,7 @@ public class DataManager {
         try {
             var submission = getSubmission(submissionId);
 
-            switch(submission.platform()) {
+            switch (submission.platform()) {
                 case SubmissionData.Platform.Modrinth modrinth -> {
                     String projectId = modrinth.projectId();
                     var version = Modrinth.getProject(projectId).getVersion(versionId);
@@ -214,7 +214,7 @@ public class DataManager {
                 .stream()
                 .filter(userData -> userData.discordId().equals(discordIdString))
                 .findAny()
-                .orElseThrow(() -> new RuntimeException("Could not find user with Discord ID: " + discordIdString));
+                .orElse(null);
     }
 
     public static void unregister(UserData user, String eventId) {
