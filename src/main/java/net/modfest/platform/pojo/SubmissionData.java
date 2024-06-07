@@ -29,7 +29,8 @@ public final class SubmissionData {
                           Images images,
                           String download,
                           String source,
-                          Awards awards) {
+                          Awards awards,
+                          String event) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -39,6 +40,7 @@ public final class SubmissionData {
         this.download = download;
         this.source = source;
         this.awards = awards;
+        this.event = event;
     }
 
     public enum PlatformType {
@@ -53,7 +55,6 @@ public final class SubmissionData {
             this.type = type;
         }
     }
-
 
 
     public interface Platform {

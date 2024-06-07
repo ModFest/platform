@@ -26,14 +26,12 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ModFestPlatform {
     private static final GsonBuilder RAW_GSON_BUILDER = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .registerTypeHierarchyAdapter(Enum.class, new EnumToLowerCaseJsonConverter())
+            .registerTypeAdapter(Date.class, new CustomDateDeserializer())
             .setPrettyPrinting();
     public static final Gson RAW_GSON = RAW_GSON_BUILDER.create();
     public static final Gson GSON = RAW_GSON_BUILDER.registerTypeAdapter(EventData.DescriptionItem.class,

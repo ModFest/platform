@@ -97,7 +97,10 @@ public final class UserData {
     }
 
     public Set<String> registered() {
-        return registered != null ? registered : new HashSet<>();
+        if(registered == null) {
+            registered = new HashSet<>();
+        }
+        return registered;
     }
 
     public void setId(String id) {

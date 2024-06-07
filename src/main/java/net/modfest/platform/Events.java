@@ -365,7 +365,7 @@ public class Events {
                                                 submissionId + "/" + version.getId())
                                         .withDescription(prefix + versionNumber + " (ID: " + version.id + ")"));
                             }
-                            return event.reply("Select a version of " + submission + ".")
+                            return event.reply("Select a version of " + submission.name() + ".")
                                     .withComponents(ActionRow.of(SelectMenu.of("modfest-setversion-version-select-menu",
                                             options)))
                                     .withEphemeral(true);
@@ -481,7 +481,11 @@ public class Events {
 
                     user.getSubmissions()
                             .stream()
-                            .filter(submission -> submission.getEvent().id().equals(ModFestPlatform.activeEvent.id()))
+                            .filter(submission -> {
+                                EventData activeEvent = ModFestPlatform.activeEvent;
+                                return submission.getEvent().id().equals(activeEvent.id()) && activeEvent.phase()
+                                        .canUpdateSubmission();
+                            })
                             .forEach(submission -> {
                                 if (typing.isEmpty() || submission.name()
                                         .toLowerCase(Locale.ROOT)

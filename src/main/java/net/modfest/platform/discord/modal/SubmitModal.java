@@ -46,7 +46,7 @@ public class SubmitModal extends Modal {
         var userId = member.getId();
         if (DataManager.getUser(userId) == null || !DataManager.isRegistered(userId,
                 ModFestPlatform.activeEvent.id())) {
-            return event.reply("Error: You are not registered for " + ModFestPlatform.activeEvent.name())
+            return event.reply("Error: You are not registered for " + ModFestPlatform.activeEvent.name() + ", run /register first!")
                     .withEphemeral(true);
         }
         return null;
@@ -99,7 +99,7 @@ public class SubmitModal extends Modal {
                                 project.getImages(),
                                 files.stream().filter(FilesItem::isPrimary).findFirst().orElseGet(files::getFirst).url,
                                 project.sourceUrl,
-                                null),
+                                null, ModFestPlatform.activeEvent.id()),
                         DataManager.getActiveEvent().id());
 
                 return event.reply("Mod '" + project.title + "' submitted successfully for " + ModFestPlatform.activeEvent.name())

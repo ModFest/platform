@@ -4,7 +4,6 @@ public class ConfigData {
     public String guild = "";
     public String userRoleId = "";
     public String activeEvent = "";
-
     public String logLifecycleChannelId = "";
     public String logInfoChannelId = "";
     public String logDebugChannelId = "";

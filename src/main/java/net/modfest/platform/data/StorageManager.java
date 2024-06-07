@@ -57,6 +57,9 @@ public class StorageManager {
         loadBadges();
         loadSubmissions();
 
+        ModFestPlatform.activeEvent = DataManager.getActiveEvent();
+        System.out.println("Active event: " + DataManager.platformData.events);
+
         // Migrate/fix legacy data
 //        var users = DataManager.getUsers();
 //        DataManager.getSubmissions().values().forEach(submissions -> submissions.values().forEach(submission -> {
