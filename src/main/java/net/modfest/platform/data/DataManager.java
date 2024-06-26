@@ -56,13 +56,12 @@ public class DataManager {
                 throw new RuntimeException("Could not find submission with ID: " + submissionId);
             }
             switch (submission.platform()) {
-                case SubmissionData.Platform.Modrinth(String projectId, String versionId) ->
-                        updateSubmissionData(submission, Modrinth.getProject(projectId));
-                default -> {
+                case SubmissionData.Platform.Modrinth(String projectId, String versionId) -> {
+                    updateSubmissionData(submission, Modrinth.getProject(projectId));
                     return null;
                 }
+                default -> throw new RuntimeException("Submisson " + submissionId + " is not a Modrinth submission.");
             }
-            throw new RuntimeException("Submisson " + submissionId + " is not a Modrinth submission.");
         } catch (Throwable e) {
             return e.getMessage();
         }
@@ -78,10 +77,10 @@ public class DataManager {
                     var version = Modrinth.getProject(projectId).getVersion(versionId);
                     submission.setPlatform(new SubmissionData.Platform.Modrinth(projectId, versionId));
                     submission.setDownload(version.getFiles()
-                            .stream()
-                            .filter(FilesItem::isPrimary)
-                            .findFirst()
-                            .orElseGet(() -> version.getFiles().getFirst()).url);
+                                                   .stream()
+                                                   .filter(FilesItem::isPrimary)
+                                                   .findFirst()
+                                                   .orElseGet(() -> version.getFiles().getFirst()).url);
                 }
                 default -> throw new RuntimeException("Submission is not associated with a Modrinth project.");
             }
@@ -94,8 +93,7 @@ public class DataManager {
     public static SubmissionData getSubmissionFromModrinthId(String modrinthId) {
         return getSubmissionList().stream()
                 .filter(submission -> switch (submission.platform()) {
-                    case SubmissionData.Platform.Modrinth(String projectId, String versionId) ->
-                            modrinthId.equals(projectId);
+                    case SubmissionData.Platform.Modrinth(String projectId, String versionId) -> modrinthId.equals(projectId);
                     default -> false;
                 })
                 .findAny()
@@ -117,13 +115,15 @@ public class DataManager {
         authors.remove(user.id());
         submission.setAuthors(authors);
         ModFestLog.debug("[DataManager] Removed submission '%s' from user '%s' for event '%s'",
-                submissionId,
-                discordId.asString(),
-                eventId);
+                         submissionId,
+                         discordId.asString(),
+                         eventId
+        );
         if (submission.authors().isEmpty()) {
             platformData.submissions.remove(submissionId);
             ModFestLog.debug("[DataManager] Removed submission '%s' entirely because it does not have any authors",
-                    submissionId);
+                             submissionId
+            );
         }
         StorageManager.saveSubmission(eventId, submissionId);
     }
