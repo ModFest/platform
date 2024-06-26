@@ -11,10 +11,7 @@ import net.modfest.platform.pojo.*;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DataManager {
@@ -116,7 +113,9 @@ public class DataManager {
     public static void removeSubmission(Snowflake discordId, String submissionId, String eventId) {
         SubmissionData submission = platformData.submissions.get(eventId).get(submissionId);
         UserData user = getUser(discordId);
-        submission.authors().remove(user.id());
+        Set<String> authors = new HashSet<>(submission.authors());
+        authors.remove(user.id());
+        submission.setAuthors(authors);
         ModFestLog.debug("[DataManager] Removed submission '%s' from user '%s' for event '%s'",
                 submissionId,
                 discordId.asString(),
