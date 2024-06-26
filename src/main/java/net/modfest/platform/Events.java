@@ -401,7 +401,7 @@ public class Events {
                         }
                         default -> throw new RuntimeException("Submission does not have associated Modrinth project.");
                     }
-                } catch (IOException e) {
+                } catch (Exception e) {
                     ModFestLog.error("[Events/event/setversion] Error fetching version data from Modrinth: ", e);
                     return event.reply("Error fetching version data from Modrinth: " + e.getMessage())
                             .withEphemeral(true);

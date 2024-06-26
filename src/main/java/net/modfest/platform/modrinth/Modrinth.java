@@ -25,12 +25,12 @@ public class Modrinth {
 
     public Modrinth(String apiKey, boolean stagingAPI) {
         this.client = new OkHttpClient.Builder().addInterceptor(chain ->
-                chain.proceed(
-                        chain.request()
-                                .newBuilder()
-                                .header("User-Agent", "ModFest Platform")
-                                .build()
-                )
+                                                                        chain.proceed(
+                                                                                chain.request()
+                                                                                        .newBuilder()
+                                                                                        .header("User-Agent", "ModFest Platform")
+                                                                                        .build()
+                                                                        )
         ).build();
         this.logger = Logger.getLogger("ModFest/ModrinthLib");
         this.apiKey = apiKey;
@@ -38,7 +38,7 @@ public class Modrinth {
         baseURL = stagingAPI ? "https://staging-api.modrinth.com/v2/" : "https://api.modrinth.com/v2/";
     }
 
-    public static Project getProject(String id) throws IOException {
+    public static Project getProject(String id) throws Exception {
         return MODRINTH._getProject(id);
     }
 
@@ -46,10 +46,13 @@ public class Modrinth {
         return MODRINTH._getUser(id);
     }
 
-    public Project _getProject(String id) throws IOException {
+    public Project _getProject(String id) throws Exception {
         Project project = gson.fromJson(client.newCall(new Request.Builder().url(baseURL + "project/" + id)
-                .addHeader("Authorization", apiKey)
-                .build()).execute().body().string(), Project.class);
+                                                               .addHeader("Authorization", apiKey)
+                                                               .build()).execute().body().string(), Project.class);
+        if (project == null) {
+            throw new RuntimeException("Project '" + id + "' cannot be found on Modrinth");
+        }
         project.setModrinth(this);
         return project;
     }
