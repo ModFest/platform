@@ -200,11 +200,13 @@ public class Events {
                                 .stream()
                                 .noneMatch(submission -> submission.getEvent().id().equals(eventId));
                         if (didNotSubmit) {
-                            mono = mono.and(event.getClient()
-                                    .getMemberById(Snowflake.of(DataManager.getGuildId()),
-                                            Snowflake.of(user.discordId()))
-                                    .doOnError((throwable) -> DataManager.unregister(user, eventId))
-                                    .flatMap(participantMember -> DataManager.unregister(participantMember, eventId)));
+                            if (!user.discordId().isEmpty()) {
+                                mono = mono.and(event.getClient()
+                                        .getMemberById(Snowflake.of(DataManager.getGuildId()),
+                                                Snowflake.of(user.discordId()))
+                                        .doOnError((throwable) -> DataManager.unregister(user, eventId))
+                                        .flatMap(participantMember -> DataManager.unregister(participantMember, eventId)));
+                            }
                         }
                     }
                 }
