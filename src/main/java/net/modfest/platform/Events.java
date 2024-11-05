@@ -207,8 +207,8 @@ public class Events {
                                                     Snowflake.of(user.discordId()))
                                             .doOnError((throwable) -> DataManager.unregister(user, eventId))
                                             .flatMap(participantMember -> DataManager.unregister(participantMember, eventId)));
-                                } catch (Throwable e) {
-                                    e.printStacktrace();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
                                 }
                             }
                         }
