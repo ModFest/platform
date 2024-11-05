@@ -201,11 +201,15 @@ public class Events {
                                 .noneMatch(submission -> submission.getEvent().id().equals(eventId));
                         if (didNotSubmit) {
                             if (!user.discordId().isEmpty()) {
-                                mono = mono.and(event.getClient()
-                                        .getMemberById(Snowflake.of(DataManager.getGuildId()),
-                                                Snowflake.of(user.discordId()))
-                                        .doOnError((throwable) -> DataManager.unregister(user, eventId))
-                                        .flatMap(participantMember -> DataManager.unregister(participantMember, eventId)));
+                                try {
+                                    mono = mono.and(event.getClient()
+                                            .getMemberById(Snowflake.of(DataManager.getGuildId()),
+                                                    Snowflake.of(user.discordId()))
+                                            .doOnError((throwable) -> DataManager.unregister(user, eventId))
+                                            .flatMap(participantMember -> DataManager.unregister(participantMember, eventId)));
+                                } catch (Throwable e) {
+                                    e.printStacktrace();
+                                }
                             }
                         }
                     }
