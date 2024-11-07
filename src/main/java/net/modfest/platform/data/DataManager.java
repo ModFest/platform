@@ -84,6 +84,7 @@ public class DataManager {
                 }
                 default -> throw new RuntimeException("Submission is not associated with a Modrinth project.");
             }
+            StorageManager.saveSubmission(submission.getEvent().id(), submission);
             return null;
         } catch (Throwable e) {
             return e.getMessage();
