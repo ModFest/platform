@@ -13,6 +13,12 @@ java {
 	}
 }
 
+configurations {
+	compileOnly {
+		extendsFrom(configurations.annotationProcessor.get())
+	}
+}
+
 repositories {
 	mavenCentral()
 }
@@ -22,8 +28,18 @@ dependencies {
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	compileOnly("org.projectlombok:lombok")
+	annotationProcessor("org.projectlombok:lombok")
 }
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+tasks.bootRun {
+	environment(
+		"PLATFORM_DATADIR" to project.rootDir.resolve("run/data"),
+		"PLATFORM_LOGSDIR" to project.rootDir.resolve("run/logs")
+	)
 }
