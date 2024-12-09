@@ -1,92 +1,22 @@
 package net.modfest.platform.pojo;
 
 import com.google.gson.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 
-@AllArgsConstructor
-public final class EventData implements Data {
-    private final String id;
-    private final String name;
-    private final String subtitle;
-    private final Phase phase;
-
-    private final List<DateRange> dates;
-
-    private final Images images;
-    private final Colors colors;
-    private final DiscordRoles discordRoles;
-    private final String mod_loader;
-    private final String minecraft_version;
-    private final String modpack;
-    private final List<DescriptionItem<?>> description;
-
-    public String id() {
-        return id;
-    }
-
-    public String name() {
-        return name;
-    }
-
-    public String subtitle() {
-        return subtitle;
-    }
-
-    public Phase phase() {
-        return phase;
-    }
-
-    public List<DateRange> dates() {
-        return dates;
-    }
-
-    public Images images() {
-        return images;
-    }
-
-    public Colors colors() {
-        return colors;
-    }
-
-    public DiscordRoles discordRoles() {
-        return discordRoles;
-    }
-
-    public String mod_loader() {
-        return mod_loader;
-    }
-
-    public String minecraft_version() {
-        return minecraft_version;
-    }
-
-    public List<DescriptionItem<?>> description() {
-        return description;
-    }
-
-    @Override
-    public String toString() {
-        return "EventData{" +
-                "id='" + id + '\'' +
-                ", subtitle='" + subtitle + '\'' +
-                ", name='" + name + '\'' +
-                ", phase=" + phase +
-                ", dates=" + dates +
-                ", images=" + images +
-                ", colors=" + colors +
-                ", discordRoles=" + discordRoles +
-                ", mod_loader='" + mod_loader + '\'' +
-                ", minecraft_version='" + minecraft_version + '\'' +
-                ", modpack='" + modpack + '\'' +
-                ", description=" + description +
-                '}';
-    }
-
+public record EventData(String id,
+                        String name,
+                        String subtitle,
+                        Phase phase,
+                        List<DateRange> dates,
+                        Images images,
+                        Colors colors,
+                        DiscordRoles discordRoles,
+                        String mod_loader,
+                        String minecraft_version,
+                        String modpack,
+                        List<DescriptionItem<?>> description) implements Data {
     public enum Type {
         MODFEST,
         BLANKETCON
@@ -138,6 +68,7 @@ public final class EventData implements Data {
             public static final String KEY = "markdown";
         }
 
+        // TODO
         public static class TypeAdapter implements JsonSerializer<DescriptionItem<?>>, JsonDeserializer<DescriptionItem<?>> {
             public static final String TYPE_KEY = "type";
 
