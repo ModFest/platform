@@ -3,7 +3,6 @@ package net.modfest.platform.repository;
 import com.google.gson.Gson;
 import jakarta.annotation.PostConstruct;
 import lombok.Locked;
-import net.modfest.platform.configuration.GsonConfig;
 import net.modfest.platform.configuration.PlatformConfig;
 import net.modfest.platform.pojo.Data;
 import org.springframework.beans.factory.annotation.Autowired;

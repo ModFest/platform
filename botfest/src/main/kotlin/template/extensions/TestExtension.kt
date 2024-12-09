@@ -1,9 +1,6 @@
 package template.extensions
 
-import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
-import dev.kordex.core.commands.converters.impl.defaultingString
-import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.i18n.withContext
