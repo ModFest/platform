@@ -54,6 +54,10 @@ class Platform(var base_url: String) {
 	suspend fun getEventIds(): List<String> {
 		return getEvents().map { e -> e.id }
 	}
+
+	suspend fun reloadFromFilesystem() {
+		client.post("/meta/reload").unwrapErrors()
+	}
 }
 
 private suspend fun HttpResponse.unwrapErrors(): HttpResponse {

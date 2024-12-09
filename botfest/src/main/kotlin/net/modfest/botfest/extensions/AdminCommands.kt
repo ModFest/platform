@@ -51,6 +51,22 @@ class AdminCommands : Extension(), KordExKoinComponent {
 					}
 				}
 			}
+
+			// Reload files from filesystem / invalidate the in-memory cache
+			ephemeralSubCommand {
+				name = Translations.Commands.Reload.name
+				description = Translations.Commands.Reload.description
+
+				action {
+					platform.reloadFromFilesystem()
+
+					respond {
+						content = Translations.Commands.Reload.response
+							.withContext(this@action)
+							.translateNamed()
+					}
+				}
+			}
 		}
 	}
 
