@@ -1,5 +1,6 @@
 package net.modfest.botfest.extensions
 
+import dev.kord.rest.builder.message.embed
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
@@ -10,12 +11,16 @@ import net.modfest.botfest.MAIN_GUILD_ID
 import net.modfest.botfest.Platform
 import net.modfest.botfest.format
 import net.modfest.botfest.i18n.Translations
+import java.time.Instant
+import java.util.Date
 
 /**
  * Provides various debugging commands
  */
 class DebugExtension : Extension(), KordExKoinComponent {
 	override val name = "debug"
+	// Store the moment that this extension was created, so we can tell approximately when the bot was started
+	val startupTime = Date.from(Instant.now())
 
 	override suspend fun setup() {
 		val platform = bot.getKoin().get<Platform>()
@@ -31,15 +36,31 @@ class DebugExtension : Extension(), KordExKoinComponent {
 				description = Translations.Commands.Health.description
 
 				action {
-					val health = platform.getHealth()
+					val botHealth = Translations.Commands.Health.Response.bot
+						.withContext(this@action)
+						.translateNamed(
+							"startupTime" to startupTime.format(TimestampType.RelativeTime)
+						)
 
-					respond {
-						content = Translations.Commands.Health.response
+					var platformHealth: String;
+					try {
+						val platformHealthInfo = platform.getHealth()
+						platformHealth = Translations.Commands.Health.Response.platform
 							.withContext(this@action)
 							.translateNamed(
-								"health" to health.health,
-								"startupTime" to health.runningSince.format(TimestampType.RelativeTime)
+								"health" to platformHealthInfo.health,
+								"startupTime" to platformHealthInfo.runningSince.format(TimestampType.RelativeTime)
 							)
+					} catch (e: Throwable) {
+						platformHealth = Translations.Commands.Health.Response.platformError
+							.withContext(this@action)
+							.translateNamed(
+								"error" to "${e.javaClass.name}: ${e.message}",
+							)
+					}
+
+					respond {
+						content = botHealth + "\n" + platformHealth
 					}
 				}
 			}
