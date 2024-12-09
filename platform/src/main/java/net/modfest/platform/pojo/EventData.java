@@ -1,22 +1,23 @@
 package net.modfest.platform.pojo;
 
 import com.google.gson.*;
+import org.springframework.lang.NonNull;
 
 import java.util.Date;
 import java.util.List;
 
-public record EventData(String id,
-                        String name,
-                        String subtitle,
-                        Phase phase,
-                        List<DateRange> dates,
-                        Images images,
-                        Colors colors,
-                        DiscordRoles discordRoles,
-                        String mod_loader,
-                        String minecraft_version,
-                        String modpack,
-                        List<DescriptionItem<?>> description) implements Data {
+public record EventData(@NonNull String id,
+                        @NonNull String name,
+                        @NonNull String subtitle,
+                        @NonNull Phase phase,
+                        @NonNull List<DateRange> dates,
+                        @NonNull Images images,
+                        @NonNull Colors colors,
+                        @NonNull DiscordRoles discordRoles,
+                        @NonNull String mod_loader,
+                        @NonNull String minecraft_version,
+                        @NonNull String modpack,
+                        @NonNull List<DescriptionItem<?>> description) implements Data {
     public enum Type {
         MODFEST,
         BLANKETCON

@@ -7,6 +7,8 @@ import net.modfest.platform.configuration.GsonConfig;
 import net.modfest.platform.configuration.PlatformConfig;
 import net.modfest.platform.pojo.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -78,7 +80,7 @@ public abstract class AbstractJsonRepository<T extends Data> {
 	}
 
 	@Locked.Write("dataLock")
-	public void save(T data) throws IOException {
+	public void save(@NonNull T data) throws IOException {
 		// Write data to json file first
 		validateId(data.id());
 		var file = this.root.resolve(data.id()+".json");
@@ -89,16 +91,18 @@ public abstract class AbstractJsonRepository<T extends Data> {
 	}
 
 	@Locked.Read("dataLock")
+	@Nullable
 	public T get(String id) {
 		return this.store.get(id);
 	}
 
 	@Locked.Read("dataLock")
+	@NonNull
 	public Iterable<T> getAll() {
 		return this.store.values();
 	}
 
-	private void validateId(String id) throws IllegalArgumentException {
+	private void validateId(@NonNull String id) throws IllegalArgumentException {
 		if (id.contains("/")) {
 			throw new IllegalArgumentException("Illegal character '/' in id: '"+id+"'");
 		}
