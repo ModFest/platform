@@ -1,11 +1,10 @@
 package net.modfest.platform.configuration;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.NonNull;
+import org.springframework.validation.annotation.Validated;
 
 import java.nio.file.Path;
 
@@ -14,7 +13,10 @@ import java.nio.file.Path;
 @ConfigurationProperties(prefix = "platform")
 @Getter
 @AllArgsConstructor
+@Validated
 public class PlatformConfig {
+	@NonNull
 	private Path datadir;
-	private Path filedir;
+	@NonNull
+	private Path logdir;
 }
