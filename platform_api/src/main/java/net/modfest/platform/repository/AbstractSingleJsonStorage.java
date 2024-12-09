@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import jakarta.annotation.PostConstruct;
 import lombok.Locked;
 import net.modfest.platform.configuration.PlatformConfig;
+import net.modfest.platform.misc.JsonUtil;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -25,7 +26,7 @@ public abstract class AbstractSingleJsonStorage<T> {
 	@Autowired
 	private PlatformConfig platformConfig;
 	@Autowired
-	private Gson gson;
+	private JsonUtil jsonUtil;
 
 	private final String name;
 	private final Class<T> clazz;
@@ -68,16 +69,14 @@ public abstract class AbstractSingleJsonStorage<T> {
 			writeToFile(defaultData);
 		}
 
-		this.cache = this.gson.fromJson(new FileReader(this.file.toFile()), this.clazz);
+		this.cache = this.jsonUtil.readJson(this.file, this.clazz);
 		if (this.cache == null) {
 			throw new RuntimeException(this.file+" appears broken! Please fix, or delete it and let it regenerate");
 		}
 	}
 
 	private void writeToFile(T data) throws IOException {
-		var writer = new FileWriter(this.file.toFile());
-		this.gson.toJson(data, writer);
-		writer.close();
+		this.jsonUtil.writeJson(this.file, data);
 	}
 
 	@Locked.Read("dataLock")

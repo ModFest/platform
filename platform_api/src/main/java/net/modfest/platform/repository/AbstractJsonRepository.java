@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import jakarta.annotation.PostConstruct;
 import lombok.Locked;
 import net.modfest.platform.configuration.PlatformConfig;
+import net.modfest.platform.misc.JsonUtil;
 import net.modfest.platform.pojo.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
@@ -35,7 +36,7 @@ public abstract class AbstractJsonRepository<T extends Data> {
 	@Autowired
 	private PlatformConfig platformConfig;
 	@Autowired
-	private Gson gson;
+	private JsonUtil jsonUtil;
 
 	private final String name;
 	private final Class<T> clazz;
@@ -70,7 +71,7 @@ public abstract class AbstractJsonRepository<T extends Data> {
 		this.store.clear();
 		try (var files = Files.newDirectoryStream(this.root)) {
 			for (var file : files) {
-				T data = this.gson.fromJson(new FileReader(file.toFile()), this.clazz);
+				T data = this.jsonUtil.readJson(file, this.clazz);
 				if (this.store.containsKey(data.id())) {
 					throw new RuntimeException("Duplicate id in "+this.name+" repository! '"+data.id()+"' appeared twice! Please resolve this manually");
 				}
@@ -84,9 +85,7 @@ public abstract class AbstractJsonRepository<T extends Data> {
 		// Write data to json file first
 		validateId(data.id());
 		var file = this.root.resolve(data.id()+".json");
-		var writer = new FileWriter(file.toFile());
-		this.gson.toJson(data, writer);
-		writer.close();
+		this.jsonUtil.writeJson(file, data);
 
 		// Keep our in-memory storage up to date
 		this.store.put(data.id(), data);
