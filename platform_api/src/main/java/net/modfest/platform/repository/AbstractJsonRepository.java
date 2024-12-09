@@ -83,7 +83,9 @@ public abstract class AbstractJsonRepository<T extends Data> {
 		// Write data to json file first
 		validateId(data.id());
 		var file = this.root.resolve(data.id()+".json");
-		this.gson.toJson(data, new FileWriter(file.toFile()));
+		var writer = new FileWriter(file.toFile());
+		this.gson.toJson(data, writer);
+		writer.close();
 
 		// Keep our in-memory storage up to date
 		this.store.put(data.id(), data);
@@ -91,8 +93,13 @@ public abstract class AbstractJsonRepository<T extends Data> {
 
 	@Locked.Read("dataLock")
 	@Nullable
-	public T get(String id) {
+	public T get(@NonNull String id) {
 		return this.store.get(id);
+	}
+
+	@Locked.Read("dataLock")
+	public boolean contains(@NonNull String id) {
+		return this.store.containsKey(id);
 	}
 
 	@Locked.Read("dataLock")

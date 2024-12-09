@@ -15,6 +15,7 @@ public class GsonCommon {
 			.registerTypeHierarchyAdapter(Enum.class, new EnumToLowerCaseJsonConverter())
 			.registerTypeAdapter(Date.class, new CustomDateDeserializer())
 			.setPrettyPrinting()
+			.serializeNulls()
 			.setLenient();
 	}
 }
