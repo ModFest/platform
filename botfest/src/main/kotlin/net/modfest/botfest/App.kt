@@ -4,7 +4,8 @@ import dev.kord.common.entity.Snowflake
 import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.utils.env
 import dev.kordex.core.utils.loadModule
-import net.modfest.botfest.extensions.DebugExtension
+import net.modfest.botfest.extensions.AdminCommands
+import net.modfest.botfest.extensions.DebugCommands
 
 val PLATFORM_API_URL = env("PLATFORM_API")
 
@@ -31,7 +32,8 @@ suspend fun main() {
 		}
 
 		extensions {
-			add(::DebugExtension)
+			add(::DebugCommands)
+			add(::AdminCommands)
 		}
 	}
 

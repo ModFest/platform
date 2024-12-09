@@ -1,6 +1,5 @@
 package net.modfest.botfest.extensions
 
-import dev.kord.rest.builder.message.embed
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
@@ -17,7 +16,7 @@ import java.util.Date
 /**
  * Provides various debugging commands
  */
-class DebugExtension : Extension(), KordExKoinComponent {
+class DebugCommands : Extension(), KordExKoinComponent {
 	override val name = "debug"
 	// Store the moment that this extension was created, so we can tell approximately when the bot was started
 	val startupTime = Date.from(Instant.now())
@@ -31,6 +30,7 @@ class DebugExtension : Extension(), KordExKoinComponent {
 
 			guild(MAIN_GUILD_ID)  // Otherwise it will take up to an hour to update
 
+			// View health of the bot and platform
 			ephemeralSubCommand {
 				name = Translations.Commands.Health.name
 				description = Translations.Commands.Health.description
@@ -61,6 +61,24 @@ class DebugExtension : Extension(), KordExKoinComponent {
 
 					respond {
 						content = botHealth + "\n" + platformHealth
+					}
+				}
+			}
+
+			// Get current event
+			ephemeralSubCommand {
+				name = Translations.Commands.Getcurrentevent.name
+				description = Translations.Commands.Getcurrentevent.description
+
+				action {
+					val data = platform.getCurrentEvent()
+
+					respond {
+						content = Translations.Commands.Getcurrentevent.response
+							.withContext(this@action)
+							.translateNamed(
+								"event" to data.event
+							)
 					}
 				}
 			}

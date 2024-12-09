@@ -7,6 +7,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.serialization.gson.*
 import net.modfest.platform.gson.GsonCommon
+import net.modfest.platform.pojo.CurrentEventData
 import net.modfest.platform.pojo.HealthData
 
 class Platform(var base_url: String) {
@@ -27,5 +28,15 @@ class Platform(var base_url: String) {
 
 	suspend fun getHealth(): HealthData {
 		return client.get("/health").body()
+	}
+
+	suspend fun getCurrentEvent(): CurrentEventData {
+		return client.get("/currentevent/").body()
+	}
+
+	suspend fun setCurrentEvent(data: CurrentEventData) {
+		client.get("/currentevent/") {
+			setBody(data)
+		}
 	}
 }
