@@ -10,3 +10,4 @@ pluginManagement {
 
 rootProject.name = "platform"
 include("platform_api")
+include("botfest")
