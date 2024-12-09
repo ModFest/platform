@@ -1,16 +1,19 @@
 package net.modfest.platform.pojo;
 
 import com.google.gson.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+@AllArgsConstructor
 public final class EventData implements Data {
     private final String id;
     private final String name;
     private final String subtitle;
-    private Phase phase;
+    private final Phase phase;
 
     private final List<DateRange> dates;
 
@@ -21,31 +24,6 @@ public final class EventData implements Data {
     private final String minecraft_version;
     private final String modpack;
     private final List<DescriptionItem<?>> description;
-
-    public EventData(String id,
-					 String name,
-					 String subtitle,
-					 Phase phase,
-					 List<DateRange> dates,
-					 Images images,
-					 Colors colors,
-					 DiscordRoles discordRoles,
-					 String mod_loader,
-					 String minecraft_version,
-					 String modpack) {
-        this.id = id;
-        this.name = name;
-        this.subtitle = subtitle;
-        this.phase = phase;
-        this.dates = dates;
-        this.images = images;
-        this.colors = colors;
-        this.discordRoles = discordRoles;
-        this.mod_loader = mod_loader;
-        this.minecraft_version = minecraft_version;
-        this.modpack = modpack;
-        this.description = new LinkedList<>();
-    }
 
     public String id() {
         return id;
@@ -89,10 +67,6 @@ public final class EventData implements Data {
 
     public List<DescriptionItem<?>> description() {
         return description;
-    }
-
-    public void setPhase(Phase phase) {
-        this.phase = phase;
     }
 
     @Override

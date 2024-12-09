@@ -18,6 +18,12 @@ import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+/**
+ * A simple repository for storing data as json.
+ * Stored data is identified by a string, and can be queried by that string.
+ * Data will be stored under a subdirectory of the configured {@link PlatformConfig#getDatadir()}.
+ * @param <T> The type of the data stored. This class should be immutable!!
+ */
 public abstract class AbstractJsonRepository<T extends Data> {
 	@Autowired
 	private PlatformConfig platformConfig;
