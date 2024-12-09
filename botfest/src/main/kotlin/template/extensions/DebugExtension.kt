@@ -11,8 +11,11 @@ import template.Platform
 import template.format
 import template.i18n.Translations
 
-class TestExtension : Extension(), KordExKoinComponent {
-	override val name = "test"
+/**
+ * Provides various debugging commands
+ */
+class DebugExtension : Extension(), KordExKoinComponent {
+	override val name = "debug"
 
 	override suspend fun setup() {
 		val platform = bot.getKoin().get<Platform>()
