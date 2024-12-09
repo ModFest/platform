@@ -1,6 +1,5 @@
 package net.modfest.platform.repository;
 
-import com.google.gson.Gson;
 import jakarta.annotation.PostConstruct;
 import lombok.Locked;
 import net.modfest.platform.configuration.PlatformConfig;
@@ -10,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

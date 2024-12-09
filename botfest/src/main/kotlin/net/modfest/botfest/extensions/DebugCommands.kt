@@ -11,7 +11,7 @@ import net.modfest.botfest.Platform
 import net.modfest.botfest.format
 import net.modfest.botfest.i18n.Translations
 import java.time.Instant
-import java.util.Date
+import java.util.*
 
 /**
  * Provides various debugging commands

@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
