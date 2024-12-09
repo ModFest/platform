@@ -1,8 +1,11 @@
+# Env vars might contain sensitive data
+.env
 /run/
 storage
 logs
 
 .gradle
+.kotlin/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
