@@ -12,7 +12,7 @@ plugins {
 	alias(libs.plugins.kordex.plugin)
 }
 
-group = "template"
+group = "net.modfest"
 version = "1.0-SNAPSHOT"
 
 dependencies {
@@ -42,12 +42,12 @@ kordEx {
 		// See https://docs.kordex.dev/data-collection.html
 		dataCollection(DataCollection.Standard)
 
-		mainClass = "template.AppKt"
+		mainClass = "net.modfest.botfest.AppKt"
 	}
 
 	i18n {
-		classPackage = "template.i18n"
-		translationBundle = "template.strings"
+		classPackage = "net.modfest.botfest.i18n"
+		translationBundle = "botfest.strings"
 	}
 }
 

@@ -1,10 +1,10 @@
-package template
+package net.modfest.botfest
 
 import dev.kord.common.entity.Snowflake
 import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.utils.env
 import dev.kordex.core.utils.loadModule
-import template.extensions.DebugExtension
+import net.modfest.botfest.extensions.DebugExtension
 
 val PLATFORM_API_URL = env("PLATFORM_API")
 

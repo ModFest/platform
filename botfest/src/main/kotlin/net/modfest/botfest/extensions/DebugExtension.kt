@@ -1,4 +1,4 @@
-package template.extensions
+package net.modfest.botfest.extensions
 
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.extensions.Extension
@@ -6,10 +6,10 @@ import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.i18n.withContext
 import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.time.TimestampType
-import template.MAIN_GUILD_ID
-import template.Platform
-import template.format
-import template.i18n.Translations
+import net.modfest.botfest.MAIN_GUILD_ID
+import net.modfest.botfest.Platform
+import net.modfest.botfest.format
+import net.modfest.botfest.i18n.Translations
 
 /**
  * Provides various debugging commands

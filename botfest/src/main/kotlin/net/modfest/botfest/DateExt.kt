@@ -1,4 +1,4 @@
-package template
+package net.modfest.botfest
 
 import dev.kordex.core.time.TimestampType
 import java.util.*

@@ -1,4 +1,4 @@
-package template
+package net.modfest.botfest
 
 import io.ktor.client.*
 import io.ktor.client.call.*
