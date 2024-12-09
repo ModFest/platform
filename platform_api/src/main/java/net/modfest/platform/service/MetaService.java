@@ -18,10 +18,14 @@ public class MetaService {
 	/**
 	 * Invalidates the in-memory cache from all {@link net.modfest.platform.repository.DiskCachedData} objects
 	 * known to Spring
+	 * @return the number of stores that were reloaded. (Just so you can tell it did something)
 	 */
-	public void reloadFromDisk() throws IOException {
+	public int reloadFromDisk() throws IOException {
+		int i = 0;
 		for (DiskCachedData diskBasedRepository : diskBasedRepositories) {
 			diskBasedRepository.readFromFilesystem();
+			i++;
 		}
+		return i;
 	}
 }

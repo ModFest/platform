@@ -38,9 +38,11 @@ public class MetaController {
 		);
 	}
 
-	@Operation(summary = "Causes the platform to reload its caches from disk")
+	@Operation(summary = "Causes the platform to reload its caches from disk",
+		description = "Invalidates the in-memory caches. Will return the amount of stores that were invalidated " +
+			"(as an indication that it's doing something)")
 	@PostMapping("/meta/reload")
-	public void reload() throws IOException {
-		metaService.reloadFromDisk();
+	public int reload() throws IOException {
+		return metaService.reloadFromDisk();
 	}
 }

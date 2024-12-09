@@ -58,12 +58,14 @@ class AdminCommands : Extension(), KordExKoinComponent {
 				description = Translations.Commands.Reload.description
 
 				action {
-					platform.reloadFromFilesystem()
+					val res = platform.reloadFromFilesystem()
 
 					respond {
 						content = Translations.Commands.Reload.response
 							.withContext(this@action)
-							.translateNamed()
+							.translateNamed(
+								"numStores" to res
+							)
 					}
 				}
 			}

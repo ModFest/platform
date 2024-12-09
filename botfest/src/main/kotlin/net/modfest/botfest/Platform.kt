@@ -55,8 +55,8 @@ class Platform(var base_url: String) {
 		return getEvents().map { e -> e.id }
 	}
 
-	suspend fun reloadFromFilesystem() {
-		client.post("/meta/reload").unwrapErrors()
+	suspend fun reloadFromFilesystem(): Int {
+		return client.post("/meta/reload").unwrapErrors().body()
 	}
 }
 
