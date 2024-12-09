@@ -1,5 +1,6 @@
 package net.modfest.platform.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,16 +16,30 @@ public class WelcomeController {
 	 * but useful to see if the api is running correctly.
 	 */
 	@GetMapping("/")
-	public WelcomeReport welcome() {
+	public WelcomeReport welcome(HttpServletRequest request) {
 		return new WelcomeReport(
 			"Welcome wanderer!",
-			"https://github.com/ModFest/platform",
+			getDocumentationUrl(request),
 			applicationContext.getId(),
 			applicationContext.getEnvironment().getProperty("build.version")
 		);
 	}
 
-	public record WelcomeReport(String about, String source, String name, String version) {
+	private String getDocumentationUrl(HttpServletRequest request) {
+		var baseUrl = request.getRequestURL().toString();
+		var swaggerPath = applicationContext.getEnvironment().getProperty("springdoc.swagger-ui.path");
+		if (swaggerPath == null) {
+			swaggerPath = "/swagger-ui/index.html"; // Default location
+		}
+		// Remove double slash
+		if (baseUrl.endsWith("/") && swaggerPath.startsWith("/")) {
+			return baseUrl.substring(0, baseUrl.length()-1) + swaggerPath;
+		} else {
+			return baseUrl + swaggerPath;
+		}
+	}
+
+	public record WelcomeReport(String about, String documentation, String name, String version) {
 
 	}
 }
