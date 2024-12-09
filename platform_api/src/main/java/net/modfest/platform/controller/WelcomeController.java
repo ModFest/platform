@@ -12,8 +12,8 @@ public class WelcomeController {
 	private ApplicationContext applicationContext;
 
 	/**
-	 * A simple route over at the root of the domain. Not really part of the api,
-	 * but useful to see if the api is running correctly.
+	 * A simple route over at the root of the domain, just for people who stumble
+	 * upon this api and quickly want some info on what it is and how it works
 	 */
 	@GetMapping("/")
 	public WelcomeReport welcome(HttpServletRequest request) {
