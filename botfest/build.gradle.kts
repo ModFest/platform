@@ -27,9 +27,14 @@ dependencies {
 	implementation(libs.logback)
 	implementation(libs.logback.groovy)
 	implementation(libs.logging)
+
+	implementation("io.ktor:ktor-serialization-gson:3.0.2")
+	implementation(project(":common"))
 }
 
 kordEx {
+	jvmTarget = 21
+
 	// https://github.com/gradle/gradle/issues/31383
 	kordExVersion = libs.versions.kordex.asProvider()
 

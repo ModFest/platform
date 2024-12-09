@@ -33,7 +33,7 @@ dependencies {
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
 
-	implementation("com.google.code.gson:gson")
+	implementation(project(":common"))
 }
 
 tasks.processResources {

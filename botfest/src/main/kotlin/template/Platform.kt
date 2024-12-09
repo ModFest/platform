@@ -6,9 +6,10 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.serialization.gson.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
+import net.modfest.platform.gson.GsonCommon
 
 class Platform(var base_url: String) {
 	val client = HttpClient() {
@@ -20,11 +21,9 @@ class Platform(var base_url: String) {
 		}
 
 		install(ContentNegotiation) {
-			json(
-				json = Json {
-					ignoreUnknownKeys = true
-				}
-			)
+			gson {
+				GsonCommon.configureGson(this)
+			}
 		}
 	}
 
@@ -35,9 +34,5 @@ class Platform(var base_url: String) {
 	suspend fun getVersion(): String {
 		val response: DefaultResponse = client.get("/").body()
 		return response.version;
-	}
-
-	@Serializable
-	class DefaultResponse(val version: String) {
 	}
 }

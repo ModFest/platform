@@ -1,7 +1,7 @@
 package net.modfest.platform.pojo;
 
 import com.google.gson.*;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Date;
 import java.util.List;

@@ -9,5 +9,7 @@ pluginManagement {
 }
 
 rootProject.name = "platform"
-include("platform_api")
+
 include("botfest")
+include("common")
+include("platform_api")

@@ -7,9 +7,6 @@ import dev.kord.common.entity.Snowflake
 import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.utils.env
 import dev.kordex.core.utils.loadModule
-import io.ktor.http.*
-import org.koin.core.module.dsl.singleOf
-import org.koin.dsl.module
 import template.extensions.TestExtension
 
 val PLATFORM_API_URL = env("PLATFORM_API")
