@@ -10,6 +10,7 @@ import io.ktor.serialization.gson.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
 import net.modfest.platform.gson.GsonCommon
+import net.modfest.platform.pojo.HealthData
 
 class Platform(var base_url: String) {
 	val client = HttpClient() {
@@ -27,12 +28,7 @@ class Platform(var base_url: String) {
 		}
 	}
 
-	fun healthCheck() {
-
-	}
-
-	suspend fun getVersion(): String {
-		val response: DefaultResponse = client.get("/").body()
-		return response.version;
+	suspend fun getHealth(): HealthData {
+		return client.get("/health").body()
 	}
 }

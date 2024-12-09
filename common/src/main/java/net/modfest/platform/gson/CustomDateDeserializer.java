@@ -18,13 +18,13 @@ public class CustomDateDeserializer implements JsonDeserializer<Date> {
     public Date deserialize(JsonElement json,
                             Type typeOfT,
                             JsonDeserializationContext context) throws JsonParseException {
-        try {
+		try {
             String dateString = json.getAsString();
             return DateFormat.getDateInstance().parse(dateString);
         } catch (ParseException ignored) {
             String dateString = json.getAsString();
             try {
-                return dateFormat.parse(dateString);
+                return dateFormat.parse(dateString.replace(" ", " "));
             } catch (ParseException e) {
                 throw new JsonParseException("Error parsing date: " + json.getAsString(), e);
             }

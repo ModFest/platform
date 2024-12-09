@@ -25,12 +25,13 @@ class TestExtension : Extension(), KordExKoinComponent {
 			guild(MAIN_GUILD_ID)  // Otherwise it will take up to an hour to update
 
 			action {
-				val version = platform.getVersion()
+				val health = platform.getHealth()
 				respond {
 					content = Translations.Commands.Health.response
 						.withContext(this@action)
 						.translateNamed(
-							"version" to version,
+							"health" to health.health,
+							"startupTime" to health.runningSince
 						)
 				}
 			}
