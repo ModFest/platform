@@ -93,3 +93,15 @@ docker {
 		)
 	}
 }
+
+// Configure platform when running in dev mode
+// For some reason we need to do this roundabout way, because the dev task is not yet added
+tasks.whenTaskAdded {
+	if (this.name == "dev") {
+		var address = project.property("dev.api.address")
+		var port = project.property("dev.api.port")
+		(this as JavaExec).environment(
+			"PLATFORM_API" to "${address}:${port}"
+		)
+	}
+}

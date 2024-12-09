@@ -6,13 +6,15 @@ package template
 import dev.kord.common.entity.Snowflake
 import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.utils.env
+import io.ktor.http.*
 import template.extensions.TestExtension
 
+val PLATFORM_API_URL = parseUrl(env("PLATFORM_API"))
 val TEST_SERVER_ID = Snowflake(
 	env("TEST_SERVER").toLong()  // Get the test server ID from the env vars or a .env file
 )
 
-private val TOKEN = env("TOKEN")   // Get the bot' token from the env vars or a .env file
+private val TOKEN = env("TOKEN")   // Get the bot's token from the env vars or a .env file
 
 suspend fun main() {
 	val bot = ExtensibleBot(TOKEN) {

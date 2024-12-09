@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "net.modfest"
-version = "0.0.1-SNAPSHOT"
+version = project.property("version")!!
 
 java {
 	toolchain {
@@ -36,6 +36,14 @@ dependencies {
 	implementation("com.google.code.gson:gson")
 }
 
+tasks.processResources {
+	filesMatching("application.properties") {
+		expand(
+			"build_version" to version
+		)
+	}
+}
+
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
@@ -43,6 +51,8 @@ tasks.withType<Test> {
 tasks.bootRun {
 	environment(
 		"PLATFORM_DATADIR" to project.rootDir.resolve("run/data"),
-		"PLATFORM_LOGSDIR" to project.rootDir.resolve("run/logs")
+		"PLATFORM_LOGSDIR" to project.rootDir.resolve("run/logs"),
+		"SERVER_ADDRESS" to project.property("dev.api.address"),
+		"SERVER_PORT" to project.property("dev.api.port"),
 	)
 }
