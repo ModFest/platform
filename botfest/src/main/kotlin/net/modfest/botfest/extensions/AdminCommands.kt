@@ -1,37 +1,28 @@
 package net.modfest.botfest.extensions
 
 import dev.kordex.core.commands.Arguments
-import dev.kordex.core.commands.application.slash.converters.impl.enumChoice
-import dev.kordex.core.commands.application.slash.converters.impl.stringChoice
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
-import dev.kordex.core.commands.converters.impl.defaultingString
+import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.commands.converters.impl.string
-import dev.kordex.core.commands.converters.impl.stringList
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
-import dev.kordex.core.i18n.toKey
-import dev.kordex.core.i18n.types.Key
 import dev.kordex.core.i18n.withContext
 import dev.kordex.core.koin.KordExKoinComponent
-import dev.kordex.core.time.TimestampType
 import dev.kordex.core.utils.suggestStringCollection
 import net.modfest.botfest.MAIN_GUILD_ID
 import net.modfest.botfest.Platform
-import net.modfest.botfest.format
 import net.modfest.botfest.i18n.Translations
-import java.time.Instant
-import java.util.ArrayList
-import java.util.Date
+import net.modfest.platform.pojo.CurrentEventData
+import org.koin.core.component.inject
 
 /**
  * Provides privileged commands that should be available only to admins
  */
 class AdminCommands : Extension(), KordExKoinComponent {
 	override val name = "admin"
+	val platform: Platform by inject()
 
 	override suspend fun setup() {
-		val platform = bot.getKoin().get<Platform>()
-
 		ephemeralSlashCommand {
 			name = Translations.Commands.Group.Admin.name
 			description = Translations.Commands.Group.Admin.description
@@ -44,19 +35,32 @@ class AdminCommands : Extension(), KordExKoinComponent {
 				description = Translations.Commands.Setcurrentevent.description
 
 				action {
-					// TODO allow bot to set current event
+					platform.setCurrentEvent(
+						CurrentEventData(arguments.event)
+					)
+
+					// Refetch just to be sure
+					var curEvent = platform.getCurrentEvent()
+
+					respond {
+						content = Translations.Commands.Setcurrentevent.response
+							.withContext(this@action)
+							.translateNamed(
+								"event" to curEvent.event
+							)
+					}
 				}
 			}
 		}
 	}
 
 	inner class SetCurrentEventArgs : Arguments() {
-		val event by string {
+		val event by optionalString {
 			name = Translations.Arguments.Event.name
 			description = Translations.Arguments.Event.description
 
 			autoComplete {
-				suggestStringCollection(arrayOf("A", "B").toList())
+				suggestStringCollection(platform.getEventIds())
 			}
 		}
 	}

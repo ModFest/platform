@@ -35,6 +35,14 @@ suspend fun main() {
 			add(::DebugCommands)
 			add(::AdminCommands)
 		}
+
+		errorResponse { message, type ->
+			// Forward the messages for bad requests to the user
+			// TODO this is not translation-friendly
+			if (type.error is HttpBadRequest) {
+				content = "ERROR: ${type.error.message}"
+			}
+		}
 	}
 
 	bot.start()
