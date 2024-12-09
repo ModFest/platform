@@ -8,11 +8,10 @@ import dev.kordex.core.components.components
 import dev.kordex.core.components.publicButton
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.chatCommand
-import dev.kordex.core.extensions.event
 import dev.kordex.core.extensions.publicSlashCommand
 import dev.kordex.core.i18n.withContext
 import dev.kordex.core.utils.respond
-import template.TEST_SERVER_ID
+import template.MAIN_GUILD_ID
 import template.i18n.Translations
 
 class TestExtension : Extension() {
@@ -74,7 +73,7 @@ class TestExtension : Extension() {
 			name = Translations.Commands.Slap.name
 			description = Translations.Commands.Slap.description
 
-			guild(TEST_SERVER_ID)  // Otherwise it will take up to an hour to update
+			guild(MAIN_GUILD_ID)  // Otherwise it will take up to an hour to update
 
 			action {
 				// Don't slap ourselves on request, slap the requester!
