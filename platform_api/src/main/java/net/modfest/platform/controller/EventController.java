@@ -11,13 +11,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Iterator;
+
 @RestController
-@RequestMapping(value = "/event", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class EventController {
 	@Autowired
 	private EventRepository repository;
 
-	@GetMapping("/{id}")
+	@GetMapping("/events")
+	public Iterator<EventData> getAllEvents() {
+		return repository.getAll().iterator();
+	}
+
+	@GetMapping("/event/{id}")
 	public EventData getEvent(@PathVariable String id) {
 		var event = repository.get(id);
 		if (event == null) {

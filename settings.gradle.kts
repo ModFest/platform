@@ -1,2 +1,2 @@
-rootProject.name = "platform_plus"
-include("platform")
+rootProject.name = "platform"
+include("platform_api")
