@@ -39,19 +39,4 @@ class TestExtension : Extension(), KordExKoinComponent {
 			}
 		}
 	}
-
-	inner class SlapSlashArgs : Arguments() {
-		val target by user {
-			name = Translations.Arguments.Target.name
-			description = Translations.Arguments.Target.description
-		}
-
-		// Slash commands don't support coalescing strings
-		val weapon by defaultingString {
-			name = Translations.Arguments.Weapon.name
-
-			defaultValue = "🐟"
-			description = Translations.Arguments.Weapon.description
-		}
-	}
 }
