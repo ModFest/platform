@@ -55,8 +55,10 @@ detekt {
 // Automatically generate a Dockerfile. Set `generateOnBuild` to `false` if you'd prefer to manually run the
 // `createDockerfile` task instead of having it run whenever you build.
 docker {
-	// Create the Dockerfile in the root folder.
-	file(rootProject.file("Dockerfile"))
+	generateOnBuild = false
+
+	// Create the Dockerfile in build/Dockerfile.
+	file(project.file("build/Dockerfile"))
 
 	commands {
 		// Each function (aside from comment/emptyLine) corresponds to a Dockerfile instruction.
