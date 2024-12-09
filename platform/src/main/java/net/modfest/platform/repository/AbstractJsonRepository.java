@@ -22,6 +22,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * A simple repository for storing data as json.
  * Stored data is identified by a string, and can be queried by that string.
  * Data will be stored under a subdirectory of the configured {@link PlatformConfig#getDatadir()}.
+ * This class is designed for low-volume, but easily auditable storage. Consider creating something else for
+ * any purpose that needs more than about a thousand entries.
+ *
+ * @apiNote Please ensure {@link T} is an immutable class. ({@link lombok.With} is an easy way to do mutation).
+ * 			This ensures that the data inside the cache can't be modified without it being properly saved to disk.
  * @param <T> The type of the data stored. This class should be immutable!!
  */
 public abstract class AbstractJsonRepository<T extends Data> {
