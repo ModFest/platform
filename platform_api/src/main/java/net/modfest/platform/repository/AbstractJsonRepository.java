@@ -32,7 +32,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * 			This ensures that the data inside the cache can't be modified without it being properly saved to disk.
  * @param <T> The type of the data stored. This class should be immutable!!
  */
-public abstract class AbstractJsonRepository<T extends Data> {
+public abstract class AbstractJsonRepository<T extends Data> implements DiskCachedData {
 	@Autowired
 	private PlatformConfig platformConfig;
 	@Autowired
@@ -63,6 +63,7 @@ public abstract class AbstractJsonRepository<T extends Data> {
 		readFromFilesystem();
 	}
 
+	@Override
 	@Locked.Write("dataLock") // Write lock, because we're writing to our internal store
 	public void readFromFilesystem() throws IOException {
 		if (!Files.exists(this.root)) {

@@ -3,10 +3,13 @@ package net.modfest.platform.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.PostConstruct;
 import net.modfest.platform.pojo.HealthData;
+import net.modfest.platform.service.MetaService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 
@@ -15,6 +18,8 @@ import java.util.Date;
  */
 @RestController
 public class MetaController {
+	@Autowired
+	private MetaService metaService;
 	private Date startupTime;
 
 	@PostConstruct
@@ -31,5 +36,11 @@ public class MetaController {
 			"\uD83D\uDC4D", // thumbs-up emoji
 			this.startupTime
 		);
+	}
+
+	@Operation(summary = "Causes the platform to reload its caches from disk")
+	@PostMapping("/meta/reload")
+	public void reload() throws IOException {
+		metaService.reloadFromDisk();
 	}
 }

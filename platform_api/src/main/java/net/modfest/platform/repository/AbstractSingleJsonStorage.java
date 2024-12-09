@@ -1,6 +1,5 @@
 package net.modfest.platform.repository;
 
-import com.google.gson.Gson;
 import jakarta.annotation.PostConstruct;
 import lombok.Locked;
 import net.modfest.platform.configuration.PlatformConfig;
@@ -8,8 +7,6 @@ import net.modfest.platform.misc.JsonUtil;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,7 +19,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * 			This ensures that the data inside the cache can't be modified without it being properly saved to disk.
  * @param <T> The type of the data. Should be immutable!!
  */
-public abstract class AbstractSingleJsonStorage<T> {
+public abstract class AbstractSingleJsonStorage<T> implements DiskCachedData {
 	@Autowired
 	private PlatformConfig platformConfig;
 	@Autowired
@@ -59,6 +56,7 @@ public abstract class AbstractSingleJsonStorage<T> {
 	// Write lock, because we're writing to our internal store, and we might be writing if
 	// the data is not initialized yet
 	@Locked.Write("dataLock")
+	@Override
 	public void readFromFilesystem() throws IOException {
 		if (!Files.exists(this.file)) {
 			Files.createDirectories(this.file.getParent());
