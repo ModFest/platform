@@ -20,7 +20,7 @@ public class HealthController {
 	@GetMapping("/health")
 	public HealthData getHealth() {
 		return new HealthData(
-			"\uD83D\uDC4D",
+			"\uD83D\uDC4D", // thumbs-up emoji
 			this.startupTime
 		);
 	}

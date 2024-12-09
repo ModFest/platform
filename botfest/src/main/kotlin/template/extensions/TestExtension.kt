@@ -7,10 +7,11 @@ import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.i18n.withContext
 import dev.kordex.core.koin.KordExKoinComponent
+import dev.kordex.core.time.TimestampType
 import template.MAIN_GUILD_ID
 import template.Platform
+import template.format
 import template.i18n.Translations
-
 
 class TestExtension : Extension(), KordExKoinComponent {
 	override val name = "test"
@@ -26,12 +27,13 @@ class TestExtension : Extension(), KordExKoinComponent {
 
 			action {
 				val health = platform.getHealth()
+
 				respond {
 					content = Translations.Commands.Health.response
 						.withContext(this@action)
 						.translateNamed(
 							"health" to health.health,
-							"startupTime" to health.runningSince
+							"startupTime" to health.runningSince.format(TimestampType.RelativeTime)
 						)
 				}
 			}
