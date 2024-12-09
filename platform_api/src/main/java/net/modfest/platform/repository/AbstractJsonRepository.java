@@ -14,6 +14,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -104,7 +105,7 @@ public abstract class AbstractJsonRepository<T extends Data> {
 
 	@Locked.Read("dataLock")
 	@NonNull
-	public Iterable<T> getAll() {
+	public Collection<T> getAll() {
 		return this.store.values();
 	}
 

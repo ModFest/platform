@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 @RestController
@@ -20,8 +21,8 @@ public class EventController {
 	private EventRepository repository;
 
 	@GetMapping("/events")
-	public Iterator<EventData> getAllEvents() {
-		return repository.getAll().iterator();
+	public Collection<EventData> getAllEvents() {
+		return repository.getAll();
 	}
 
 	@GetMapping("/event/{id}")

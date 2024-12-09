@@ -10,6 +10,7 @@ import io.ktor.http.*
 import io.ktor.serialization.gson.*
 import net.modfest.platform.gson.GsonCommon
 import net.modfest.platform.pojo.CurrentEventData
+import net.modfest.platform.pojo.EventData
 import net.modfest.platform.pojo.HealthData
 
 class Platform(var base_url: String) {
@@ -46,9 +47,12 @@ class Platform(var base_url: String) {
 		}.unwrapErrors()
 	}
 
+	suspend fun getEvents(): List<EventData> {
+		return client.get("/events").unwrapErrors().body()
+	}
+
 	suspend fun getEventIds(): List<String> {
-		// TODO proper impl
-		return arrayOf("A", "B").toList();
+		return getEvents().map { e -> e.id }
 	}
 }
 
