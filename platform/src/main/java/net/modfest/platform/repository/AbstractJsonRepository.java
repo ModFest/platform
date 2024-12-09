@@ -64,6 +64,9 @@ public abstract class AbstractJsonRepository<T extends Data> {
 		try (var files = Files.newDirectoryStream(this.root)) {
 			for (var file : files) {
 				T data = this.gson.fromJson(new FileReader(file.toFile()), this.clazz);
+				if (this.store.containsKey(data.id())) {
+					throw new RuntimeException("Duplicate id in "+this.name+" repository! '"+data.id()+"' appeared twice! Please resolve this manually");
+				}
 				this.store.put(data.id(), data);
 			}
 		}
