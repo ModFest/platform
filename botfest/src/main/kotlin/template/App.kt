@@ -19,19 +19,8 @@ private val TOKEN = env("TOKEN")   // Get the bot's token from the env vars or a
 
 suspend fun main() {
 	val bot = ExtensibleBot(TOKEN) {
-		chatCommands {
-			defaultPrefix = "?"
+		applicationCommands {
 			enabled = true
-
-			prefix { default ->
-				if (guildId == MAIN_GUILD_ID) {
-					// For the test server, we use ! as the command prefix
-					"!"
-				} else {
-					// For other servers, we use the configured default prefix
-					default
-				}
-			}
 		}
 
 		extensions {
