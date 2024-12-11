@@ -82,6 +82,26 @@ class DebugCommands : Extension(), KordExKoinComponent {
 					}
 				}
 			}
+
+			// Whoami command
+			ephemeralSubCommand {
+				name = Translations.Commands.Whoami.name
+				description = Translations.Commands.Whoami.description
+
+				action {
+					val data = platform.withAuth(this.user).getAuthenticatedUserInfo()
+
+					respond {
+						content = Translations.Commands.Whoami.response
+							.withContext(this@action)
+							.translateNamed(
+								"auth" to data.isAuthenticated,
+								"id" to data.userId,
+								"name" to data.name,
+							)
+					}
+				}
+			}
 		}
 	}
 }

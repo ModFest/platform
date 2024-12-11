@@ -1,9 +1,9 @@
 package net.modfest.platform.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
 import net.modfest.platform.pojo.HealthData;
+import net.modfest.platform.pojo.Whoami;
 import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.service.MetaService;
 import org.apache.shiro.SecurityUtils;
@@ -53,7 +53,7 @@ public class MetaController {
 	@Operation(summary = "Get information about the currently logged-in user",
 			   description = "This route is intended to allow you to debug if you're logged in")
 	@GetMapping("/meta/me")
-	public MeInfo aboutLoggedInUser() {
+	public Whoami aboutLoggedInUser() {
 		var subject = SecurityUtils.getSubject();
 		var principal = SecurityUtils.getSubject().getPrincipal();
 
@@ -68,12 +68,11 @@ public class MetaController {
 			default -> {}
 		}
 
-		return new MeInfo(
+		return new Whoami(
 			subject.isAuthenticated(),
 			userId,
 			name
 		);
 	}
 
-	private record MeInfo(boolean isAuthenticated, @Nullable String userId, @Nullable String name) {}
 }

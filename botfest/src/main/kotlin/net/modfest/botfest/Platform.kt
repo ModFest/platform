@@ -1,5 +1,7 @@
 package net.modfest.botfest
 
+import dev.kord.common.entity.Snowflake
+import dev.kord.core.behavior.UserBehavior
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -12,6 +14,7 @@ import net.modfest.platform.gson.GsonCommon
 import net.modfest.platform.pojo.CurrentEventData
 import net.modfest.platform.pojo.EventData
 import net.modfest.platform.pojo.HealthData
+import net.modfest.platform.pojo.Whoami
 
 class Platform(var base_url: String) {
 	val client = HttpClient() {
@@ -31,6 +34,14 @@ class Platform(var base_url: String) {
 				GsonCommon.configureGson(this)
 			}
 		}
+	}
+
+	fun withAuth(user: UserBehavior): PlatformAuthenticated {
+		return PlatformAuthenticated(this.client, user.id)
+	}
+
+	fun withAuth(user: Snowflake): PlatformAuthenticated {
+		return PlatformAuthenticated(this.client, user)
 	}
 
 	suspend fun getHealth(): HealthData {
@@ -60,6 +71,25 @@ class Platform(var base_url: String) {
 	}
 }
 
+/**
+ * This class represents all platform api's that need an authenticated user.
+ */
+class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) {
+	private fun HttpRequestBuilder.addAuth() {
+		header("BotFest-Secret", PLATFORM_SHARED_SECRET)
+		header("BotFest-Target-User", discordUser.value)
+	}
+	
+	suspend fun getAuthenticatedUserInfo(): Whoami {
+		return client.get("/meta/me") {
+			addAuth()
+		}.unwrapErrors().body()
+	}
+}
+
+/**
+ * Helper method to unwrap platform's errors into friendly exceptions
+ */
 private suspend fun HttpResponse.unwrapErrors(): HttpResponse {
 	if (this.status == HttpStatusCode.BadRequest) {
 		val v: SpringBadRequest = this.body();
@@ -72,6 +102,7 @@ private suspend fun HttpResponse.unwrapErrors(): HttpResponse {
 }
 
 /**
+ * Data model for platform's 400 return messages.
  * There are more fields, but this is the one we care about
  */
 private class SpringBadRequest(val message: String) {

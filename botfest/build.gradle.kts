@@ -106,7 +106,8 @@ tasks.whenTaskAdded {
 		var address = project.property("dev.api.address")
 		var port = project.property("dev.api.port")
 		(this as JavaExec).environment(
-			"PLATFORM_API" to "${address}:${port}"
+			"PLATFORM_API" to "${address}:${port}",
+			"PLATFORM_SECRET" to project.property("dev.botfest.shared-secret"),
 		)
 	}
 }

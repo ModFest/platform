@@ -8,6 +8,7 @@ import net.modfest.botfest.extensions.AdminCommands
 import net.modfest.botfest.extensions.DebugCommands
 
 val PLATFORM_API_URL = env("PLATFORM_API")
+val PLATFORM_SHARED_SECRET = env("PLATFORM_SECRET")
 
 val MAIN_GUILD_ID = Snowflake(
 	env("MAIN_GUILD").toLong()  // Get the test server ID from the env vars or a .env file
