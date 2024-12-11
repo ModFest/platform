@@ -23,6 +23,7 @@ public class PlatformConfig {
 	private Path datadir;
 	@NonNull
 	private Path logdir;
+	private String botFestSecret;
 
 	@Autowired
 	private MigrationManager manager;

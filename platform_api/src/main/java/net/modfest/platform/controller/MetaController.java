@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.PostConstruct;
 import net.modfest.platform.pojo.HealthData;
 import net.modfest.platform.service.MetaService;
+import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,4 +46,18 @@ public class MetaController {
 	public int reload() throws IOException {
 		return metaService.reloadFromDisk();
 	}
+
+
+	@Operation(summary = "Get information about the currently logged-in user",
+			   description = "This route is intended to allow you to debug if you're logged in")
+	@GetMapping("/meta/me")
+	public MeInfo aboutLoggedInUser() {
+		var subject = SecurityUtils.getSubject();
+
+		return new MeInfo(
+			subject.isAuthenticated()
+		);
+	}
+
+	private record MeInfo(boolean isAuthenticated) {}
 }
