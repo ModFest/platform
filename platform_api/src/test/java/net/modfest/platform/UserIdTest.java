@@ -1,13 +1,13 @@
 package net.modfest.platform;
 
-import net.modfest.platform.misc.UserId;
+import net.modfest.platform.misc.MfUserId;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;
 
 public class UserIdTest {
 	@RepeatedTest(10000)
 	public void testRandom() {
-		var randomId = UserId.generateRandom();
+		var randomId = MfUserId.generateRandom();
 
 		// User ids should have a length of 5
 		Assertions.assertEquals(5, randomId.internal().length(), randomId + " has wrong length");

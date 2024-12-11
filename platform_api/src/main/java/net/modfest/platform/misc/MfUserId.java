@@ -2,8 +2,8 @@ package net.modfest.platform.misc;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-public record UserId(String internal) {
-	public static UserId generateRandom() {
+public class MfUserId {
+	public static String generateRandom() {
 		// A random userid will consist out of 5 numbers
 		// the first number cannot be zero, to avoid truncating numbers
 		// by converting them to/from integers
@@ -16,6 +16,6 @@ public record UserId(String internal) {
 			str.append((char)('0' + random.nextInt(0, 10)));
 		}
 
-		return new UserId(str.toString());
+		return str.toString();
 	}
 }
