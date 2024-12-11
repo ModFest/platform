@@ -1,8 +1,10 @@
 package net.modfest.platform.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
 import net.modfest.platform.pojo.HealthData;
+import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.service.MetaService;
 import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,11 +55,25 @@ public class MetaController {
 	@GetMapping("/meta/me")
 	public MeInfo aboutLoggedInUser() {
 		var subject = SecurityUtils.getSubject();
+		var principal = SecurityUtils.getSubject().getPrincipal();
+
+		String userId = null;
+		String name = null;
+
+		switch (principal) {
+			case UserData user -> {
+				userId = user.id();
+				name = user.name();
+			}
+			default -> {}
+		}
 
 		return new MeInfo(
-			subject.isAuthenticated()
+			subject.isAuthenticated(),
+			userId,
+			name
 		);
 	}
 
-	private record MeInfo(boolean isAuthenticated) {}
+	private record MeInfo(boolean isAuthenticated, @Nullable String userId, @Nullable String name) {}
 }
