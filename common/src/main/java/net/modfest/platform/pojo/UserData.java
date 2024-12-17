@@ -1,6 +1,7 @@
 package net.modfest.platform.pojo;
 
 import com.google.gson.annotations.SerializedName;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Set;
 
@@ -17,6 +18,6 @@ public record UserData(
     String icon,
     Set<String> badges,
     Set<String> registered,
-	UserRole role
+	@NonNull UserRole role
 ) implements Data {
 }
