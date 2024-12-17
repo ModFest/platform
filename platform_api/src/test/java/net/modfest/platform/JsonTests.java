@@ -1,28 +1,27 @@
 package net.modfest.platform;
 
-import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import net.modfest.platform.gson.GsonCommon;
 import net.modfest.platform.pojo.EventData;
 import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.pojo.UserRole;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.json.JsonTest;
 
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-@JsonTest
 public class JsonTests {
-	@Autowired
-	private Gson gson;
-
 	@ParameterizedTest
 	@MethodSource("testObjects")
 	public void roundtripJson(Object serializableObject) {
+		var gsonBuilder = new GsonBuilder();
+		GsonCommon.configureGson(gsonBuilder);
+		var gson = gsonBuilder.create();
+
 		var jsonString = gson.toJson(serializableObject);
 		var reserializedObject = gson.fromJson(jsonString, serializableObject.getClass());
 

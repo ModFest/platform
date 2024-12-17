@@ -69,7 +69,6 @@ public record EventData(@NonNull String id,
             public static final String KEY = "markdown";
         }
 
-        // TODO
         public static class TypeAdapter implements JsonSerializer<DescriptionItem<?>>, JsonDeserializer<DescriptionItem<?>> {
             public static final String TYPE_KEY = "type";
 
