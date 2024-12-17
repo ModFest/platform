@@ -16,6 +16,7 @@ public record UserData(
     @SerializedName(value = "icon", alternate = {"icon_url"})
     String icon,
     Set<String> badges,
-    Set<String> registered
+    Set<String> registered,
+	UserRole role
 ) implements Data {
 }

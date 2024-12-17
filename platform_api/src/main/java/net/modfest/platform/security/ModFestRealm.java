@@ -1,6 +1,7 @@
 package net.modfest.platform.security;
 
 import net.modfest.platform.configuration.PlatformConfig;
+import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.security.token.BotFestToken;
 import net.modfest.platform.service.UserService;
 import org.apache.shiro.authc.AuthenticationException;
@@ -56,6 +57,18 @@ public class ModFestRealm extends AuthorizingRealm {
 
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
+		// If the user has modfest user data attached in their authenticated info,
+		// we'll use that to determine which role they have!
+		var user = principalCollection.oneByType(UserData.class);
+		if (user != null) {
+			var userRole = user.role();
+			var group = switch (userRole) {
+				case null -> PermissionGroup.UNPRIVILEGED_USERS;
+				case NONE -> PermissionGroup.UNPRIVILEGED_USERS;
+				case TEAM_MEMBER -> PermissionGroup.TEAM_MEMBERS;
+			};
+			return new GroupBasedAuthorizationInfo(group);
+		}
 		return null;
 	}
 }
