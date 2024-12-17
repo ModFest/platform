@@ -10,8 +10,8 @@ public class UserIdTest {
 		var randomId = MfUserId.generateRandom();
 
 		// User ids should have a length of 5
-		Assertions.assertEquals(5, randomId.internal().length(), randomId + " has wrong length");
+		Assertions.assertEquals(5, randomId.length(), randomId + " has wrong length");
 		// User ids cannot start with a zero. This is to avoid errors if you convert them to an integer and back
-		Assertions.assertNotEquals('0', randomId.internal().charAt(0), randomId + " is invalid");
+		Assertions.assertNotEquals('0', randomId.charAt(0), randomId + " is invalid");
 	}
 }

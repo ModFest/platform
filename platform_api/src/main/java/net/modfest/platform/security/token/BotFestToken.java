@@ -12,4 +12,9 @@ public record BotFestToken(String sharedSecret, String targetUser) implements Au
 	public Object getCredentials() {
 		return sharedSecret();
 	}
+
+	@Override
+	public String toString() {
+		return "BotFestToken[sharedSecret=***,targetUser="+targetUser+"]";
+	}
 }
