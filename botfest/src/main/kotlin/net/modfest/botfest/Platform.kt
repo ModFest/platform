@@ -65,10 +65,6 @@ class Platform(var base_url: String) {
 	suspend fun getEventIds(): List<String> {
 		return getEvents().map { e -> e.id }
 	}
-
-	suspend fun reloadFromFilesystem(): Int {
-		return client.post("/meta/reload").unwrapErrors().body()
-	}
 }
 
 /**
@@ -82,6 +78,12 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 	
 	suspend fun getAuthenticatedUserInfo(): Whoami {
 		return client.get("/meta/me") {
+			addAuth()
+		}.unwrapErrors().body()
+	}
+
+	suspend fun reloadFromFilesystem(): Int {
+		return client.post("/meta/reload") {
 			addAuth()
 		}.unwrapErrors().body()
 	}

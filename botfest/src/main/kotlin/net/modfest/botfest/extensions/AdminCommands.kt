@@ -57,7 +57,7 @@ class AdminCommands : Extension(), KordExKoinComponent {
 				description = Translations.Commands.Reload.description
 
 				action {
-					val res = platform.reloadFromFilesystem()
+					val res = platform.withAuth(this.user).reloadFromFilesystem()
 
 					respond {
 						content = Translations.Commands.Reload.response

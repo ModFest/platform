@@ -18,7 +18,7 @@ public record GroupBasedAuthorizationInfo(PermissionGroup group) implements Auth
 
 		do {
 			roles.add(currentGroup.name());
-			currentGroup = group.parent;
+			currentGroup = currentGroup.parent;
 		} while (currentGroup != null);
 
 		return roles;
