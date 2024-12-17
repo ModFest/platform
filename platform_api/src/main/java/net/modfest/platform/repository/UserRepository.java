@@ -1,14 +1,16 @@
 package net.modfest.platform.repository;
 
+import net.modfest.platform.git.ManagedDirectory;
 import net.modfest.platform.pojo.UserData;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 import java.util.Objects;
 
 @Repository
 public class UserRepository extends AbstractJsonRepository<UserData> {
-	public UserRepository() {
-		super("users", UserData.class);
+	public UserRepository(@Qualifier("datadir") ManagedDirectory datadir) {
+		super(datadir.getSubDirectory("users"), "user", UserData.class);
 	}
 
 	public UserData getByDiscordId(String discordId) {

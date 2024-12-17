@@ -1,7 +1,9 @@
 package net.modfest.platform.repository;
 
+import net.modfest.platform.git.ManagedDirectory;
 import net.modfest.platform.pojo.CurrentEventData;
 import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -9,8 +11,8 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class CurrentEventRepository extends AbstractSingleJsonStorage<CurrentEventData> {
-	protected CurrentEventRepository() {
-		super("currentEvent.json", CurrentEventData.class);
+	protected CurrentEventRepository(@Qualifier("datadir") ManagedDirectory datadir) {
+		super(datadir.getSubFile("currentEvent.json"), CurrentEventData.class);
 	}
 
 	@Override

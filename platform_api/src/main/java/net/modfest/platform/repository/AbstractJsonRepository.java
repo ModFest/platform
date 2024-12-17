@@ -3,6 +3,8 @@ package net.modfest.platform.repository;
 import jakarta.annotation.PostConstruct;
 import lombok.Locked;
 import net.modfest.platform.configuration.PlatformConfig;
+import net.modfest.platform.git.ManagedDirectory;
+import net.modfest.platform.misc.FileUtil;
 import net.modfest.platform.misc.JsonUtil;
 import net.modfest.platform.pojo.Data;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +12,6 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,13 +31,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public abstract class AbstractJsonRepository<T extends Data> implements DiskCachedData {
 	@Autowired
-	private PlatformConfig platformConfig;
-	@Autowired
 	private JsonUtil jsonUtil;
 
 	private final String name;
 	private final Class<T> clazz;
-	private Path root;
+	private ManagedDirectory root;
 	/**
 	 * This is our in-memory storage for quick lookups.
 	 * It should be kept in-sync with the filesystem
@@ -48,14 +46,14 @@ public abstract class AbstractJsonRepository<T extends Data> implements DiskCach
 	 */
 	private final ReadWriteLock dataLock = new ReentrantReadWriteLock();
 
-	public AbstractJsonRepository(String name, Class<T> clazz) {
+	public AbstractJsonRepository(ManagedDirectory root, String name, Class<T> clazz) {
+		this.root = root;
 		this.name = name;
 		this.clazz = clazz;
 	}
 
 	@PostConstruct
 	private void init() throws IOException {
-		this.root = platformConfig.getDatadir().resolve(name);
 		// Initialize storage
 		readFromFilesystem();
 	}
@@ -63,27 +61,29 @@ public abstract class AbstractJsonRepository<T extends Data> implements DiskCach
 	@Override
 	@Locked.Write("dataLock") // Write lock, because we're writing to our internal store
 	public void readFromFilesystem() throws IOException {
-		if (!Files.exists(this.root)) {
-			Files.createDirectories(this.root);
-		}
+		// Ensure the folder is created
+		this.root.createDirectories();
+
 		this.store.clear();
-		try (var files = Files.newDirectoryStream(this.root)) {
-			for (var file : files) {
+
+		this.root.read(p -> {
+			FileUtil.iterDir(p, file -> {
 				T data = this.jsonUtil.readJson(file, this.clazz);
 				if (this.store.containsKey(data.id())) {
 					throw new RuntimeException("Duplicate id in "+this.name+" repository! '"+data.id()+"' appeared twice! Please resolve this manually");
 				}
 				this.store.put(data.id(), data);
-			}
-		}
+			});
+		});
 	}
 
 	@Locked.Write("dataLock")
 	public void save(@NonNull T data) throws IOException {
 		// Write data to json file first
 		validateId(data.id());
-		var file = this.root.resolve(data.id()+".json");
-		this.jsonUtil.writeJson(file, data);
+		this.root.write(p -> {
+			this.jsonUtil.writeJson(p.resolve(data.id()+".json"), data);
+		});
 
 		// Keep our in-memory storage up to date
 		this.store.put(data.id(), data);

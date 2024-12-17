@@ -24,6 +24,7 @@ repositories {
 }
 
 dependencies {
+	// Spring boot
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -32,6 +33,9 @@ dependencies {
 
 	// Swagger ui
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
+
+	// Git integration
+	implementation("org.eclipse.jgit:org.eclipse.jgit:7.1.0.202411261347-r")
 
 	// Apache shiro provides the api's for authentication and authorization
 	implementation("org.apache.shiro:shiro-spring:2.0.2:jakarta") {
@@ -45,9 +49,11 @@ dependencies {
 	}
 	implementation("org.apache.shiro:shiro-web:2.0.2:jakarta")
 
+	// Yes, I am using lombok :(
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
 
+	// Add common sources
 	implementation(project(":common"))
 }
 
@@ -63,6 +69,7 @@ tasks.withType<Test> {
 	useJUnitPlatform()
 }
 
+// Default properties when running in dev
 tasks.bootRun {
 	environment(
 		"PLATFORM_DATADIR" to project.rootDir.resolve("run/data"),

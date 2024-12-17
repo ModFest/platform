@@ -2,14 +2,13 @@ package net.modfest.platform.repository;
 
 import jakarta.annotation.PostConstruct;
 import lombok.Locked;
-import net.modfest.platform.configuration.PlatformConfig;
+import net.modfest.platform.git.ManagedFile;
 import net.modfest.platform.misc.JsonUtil;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -21,13 +20,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public abstract class AbstractSingleJsonStorage<T> implements DiskCachedData {
 	@Autowired
-	private PlatformConfig platformConfig;
-	@Autowired
 	private JsonUtil jsonUtil;
 
-	private final String name;
 	private final Class<T> clazz;
-	private Path file;
+	private ManagedFile file;
 	/**
 	 * Lock used both for writing to the filesystem and to manage {@link #cache}.
 	 */
@@ -36,19 +32,16 @@ public abstract class AbstractSingleJsonStorage<T> implements DiskCachedData {
 	private T cache;
 
 	/**
-	 * @param fileName Filename where this data should be stored. Will be relative to
-	 * 				   {@link PlatformConfig#getDatadir()}. This should include the extension
-	 * 				   of the file. Example: "myfile.json"
+	 * @param file file where the json should be stored
 	 * @param clazz The class of the data stored
 	 */
-	protected AbstractSingleJsonStorage(String fileName, Class<T> clazz) {
-		this.name = fileName;
+	protected AbstractSingleJsonStorage(ManagedFile file, Class<T> clazz) {
+		this.file = file;
 		this.clazz = clazz;
 	}
 
 	@PostConstruct
 	private void init() throws IOException {
-		this.file = platformConfig.getDatadir().resolve(name);
 		// Initialize storage
 		readFromFilesystem();
 	}
@@ -58,23 +51,30 @@ public abstract class AbstractSingleJsonStorage<T> implements DiskCachedData {
 	@Locked.Write("dataLock")
 	@Override
 	public void readFromFilesystem() throws IOException {
-		if (!Files.exists(this.file)) {
-			Files.createDirectories(this.file.getParent());
-			var defaultData = this.createDefault();
-			if (defaultData == null) {
-				throw new RuntimeException(new NullPointerException("Default data is null"));
+		this.file.createParentDirectories();
+		this.file.read(p -> {
+			if (!Files.exists(p)) {
+				var defaultData = this.createDefault();
+				if (defaultData == null) {
+					throw new RuntimeException(new NullPointerException("Default data is null"));
+				}
+				writeToFile(defaultData);
 			}
-			writeToFile(defaultData);
-		}
+		});
 
-		this.cache = this.jsonUtil.readJson(this.file, this.clazz);
+		this.file.read(p -> {
+			this.cache = this.jsonUtil.readJson(p, this.clazz);
+		});
+
 		if (this.cache == null) {
 			throw new RuntimeException(this.file+" appears broken! Please fix, or delete it and let it regenerate");
 		}
 	}
 
 	private void writeToFile(T data) throws IOException {
-		this.jsonUtil.writeJson(this.file, data);
+		this.file.write(p -> {
+			this.jsonUtil.writeJson(p, data);
+		});
 	}
 
 	@Locked.Read("dataLock")
