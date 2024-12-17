@@ -98,6 +98,7 @@ class DebugCommands : Extension(), KordExKoinComponent {
 								"auth" to data.isAuthenticated,
 								"id" to data.userId,
 								"name" to data.name,
+								"permissions" to (data.permissions?.joinToString("\n"))
 							)
 					}
 				}

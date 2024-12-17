@@ -14,6 +14,7 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Collection;
 import java.util.Objects;
 
 public class ModFestRealm extends AuthorizingRealm {
@@ -70,5 +71,14 @@ public class ModFestRealm extends AuthorizingRealm {
 			return new GroupBasedAuthorizationInfo(group);
 		}
 		return null;
+	}
+
+	/**
+	 * @deprecated This is public only for debugging purposes. Use Shiro's api's to check for permissions
+	 */
+	@Deprecated
+	public Collection<String> getPermissions(PrincipalCollection principalCollection) {
+		var info = this.getAuthorizationInfo(principalCollection);
+		return info == null ? null : info.getStringPermissions();
 	}
 }

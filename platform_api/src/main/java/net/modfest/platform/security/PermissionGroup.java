@@ -2,6 +2,7 @@ package net.modfest.platform.security;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public enum PermissionGroup {
@@ -15,7 +16,8 @@ public enum PermissionGroup {
 
 	PermissionGroup(@Nullable PermissionGroup parent, Set<String> permissions) {
 		this.parent = parent;
-		this.permissions = permissions;
+		this.permissions = new HashSet<>();
+		this.permissions.addAll(permissions);
 		if (this.parent != null) {
 			this.permissions.addAll(this.parent.permissions);
 		}

@@ -5,6 +5,7 @@ import jakarta.annotation.PostConstruct;
 import net.modfest.platform.pojo.HealthData;
 import net.modfest.platform.pojo.Whoami;
 import net.modfest.platform.pojo.UserData;
+import net.modfest.platform.security.ModFestRealm;
 import net.modfest.platform.security.Permissions;
 import net.modfest.platform.service.MetaService;
 import org.apache.shiro.SecurityUtils;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -25,6 +27,8 @@ import java.util.Date;
 public class MetaController {
 	@Autowired
 	private MetaService metaService;
+	@Autowired
+	private ModFestRealm realm;
 	private Date startupTime;
 
 	@PostConstruct
@@ -68,13 +72,16 @@ public class MetaController {
 				userId = user.id();
 				name = user.name();
 			}
-			default -> {}
+			case null, default -> {}
 		}
+
+		Collection<String> permissions = realm.getPermissions(subject.getPrincipals());
 
 		return new Whoami(
 			subject.isAuthenticated(),
 			userId,
-			name
+			name,
+			permissions
 		);
 	}
 
