@@ -4,11 +4,19 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRefNameException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
+import org.eclipse.jgit.transport.URIish;
+import org.jspecify.annotations.NonNull;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class GitRootPath extends GitManagedDirectory implements ManagedDirectory, AutoCloseable {
+	private final List<URIish> remotes = new ArrayList<>();
 
 	public GitRootPath(Path path) throws IOException {
 		super(createGit(path), path, ".");
@@ -36,8 +44,57 @@ public class GitRootPath extends GitManagedDirectory implements ManagedDirectory
 		}
 	}
 
+	/**
+	 * Adds a remote to which this git repository will be synchronized
+	 */
+	public void addRemote(@NonNull String uri) throws URISyntaxException, GitAPIException {
+		addRemote(new URIish(uri));
+	}
+
+	public void addRemote(@NonNull URIish uri) throws GitAPIException {
+		this.remotes.add(uri);
+		this.setGitRemotes();
+	}
+
+	/**
+	 * Iterates all the remotes in this git repository. The first parameter represents
+	 * the name of the remote, and the second represents the uri it's configured for.
+	 */
+	private void forAllRemotes(@NonNull RemoteConsumer consumer) throws GitAPIException {
+		for (int i = 0; i < remotes.size(); i++) {
+			var name = i == 0 ? "platform" : "platform-"+i;
+			consumer.accept(name, remotes.get(i));
+		}
+	}
+
+	/**
+	 * Sets the git remotes of the git repositories to the urls configured for this git
+	 */
+	private void setGitRemotes() throws GitAPIException {
+		forAllRemotes((name, uri) -> {
+			this.git.remoteSetUrl()
+				.setRemoteName(name)
+				.setRemoteUri(uri)
+				.call();
+		});
+	}
+
+	@Scheduled(fixedRate = 1, timeUnit = TimeUnit.MINUTES)
+	private void pushGitRepo() throws GitAPIException {
+		forAllRemotes((name, _uri) -> {
+			this.git.push()
+				.setRemote(name)
+				.setForce(true)
+				.call();
+		});
+	}
+
 	@Override
 	public void close() throws Exception {
 		git.close();
+	}
+
+	private interface RemoteConsumer {
+		void accept(String name, URIish uri) throws GitAPIException;
 	}
 }
