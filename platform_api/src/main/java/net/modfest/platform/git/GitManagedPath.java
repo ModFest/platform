@@ -2,19 +2,27 @@ package net.modfest.platform.git;
 
 import net.modfest.platform.IOConsumer;
 import net.modfest.platform.IOFunction;
+import net.modfest.platform.configuration.GitConfig;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.EmptyCommitException;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.jspecify.annotations.NonNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
 public class GitManagedPath implements ManagedPath {
+	@NonNull
+	protected final GitConfig config;
+	@NonNull
 	protected final Git git;
+	@NonNull
 	protected final Path path;
+	@NonNull
 	protected final String subPath;
 
-	public GitManagedPath(Git git, Path path, String subPath) {
+	public GitManagedPath(GitConfig config, Git git, Path path, String subPath) {
+		this.config = config;
 		this.git = git;
 		this.path = path;
 		this.subPath = subPath;
@@ -30,7 +38,7 @@ public class GitManagedPath implements ManagedPath {
 			this.git.add().addFilepattern(subPath).setUpdate(true).call();
 			// Commit the changes
 			this.git.commit()
-				.setAuthor("Platform", "platform@example.org")
+				.setAuthor(config.getUser(), config.getEmail())
 				.setMessage("PLATFORM CHANGE")
 				.setAllowEmpty(false)
 				.setSign(false)

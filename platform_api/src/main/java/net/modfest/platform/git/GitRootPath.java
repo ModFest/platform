@@ -1,5 +1,6 @@
 package net.modfest.platform.git;
 
+import net.modfest.platform.configuration.GitConfig;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRefNameException;
@@ -18,11 +19,11 @@ import java.util.concurrent.TimeUnit;
 public class GitRootPath extends GitManagedDirectory implements ManagedDirectory, AutoCloseable {
 	private final List<URIish> remotes = new ArrayList<>();
 
-	public GitRootPath(Path path) throws IOException {
-		super(createGit(path), path, ".");
+	public GitRootPath(Path path, GitConfig config) throws IOException {
+		super(config, createGit(path, config), path, ".");
 	}
 
-	private static Git createGit(Path path) throws IOException {
+	private static Git createGit(Path path, GitConfig conf) throws IOException {
 		// Try opening the directory, if it's not a git directory, initialize it as one
 		try {
 			return Git.open(path.toFile());
@@ -31,7 +32,7 @@ public class GitRootPath extends GitManagedDirectory implements ManagedDirectory
 				var git = Git.init().setDirectory(path.toFile()).setInitialBranch("main").call();
 				git.add().addFilepattern(".").call();
 				git.commit()
-					.setAuthor("platform", "platform@example.com")
+					.setAuthor(conf.getUser(), conf.getEmail())
 					.setMessage("Initial commit")
 					.setSign(false)
 					.call();

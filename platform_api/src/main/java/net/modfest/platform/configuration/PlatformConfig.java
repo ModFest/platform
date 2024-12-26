@@ -34,16 +34,18 @@ public class PlatformConfig {
 	@Nullable
 	private String gitRemote;
 
-	// This is a bean dependency, not a config value
+	// These are bean dependencies, not a config value
 	@Autowired
 	private MigrationManager manager;
+	@Autowired
+	private GitConfig config;
 
 	/**
 	 * The data dir is only exposed as a bean in order to prevent misuse
 	 */
 	@Bean(name = "datadir")
-	public GitRootPath getDatadir() throws IOException, URISyntaxException, GitAPIException {
-		var git = new GitRootPath(this.datadir);
+	public GitRootPath getDatadir(GitConfig config) throws IOException, URISyntaxException, GitAPIException {
+		var git = new GitRootPath(this.datadir, config);
 		if (gitRemote != null) {
 			git.addRemote(gitRemote);
 		}
@@ -54,6 +56,6 @@ public class PlatformConfig {
 	private void init() throws IOException, URISyntaxException, GitAPIException {
 		// HACK: by calling this method from this init, it ensures that migrations are ran before anything
 		// can even access the platform config
-		manager.migrate(this.getDatadir());
+		manager.migrate(this.getDatadir(config));
 	}
 }
