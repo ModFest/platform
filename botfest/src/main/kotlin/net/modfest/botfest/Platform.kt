@@ -14,6 +14,7 @@ import net.modfest.platform.gson.GsonCommon
 import net.modfest.platform.pojo.CurrentEventData
 import net.modfest.platform.pojo.EventData
 import net.modfest.platform.pojo.HealthData
+import net.modfest.platform.pojo.UserPatchData
 import net.modfest.platform.pojo.Whoami
 
 class Platform(var base_url: String) {
@@ -86,6 +87,13 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		return client.post("/meta/reload") {
 			addAuth()
 		}.unwrapErrors().body()
+	}
+
+	suspend fun patchUserData(patch: UserPatchData) {
+		client.patch("/user/@me") {
+			addAuth()
+			setBody(patch)
+		}.unwrapErrors();
 	}
 }
 
