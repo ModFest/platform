@@ -35,6 +35,16 @@ public class UserController {
 		return user;
 	}
 
+	@PatchMapping("/user/@me")
+	public void editOwnUser(@RequestBody UserPatchData data) throws IOException {
+		var principal = SecurityUtils.getSubject().getPrincipal();
+		if (principal instanceof UserData user) {
+			editUserData(user.id(), data);
+		} else {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request is not associated with a user");
+		}
+	}
+
 	@PatchMapping("/user/{id}")
 	public void editUserData(@PathVariable String id, @RequestBody UserPatchData data) throws IOException {
 		var user = service.getByMfId(id);
