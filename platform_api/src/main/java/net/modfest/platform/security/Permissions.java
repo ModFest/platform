@@ -11,4 +11,8 @@ public class Permissions {
 		 */
 		public static final String RELOAD = "meta.reload";
 	}
+
+	public static class Users {
+		public static final String LIST_ALL = "users.list";
+	}
 }
