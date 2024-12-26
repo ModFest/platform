@@ -20,4 +20,8 @@ dependencies {
 	api("org.jspecify:jspecify:1.0.0")
 
 	api("com.google.code.gson:gson:2.11.0")
+
+	// Yes, I am using lombok :(
+	compileOnly("org.projectlombok:lombok:1.18.36")
+	annotationProcessor("org.projectlombok:lombok:1.18.36")
 }

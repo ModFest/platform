@@ -14,5 +14,9 @@ public class Permissions {
 
 	public static class Users {
 		public static final String LIST_ALL = "users.list";
+		/**
+		 * Allows the user to edit all other users their data
+		 */
+		public static final String EDIT_OTHERS = "users.edit_others";
 	}
 }

@@ -10,7 +10,8 @@ public enum PermissionGroup {
 	)),
 	TEAM_MEMBERS(UNPRIVILEGED_USERS, Set.of(
 		Permissions.Meta.RELOAD,
-		Permissions.Users.LIST_ALL
+		Permissions.Users.LIST_ALL,
+		Permissions.Users.EDIT_OTHERS
 	));
 
 	public final @Nullable PermissionGroup parent;

@@ -1,10 +1,12 @@
 package net.modfest.platform.pojo;
 
 import com.google.gson.annotations.SerializedName;
+import lombok.With;
 import org.jspecify.annotations.NonNull;
 
 import java.util.Set;
 
+@With
 public record UserData(
     String id,
     String slug,
