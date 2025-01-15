@@ -7,6 +7,7 @@ import dev.kordex.core.utils.loadModule
 import net.modfest.botfest.extensions.AdminCommands
 import net.modfest.botfest.extensions.DebugCommands
 import net.modfest.botfest.extensions.UserCommands
+import net.modfest.botfest.extensions.Register
 
 val PLATFORM_API_URL = env("PLATFORM_API")
 val PLATFORM_SHARED_SECRET = env("PLATFORM_SECRET")
@@ -37,6 +38,7 @@ suspend fun main() {
 			add(::DebugCommands)
 			add(::AdminCommands)
 			add(::UserCommands)
+			add(::Register)
 		}
 
 		errorResponse { message, type ->

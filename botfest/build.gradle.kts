@@ -38,6 +38,8 @@ kordEx {
 	// https://github.com/gradle/gradle/issues/31383
 	kordExVersion = libs.versions.kordex.asProvider()
 
+	module("dev-unsafe")
+
 	bot {
 		// See https://docs.kordex.dev/data-collection.html
 		dataCollection(DataCollection.Standard)
