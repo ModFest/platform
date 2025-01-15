@@ -18,5 +18,9 @@ public class Permissions {
 		 * Allows the user to edit all other users their data
 		 */
 		public static final String EDIT_OTHERS = "users.edit_others";
+		/**
+		 * Permission to create new users
+		 */
+		public static final String CREATE = "users.create";
 	}
 }

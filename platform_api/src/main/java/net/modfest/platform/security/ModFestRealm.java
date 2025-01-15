@@ -44,6 +44,10 @@ public class ModFestRealm extends AuthorizingRealm {
 				if (!Objects.equals(botFestToken.sharedSecret(), platformConfig.getBotFestSecret())) {
 					throw new AuthenticationException("BotFest secret is invalid");
 				}
+				if (Objects.equals(botFestToken.targetUser(), "@self")) {
+					// BotFest is logging in as itself, and not on behalf of a different user
+					return new SimpleAuthenticationInfo(BotFestIdentity.INSTANCE, botFestToken, "platform");
+				}
 				var data = userService.getByDiscordId(botFestToken.targetUser());
 				if (data == null) {
 					throw new AuthenticationException("Can't find user with id "+botFestToken.targetUser());
@@ -69,6 +73,9 @@ public class ModFestRealm extends AuthorizingRealm {
 				case TEAM_MEMBER -> PermissionGroup.TEAM_MEMBERS;
 			};
 			return new GroupBasedAuthorizationInfo(group);
+		}
+		if (principalCollection.oneByType(BotFestIdentity.class) != null) {
+			return new GroupBasedAuthorizationInfo(PermissionGroup.BOTFEST);
 		}
 		return null;
 	}

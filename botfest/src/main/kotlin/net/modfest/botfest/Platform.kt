@@ -45,6 +45,10 @@ class Platform(var base_url: String) {
 		return PlatformAuthenticated(this.client, user)
 	}
 
+	fun authenticatedAsBotFest(): PlatformBotFestAuthenticated {
+		return PlatformBotFestAuthenticated(this.client)
+	}
+
 	suspend fun getHealth(): HealthData {
 		return client.get("/health").unwrapErrors().body()
 	}
@@ -70,6 +74,8 @@ class Platform(var base_url: String) {
 
 /**
  * This class represents all platform api's that need an authenticated user.
+ * This is for routes authenticated as a user, if you need the call to be
+ * authenticated as BotFest itself, use [PlatformBotFestAuthenticated]
  */
 class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) {
 	private fun HttpRequestBuilder.addAuth() {
@@ -94,6 +100,18 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 			addAuth()
 			setBody(patch)
 		}.unwrapErrors();
+	}
+}
+
+/**
+ * This class represents all platform api's that need to be authenticated.
+ * This will authenticate as BotFest itself. If BotFest is performing an action on behalf of
+ * an already existing user, use [PlatformAuthenticated].
+ */
+class PlatformBotFestAuthenticated(var client: HttpClient) {
+	private fun HttpRequestBuilder.addAuth() {
+		header("BotFest-Secret", PLATFORM_SHARED_SECRET)
+		header("BotFest-Target-User", "@self")
 	}
 }
 

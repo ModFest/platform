@@ -12,6 +12,15 @@ public enum PermissionGroup {
 		Permissions.Meta.RELOAD,
 		Permissions.Users.LIST_ALL,
 		Permissions.Users.EDIT_OTHERS
+	)),
+	/**
+	 * Note: BotFest usually performs actions on behalf of a different user.
+	 * This is for actions that BotFest itself performs
+	 */
+	BOTFEST(null, Set.of(
+		// BotFest needs to create users. It cannot perform actions on behalf of a user
+		// if it doesn't exist yet.
+		Permissions.Users.CREATE
 	));
 
 	public final @Nullable PermissionGroup parent;
