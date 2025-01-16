@@ -1,5 +1,6 @@
 package net.modfest.platform.controller;
 
+import net.modfest.platform.pojo.UserCreateData;
 import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.pojo.UserPatchData;
 import net.modfest.platform.security.PermissionUtils;
@@ -24,6 +25,24 @@ public class UserController {
 	@RequiresPermissions(Permissions.Users.LIST_ALL)
 	public Collection<UserData> listAll() {
 		return service.getAll();
+	}
+
+	@PutMapping("/users")
+	@RequiresPermissions(Permissions.Users.CREATE)
+	public void createUser(@RequestBody UserCreateData data) throws IOException {
+		try {
+			service.create(data);
+		} catch (UserService.InvalidModrinthIdException e) {
+			throw new ResponseStatusException(
+				HttpStatus.BAD_REQUEST,
+				"Unknown modrinth id: "+data.modrinthId()
+			);
+		} catch (UserService.UserAlreadyExistsException e) {
+			throw new ResponseStatusException(
+				HttpStatus.BAD_REQUEST,
+				e.getMessage()
+			);
+		}
 	}
 
 	@GetMapping("/user/{id}")

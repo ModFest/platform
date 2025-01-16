@@ -14,6 +14,7 @@ import net.modfest.platform.gson.GsonCommon
 import net.modfest.platform.pojo.CurrentEventData
 import net.modfest.platform.pojo.EventData
 import net.modfest.platform.pojo.HealthData
+import net.modfest.platform.pojo.UserCreateData
 import net.modfest.platform.pojo.UserPatchData
 import net.modfest.platform.pojo.Whoami
 
@@ -112,6 +113,13 @@ class PlatformBotFestAuthenticated(var client: HttpClient) {
 	private fun HttpRequestBuilder.addAuth() {
 		header("BotFest-Secret", PLATFORM_SHARED_SECRET)
 		header("BotFest-Target-User", "@self")
+	}
+
+	suspend fun createUser(data: UserCreateData) {
+		client.put("/users") {
+			addAuth()
+			setBody(data)
+		}.unwrapErrors();
 	}
 }
 

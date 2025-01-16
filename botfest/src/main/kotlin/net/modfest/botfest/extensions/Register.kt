@@ -11,6 +11,7 @@ import dev.kordex.modules.dev.unsafe.commands.slash.InitialSlashCommandResponse
 import dev.kordex.modules.dev.unsafe.extensions.unsafeSlashCommand
 import net.modfest.botfest.Platform
 import net.modfest.botfest.i18n.Translations
+import net.modfest.platform.pojo.UserCreateData
 import org.koin.core.component.inject
 import java.util.*
 
@@ -42,7 +43,12 @@ class Register : Extension(), KordExKoinComponent {
 
 				// Result will be null if the user didn't enter anything
 				if (result != null) {
-					println("E");
+					platform.authenticatedAsBotFest().createUser(UserCreateData(
+						modal.displayName.value,
+						modal.pronouns.value,
+						modal.modrinthSlug.value,
+						this.user.id.value.toString()
+					))
 				}
 			}
 		}

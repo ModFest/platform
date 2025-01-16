@@ -21,6 +21,12 @@ configurations {
 
 repositories {
 	mavenCentral()
+	maven {
+		url = uri("https://maven.theepicblock.nl")
+		content {
+			includeGroup("nl.theepicblock")
+		}
+	}
 }
 
 dependencies {
@@ -48,6 +54,9 @@ dependencies {
 		exclude("org.apache.shiro", "shiro-web")
 	}
 	implementation("org.apache.shiro:shiro-web:2.0.2:jakarta")
+
+	// Modrinth api
+	implementation("nl.theepicblock:DukeRinth:0.1.0")
 
 	// Yes, I am using lombok :(
 	compileOnly("org.projectlombok:lombok")
