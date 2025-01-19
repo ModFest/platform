@@ -1,5 +1,7 @@
 package net.modfest.platform.migrations;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.modfest.platform.misc.JsonUtil;
@@ -53,13 +55,14 @@ public record Migrator(JsonUtil json, Path root) {
 	 * changes user id's to randomly generated strings
 	 */
 	public void migrateTo2() throws IOException {
-		// TODO migrate submission data
 		var uids = new HashSet<String>();
+		var old2New = new HashMap<String, String>();
 
 		var usersPath = root.resolve("users");
 
 		MigratorUtils.executeForAllFiles(usersPath, path -> {
 			var userJson = json.readJson(path, JsonObject.class);
+			var oldId = userJson.getAsJsonPrimitive("id").getAsString();
 			String uid;
 			do {
 				uid = MfUserId.generateRandom();
@@ -70,7 +73,71 @@ public record Migrator(JsonUtil json, Path root) {
 
 			var newLocation = usersPath.resolve(uid+".json");
 			Files.move(path, newLocation);
+
+			old2New.put(oldId, uid);
 		});
+
+		// Edit submissions to match new ids
+		var newIdentities = new HashMap<String, String>();
+		var eventParticipants = new HashMap<String, HashSet<String>>();
+		var submissions = root.resolve("submissions");
+		MigratorUtils.executeForAllFiles(submissions, eventDir -> {
+			var eventName = eventDir.getFileName().toString();
+			eventParticipants.put(eventName, new HashSet<>());
+			MigratorUtils.executeForAllFiles(eventDir, submissionFile -> {
+				var submission = json.readJson(submissionFile, JsonObject.class);
+				var authors = submission.getAsJsonArray("authors");
+				var newAuthors = new JsonArray();
+				for (var a : authors) {
+					var author = a.getAsString();
+					if (!old2New.containsKey(author)) {
+						// This is a user who isn't present in our users list!
+						// we will create them a new identity
+						String uid;
+						do {
+							uid = MfUserId.generateRandom();
+						} while (uids.contains(uid));
+						old2New.put(author, uid);
+						newIdentities.put(author, uid);
+						eventParticipants.get(eventName).add(uid);
+						newAuthors.add(uid);
+					} else {
+						var uid = old2New.get(author);
+						eventParticipants.get(eventName).add(uid);
+						newAuthors.add(uid);
+					}
+				}
+				submission.add("authors", newAuthors);
+				json.writeJson(submissionFile, submission);
+			});
+		});
+
+		// Create json's for the new identities
+		for (var identity : newIdentities.entrySet()) {
+			var id = identity.getValue();
+			var name = identity.getKey();
+			var path = usersPath.resolve(id+".json");
+
+			var userJson = new JsonObject();
+			userJson.addProperty("id", id);
+			userJson.add("slug", JsonNull.INSTANCE);
+			userJson.addProperty("name", name);
+			userJson.add("pronouns", JsonNull.INSTANCE);
+			userJson.add("modrinth_id", JsonNull.INSTANCE);
+			userJson.add("discord_id", JsonNull.INSTANCE);
+			userJson.add("icon", JsonNull.INSTANCE);
+			userJson.add("badges", new JsonArray());
+			var r = new JsonArray();
+			for (var participation : eventParticipants.entrySet()) {
+				if (participation.getValue().contains(id)) {
+					r.add(participation.getKey());
+				}
+			}
+			userJson.add("registered", r);
+			userJson.addProperty("role", "none");
+
+			json.writeJson(path, userJson);
+		}
 	}
 
 	/**
