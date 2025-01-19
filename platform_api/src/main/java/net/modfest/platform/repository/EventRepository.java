@@ -12,4 +12,9 @@ public class EventRepository extends AbstractJsonRepository<EventData> {
 	public EventRepository(@Qualifier("datadir") ManagedDirectory datadir) {
 		super(datadir.getSubDirectory("events"), "event", EventData.class);
 	}
+
+	@Override
+	protected void validateEdit(EventData previous, EventData current) throws ConstraintViolationException {
+		// TODO
+	}
 }

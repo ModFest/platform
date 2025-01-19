@@ -78,15 +78,19 @@ public abstract class AbstractJsonRepository<T extends Data> implements DiskCach
 	}
 
 	@Locked.Write("dataLock")
-	public void save(@NonNull T data) throws IOException {
+	public void save(@NonNull T newData) throws IOException {
+		// Run validations
+		validateId(newData.id());
+		var prev = this.store.get(newData.id());
+		validateEdit(prev, newData);
+
 		// Write data to json file first
-		validateId(data.id());
 		this.root.write(p -> {
-			this.jsonUtil.writeJson(p.resolve(data.id()+".json"), data);
+			this.jsonUtil.writeJson(p.resolve(newData.id()+".json"), newData);
 		});
 
 		// Keep our in-memory storage up to date
-		this.store.put(data.id(), data);
+		this.store.put(newData.id(), newData);
 	}
 
 	@Locked.Read("dataLock")
@@ -106,9 +110,17 @@ public abstract class AbstractJsonRepository<T extends Data> implements DiskCach
 		return this.store.values();
 	}
 
-	private void validateId(@NonNull String id) throws IllegalArgumentException {
+	private void validateId(@NonNull String id) throws ConstraintViolationException {
 		if (id.contains("/")) {
-			throw new IllegalArgumentException("Illegal character '/' in id: '"+id+"'");
+			throw new ConstraintViolationException("Illegal character '/' in id: '"+id+"'");
 		}
 	}
+
+	/**
+	 * Called whenever a database entry is edited. This should be overwritten
+	 * to ensure integrity of database constraints.
+	 * @param previous The previous value of the database entry (might be null if the entry is newly created)
+	 * @param current The new value of the database entry   
+	 */
+	abstract protected void validateEdit(@Nullable T previous, @NonNull T current) throws ConstraintViolationException;
 }
