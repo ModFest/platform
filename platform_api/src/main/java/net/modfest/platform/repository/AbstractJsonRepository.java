@@ -30,7 +30,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @param <T> The type of the data stored. This class should be immutable!!
  */
 public abstract class AbstractJsonRepository<T extends Data> implements DiskCachedData {
-	@Autowired
 	private JsonUtil jsonUtil;
 
 	private final String name;
@@ -46,7 +45,8 @@ public abstract class AbstractJsonRepository<T extends Data> implements DiskCach
 	 */
 	private final ReadWriteLock dataLock = new ReentrantReadWriteLock();
 
-	public AbstractJsonRepository(ManagedDirectory root, String name, Class<T> clazz) {
+	public AbstractJsonRepository(@Autowired JsonUtil jsonUtil, ManagedDirectory root, String name, Class<T> clazz) {
+		this.jsonUtil = jsonUtil;
 		this.root = root;
 		this.name = name;
 		this.clazz = clazz;

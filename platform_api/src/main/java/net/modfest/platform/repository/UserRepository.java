@@ -2,8 +2,10 @@ package net.modfest.platform.repository;
 
 import net.modfest.platform.git.ManagedDirectory;
 import net.modfest.platform.misc.DiscordIdUtils;
+import net.modfest.platform.misc.JsonUtil;
 import net.modfest.platform.misc.ModrinthIdUtils;
 import net.modfest.platform.pojo.UserData;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
@@ -11,8 +13,9 @@ import java.util.Objects;
 
 @Repository
 public class UserRepository extends AbstractJsonRepository<UserData> {
-	public UserRepository(@Qualifier("datadir") ManagedDirectory datadir) {
-		super(datadir.getSubDirectory("users"), "user", UserData.class);
+	// The @Qualifier("datadir") ensures that spring will give us the object marked as "datadir"
+	public UserRepository(@Autowired JsonUtil json, @Qualifier("datadir") ManagedDirectory datadir) {
+		super(json, datadir.getSubDirectory("users"), "user", UserData.class);
 	}
 
 	public UserData getByDiscordId(String discordId) {
@@ -55,7 +58,7 @@ public class UserRepository extends AbstractJsonRepository<UserData> {
 		}
 
 		if (previous == null || !Objects.equals(current.discordId(), previous.discordId())) {
-			if (!DiscordIdUtils.isValidSnowflake(current.modrinthId())) {
+			if (!DiscordIdUtils.isValidSnowflake(current.discordId())) {
 				throw new ConstraintViolationException("Invalid discord id "+current.discordId());
 			}
 			var existing = this.getByDiscordId(current.discordId());

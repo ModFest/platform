@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class CurrentEventRepository extends AbstractSingleJsonStorage<CurrentEventData> {
+	// The @Qualifier("datadir") ensures that spring will give us the object marked as "datadir"
 	protected CurrentEventRepository(@Qualifier("datadir") ManagedDirectory datadir) {
 		super(datadir.getSubFile("currentEvent.json"), CurrentEventData.class);
 	}
