@@ -22,8 +22,14 @@ public class CustomDateDeserializer implements JsonDeserializer<Date> {
             String dateString = json.getAsString();
             return DateFormat.getDateInstance().parse(dateString);
         } catch (ParseException ignored) {
+			// Platform currently serializes dates with gson's builtin
+			// serialization. Unfortunately this serialization isn't stable
+			// this is an attempt to fix the differences
             String dateString = json.getAsString();
             try {
+				if (dateString.startsWith("Sep ")) {
+					dateString = dateString.replaceFirst("Sep ", "Sept ");
+				}
                 return dateFormat.parse(dateString.replace(" ", " "));
             } catch (ParseException e) {
                 throw new JsonParseException("Error parsing date: " + json.getAsString(), e);
