@@ -2,50 +2,50 @@ package net.modfest.platform.repository;
 
 import jakarta.annotation.PostConstruct;
 import lombok.Locked;
-import net.modfest.platform.configuration.PlatformConfig;
 import net.modfest.platform.git.ManagedDirectory;
 import net.modfest.platform.misc.FileUtil;
 import net.modfest.platform.misc.JsonUtil;
-import net.modfest.platform.pojo.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * A simple repository for storing data as json.
  * Stored data is identified by a string, and can be queried by that string.
- * Data will be stored under a subdirectory of the configured {@link PlatformConfig#getDatadir()}.
+ * Data will be stored under a subdirectory of the configured datadir.
  * This class is designed for low-volume, but easily auditable storage. Consider creating something else for
  * any purpose that needs more than about a thousand entries.
  *
- * @apiNote Please ensure {@link T} is an immutable class. ({@link lombok.With} is an easy way to do mutation).
+ * @apiNote Please ensure {@link Data} is an immutable class. ({@link lombok.With} is an easy way to do mutation).
  * 			This ensures that the data inside the cache can't be modified without it being properly saved to disk.
- * @param <T> The type of the data stored. This class should be immutable!!
+ * @param <Data> The type of the data stored. This class should be immutable!!
  */
-public abstract class AbstractJsonRepository<T extends Data> implements DiskCachedData {
+public abstract class AbstractJsonRepository<Data, Id> implements DiskCachedData {
 	private JsonUtil jsonUtil;
 
 	private final String name;
-	private final Class<T> clazz;
+	private final Class<Data> clazz;
 	private ManagedDirectory root;
 	/**
 	 * This is our in-memory storage for quick lookups.
 	 * It should be kept in-sync with the filesystem
 	 */
-	private final Map<String, T> store = new HashMap<>();
+	private final Map<Id, Data> store = new HashMap<>();
 	/**
 	 * Lock used both for writing to the filesystem and to manage {@link #store}.
 	 */
 	private final ReadWriteLock dataLock = new ReentrantReadWriteLock();
 
-	public AbstractJsonRepository(@Autowired JsonUtil jsonUtil, ManagedDirectory root, String name, Class<T> clazz) {
+	public AbstractJsonRepository(@Autowired JsonUtil jsonUtil, ManagedDirectory root, String name, Class<Data> clazz) {
 		this.jsonUtil = jsonUtil;
 		this.root = root;
 		this.name = name;
@@ -68,45 +68,51 @@ public abstract class AbstractJsonRepository<T extends Data> implements DiskCach
 
 		this.root.read(p -> {
 			FileUtil.iterDir(p, file -> {
-				T data = this.jsonUtil.readJson(file, this.clazz);
-				if (this.store.containsKey(data.id())) {
-					throw new RuntimeException("Duplicate id in "+this.name+" repository! '"+data.id()+"' appeared twice! Please resolve this manually");
+				Data data = this.jsonUtil.readJson(file, this.clazz);
+
+				if (this.store.containsKey(getId(data))) {
+					throw new RuntimeException("Duplicate id in "+this.name+" repository! '"+getId(data)+"' appeared twice! Please resolve this manually");
 				}
-				this.store.put(data.id(), data);
+
+				var expectedPath = p.resolve(getLocation(data));
+				if (!Objects.equals(file.toAbsolutePath(), expectedPath.toAbsolutePath())) {
+					throw new RuntimeException("Data is in the wrong location. Expected "+p.relativize(expectedPath)+" but found "+p.relativize(file));
+				}
+
+				this.store.put(getId(data), data);
 			});
 		});
 	}
 
 	@Locked.Write("dataLock")
-	public void save(@NonNull T newData) throws IOException {
+	public void save(@NonNull Data newData) throws IOException {
 		// Run validations
-		validateId(newData.id());
-		var prev = this.store.get(newData.id());
+		var prev = this.store.get(getId(newData));
 		validateEdit(prev, newData);
 
 		// Write data to json file first
 		this.root.write(p -> {
-			this.jsonUtil.writeJson(p.resolve(newData.id()+".json"), newData);
+			this.jsonUtil.writeJson(p.resolve(getLocation(newData)), newData);
 		});
 
 		// Keep our in-memory storage up to date
-		this.store.put(newData.id(), newData);
+		this.store.put(getId(newData), newData);
 	}
 
 	@Locked.Read("dataLock")
 	@Nullable
-	public T get(@NonNull String id) {
+	public Data get(@NonNull Id id) {
 		return this.store.get(id);
 	}
 
 	@Locked.Read("dataLock")
-	public boolean contains(@NonNull String id) {
+	public boolean contains(@NonNull Id id) {
 		return this.store.containsKey(id);
 	}
 
 	@Locked.Read("dataLock")
 	@NonNull
-	public Collection<T> getAll() {
+	public Collection<Data> getAll() {
 		return this.store.values();
 	}
 
@@ -122,5 +128,9 @@ public abstract class AbstractJsonRepository<T extends Data> implements DiskCach
 	 * @param previous The previous value of the database entry (might be null if the entry is newly created)
 	 * @param current The new value of the database entry   
 	 */
-	abstract protected void validateEdit(@Nullable T previous, @NonNull T current) throws ConstraintViolationException;
+	abstract protected void validateEdit(@Nullable Data previous, @NonNull Data current) throws ConstraintViolationException;
+
+	abstract protected Id getId(Data data);
+
+	abstract protected Path getLocation(Data data);
 }

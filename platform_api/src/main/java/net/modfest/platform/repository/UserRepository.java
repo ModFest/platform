@@ -9,10 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
+import java.nio.file.Path;
 import java.util.Objects;
 
 @Repository
-public class UserRepository extends AbstractJsonRepository<UserData> {
+public class UserRepository extends AbstractJsonRepository<UserData, String> {
 	// The @Qualifier("datadir") ensures that spring will give us the object marked as "datadir"
 	public UserRepository(@Autowired JsonUtil json, @Qualifier("datadir") ManagedDirectory datadir) {
 		super(json, datadir.getSubDirectory("users"), "user", UserData.class);
@@ -66,5 +67,15 @@ public class UserRepository extends AbstractJsonRepository<UserData> {
 				throw new ConstraintViolationException("Discord id '"+current.discordId()+"' must be unique, but it's already in the database");
 			}
 		}
+	}
+
+	@Override
+	protected String getId(UserData data) {
+		return data.id();
+	}
+
+	@Override
+	protected Path getLocation(UserData data) {
+		return Path.of(data.id()+".json");
 	}
 }

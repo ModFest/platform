@@ -8,9 +8,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
 
+import java.nio.file.Path;
+
 @Repository
 @Scope("singleton")
-public class EventRepository extends AbstractJsonRepository<EventData> {
+public class EventRepository extends AbstractJsonRepository<EventData, String> {
 	// The @Qualifier("datadir") ensures that spring will give us the object marked as "datadir"
 	public EventRepository(@Autowired JsonUtil json, @Qualifier("datadir") ManagedDirectory datadir) {
 		super(json, datadir.getSubDirectory("events"), "event", EventData.class);
@@ -19,5 +21,15 @@ public class EventRepository extends AbstractJsonRepository<EventData> {
 	@Override
 	protected void validateEdit(EventData previous, EventData current) throws ConstraintViolationException {
 		// TODO
+	}
+
+	@Override
+	protected String getId(EventData data) {
+		return data.id();
+	}
+
+	@Override
+	protected Path getLocation(EventData data) {
+		return Path.of(data.id()+".json");
 	}
 }

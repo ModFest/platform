@@ -16,19 +16,43 @@ import java.util.Map;
  * Contains ad-hoc migrations to our json format
  */
 public record Migrator(JsonUtil json, Path root) {
-	static final int CURRENT_VERSION = 2;
+	static final int CURRENT_VERSION = 3;
 	static final Map<Integer,MigrationManager.Migration> MIGRATIONS = new HashMap<>();
 
 	static {
 		MIGRATIONS.put(1, Migrator::migrateTo1);
 		MIGRATIONS.put(2, Migrator::migrateTo2);
+		MIGRATIONS.put(3, Migrator::migrateTo3);
 	}
+
 
 	/**
 	 * V1
-	 * changes user id's to randomly generated strings
+	 * Migrates from the old platform data format.
+	 * Changes: submissions now explicitly store which event they're from
 	 */
 	public void migrateTo1() throws IOException {
+		var submissionPath = root.resolve("submissions");
+
+		MigratorUtils.executeForAllFiles(submissionPath, folder -> {
+			if (!Files.isDirectory(folder)) {
+				return;
+			}
+
+			var eventName = folder.getFileName().toString();
+			MigratorUtils.executeForAllFiles(folder, event -> {
+				var eventJson = json.readJson(event, JsonObject.class);
+				eventJson.add("event", new JsonPrimitive(eventName));
+				json.writeJson(event, eventJson);
+			});
+		});
+	}
+
+	/**
+	 * V2
+	 * changes user id's to randomly generated strings
+	 */
+	public void migrateTo2() throws IOException {
 		// TODO migrate submission data
 		var uids = new HashSet<String>();
 
@@ -50,12 +74,12 @@ public record Migrator(JsonUtil json, Path root) {
 	}
 
 	/**
-	 * V2
+	 * V3
 	 * The "role" field for users is no longer nullable.
 	 * All users now have a role. This role may be set to "NONE", but it
 	 * can't be missing/null
 	 */
-	public void migrateTo2() throws IOException {
+	public void migrateTo3() throws IOException {
 		var usersPath = root.resolve("users");
 
 		MigratorUtils.executeForAllFiles(usersPath, path -> {
