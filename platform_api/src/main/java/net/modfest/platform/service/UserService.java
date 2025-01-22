@@ -24,12 +24,16 @@ public class UserService {
 		return userRepository.get(modfestId);
 	}
 
-	public void save(UserData data) throws IOException {
-		userRepository.save(data);
-	}
-
 	public UserData getByDiscordId(String discordId) {
 		return userRepository.getByDiscordId(discordId);
+	}
+
+	public UserData getByModrinthId(String modrinthId) {
+		return userRepository.getByModrinthId(modrinthId);
+	}
+
+	public void save(UserData data) throws IOException {
+		userRepository.save(data);
 	}
 
 	public Collection<UserData> getAll() {

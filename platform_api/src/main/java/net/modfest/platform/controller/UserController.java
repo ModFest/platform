@@ -1,13 +1,16 @@
 package net.modfest.platform.controller;
 
-import net.modfest.platform.pojo.UserCreateData;
-import net.modfest.platform.pojo.UserData;
-import net.modfest.platform.pojo.UserPatchData;
+import net.modfest.platform.misc.ModrinthIdUtils;
+import net.modfest.platform.pojo.*;
 import net.modfest.platform.security.PermissionUtils;
 import net.modfest.platform.security.Permissions;
+import net.modfest.platform.service.EventService;
+import net.modfest.platform.service.SubmissionService;
 import net.modfest.platform.service.UserService;
+import nl.theepicblock.dukerinth.ModrinthApi;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -15,11 +18,19 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 
 @RestController
 public class UserController {
 	@Autowired
 	private UserService service;
+	@Autowired
+	private EventService eventService;
+	@Autowired
+	private SubmissionService submissionService;
+	@Autowired
+	private ModrinthApi modrinthApi;
 
 	@GetMapping("/users")
 	@RequiresPermissions(Permissions.Users.LIST_ALL)
@@ -45,31 +56,57 @@ public class UserController {
 		}
 	}
 
-	@GetMapping("/user/{id}")
-	public UserData getSingleUser(@PathVariable String id) {
-		var user = service.getByMfId(id);
+	private @NonNull UserData parseUserId(String id) {
+		if (Objects.equals(id, "@me")) {
+			var principal = SecurityUtils.getSubject().getPrincipal();
+			if (principal instanceof UserData user) {
+				return user;
+			} else {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request is not associated with a user");
+			}
+		}
+
+		UserData user;
+		if (id.startsWith("mr:")) {
+			// I will allow people to put modrinth slugs in here,
+			// let's hope nobody uses them for persistence :(
+			var mrId = id.substring(3);
+			if (!ModrinthIdUtils.isValidModrinthId(mrId)) {
+				var apiResult = modrinthApi.users().getUser(mrId);
+				if (apiResult != null) mrId = apiResult.id;
+			}
+			user = service.getByModrinthId(mrId);
+		} else if (id.startsWith("dc:")) {
+			user = service.getByDiscordId(id.substring(3));
+		} else {
+			user = service.getByMfId(id);
+		}
+
 		if (user == null) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such user exists");
 		}
 		return user;
 	}
 
-	@PatchMapping("/user/@me")
-	public void editOwnUser(@RequestBody UserPatchData data) throws IOException {
-		var principal = SecurityUtils.getSubject().getPrincipal();
-		if (principal instanceof UserData user) {
-			editUserData(user.id(), data);
-		} else {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request is not associated with a user");
+	@GetMapping("/user/{id}")
+	public UserData getSingleUser(@PathVariable String id) {
+		return parseUserId(id);
+	}
+
+	@GetMapping("/user/{id}/submissions")
+	public List<SubmissionData> getUserSubmissions(@PathVariable String id, @RequestParam(required = false) String eventFilter) {
+		var user = parseUserId(id);
+		EventData filter = null;
+		if (eventFilter != null) {
+			filter = eventService.getEventById(eventFilter);
+			if (filter == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event "+eventFilter+" does not exist");
 		}
+		return submissionService.getAllSubmissions(user, filter).toList();
 	}
 
 	@PatchMapping("/user/{id}")
 	public void editUserData(@PathVariable String id, @RequestBody UserPatchData data) throws IOException {
-		var user = service.getByMfId(id);
-		if (user == null) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such user exists");
-		}
+		var user = parseUserId(id);
 
 		// Check permissions
 		// In order for the request to be allowed, the person making the request needs
