@@ -24,7 +24,7 @@ public record UserData(
     Set<String> registered,
 	@NonNull UserRole role
 ) implements Data {
-	public UserData setRegistration(EventData event, boolean registered) {
+	public UserData withRegistration(EventData event, boolean registered) {
 		// Be careful to maintain immutability
 		var newSet = new HashSet<>(this.registered());
 		if (registered) {

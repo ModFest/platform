@@ -11,7 +11,9 @@ public enum PermissionGroup {
 	TEAM_MEMBERS(UNPRIVILEGED_USERS, Set.of(
 		Permissions.Meta.RELOAD,
 		Permissions.Users.LIST_ALL,
-		Permissions.Users.EDIT_OTHERS
+		Permissions.Users.EDIT_OTHERS,
+		Permissions.Event.BYPASS_REGISTRATIONS,
+		Permissions.Event.REGISTER_OTHERS
 	)),
 	/**
 	 * Note: BotFest usually performs actions on behalf of a different user.

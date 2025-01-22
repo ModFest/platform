@@ -1,11 +1,14 @@
 package net.modfest.platform.service;
 
 import net.modfest.platform.pojo.EventData;
+import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.repository.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -24,9 +27,13 @@ public class EventService {
 		return eventRepository.get(id);
 	}
 
+	public Collection<EventData> getAll() {
+		return eventRepository.getAll();
+	}
+
 	// If the event has registrations open:
-	//   if a user has zero submissions, they can freely register/deregister
-	//   if a user has more than zero submissions, they must be registered and cannot deregister
+	//   if a user has zero submissions, they can freely register/unregister
+	//   if a user has more than zero submissions, they must be registered and cannot unregister
 	// If the event has registrations closed:
 	//   the user is only registered if they have at least one submission
 
@@ -37,16 +44,32 @@ public class EventService {
 		}
 	}
 
+	/**
+	 * Checks if a user can unregister.
+	 * WARNING: Does not take into account the phase!
+	 */
+	public boolean canUnregister(EventData event, UserData user) {
+		return allEventAuthors(event).noneMatch(u -> Objects.equals(u, user.id()));
+	}
+
+	/**
+	 * Forcibly sets a user to be registered/unregistered.
+	 * WARNING: Does not take into account the phase!
+	 */
+	public void setRegistered(EventData event, UserData user, boolean registered) throws IOException {
+		userService.save(user.withRegistration(event, registered));
+	}
+
 	public void resetRegistrationData(EventData event) {
 		AtomicReference<IOException> hadException = new AtomicReference<>();
 		if (event.phase().canRegister()) {
 			// The event has registrations open. Users with zero submissions can freely register
-			// and deregister. But if a user has a submission, they must be registered
+			// and unregister. But if a user has a submission, they must be registered
 			allEventAuthors(event).forEach(authorId -> {
 				var u = userService.getByMfId(authorId);
 				if (!u.registered().contains(event.id())) {
 					try {
-						userService.save(u.setRegistration(event, true));
+						userService.save(u.withRegistration(event, true));
 					} catch (IOException e) {
 						hadException.set(e);
 					}
@@ -59,7 +82,7 @@ public class EventService {
 			for (var u : userService.getAll()) {
 				if (u.registered().contains(event.id()) != authors.contains(u.id())) {
 					try {
-						userService.save(u.setRegistration(event, authors.contains(u.id())));
+						userService.save(u.withRegistration(event, authors.contains(u.id())));
 					} catch (IOException e) {
 						hadException.set(e);
 					}

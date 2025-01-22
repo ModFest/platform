@@ -10,7 +10,6 @@ import net.modfest.platform.service.UserService;
 import nl.theepicblock.dukerinth.ModrinthApi;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
-import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -56,7 +55,8 @@ public class UserController {
 		}
 	}
 
-	private @NonNull UserData parseUserId(String id) {
+	@GetMapping("/user/{id}")
+	public UserData getSingleUser(@PathVariable String id) {
 		if (Objects.equals(id, "@me")) {
 			var principal = SecurityUtils.getSubject().getPrincipal();
 			if (principal instanceof UserData user) {
@@ -88,14 +88,9 @@ public class UserController {
 		return user;
 	}
 
-	@GetMapping("/user/{id}")
-	public UserData getSingleUser(@PathVariable String id) {
-		return parseUserId(id);
-	}
-
 	@GetMapping("/user/{id}/submissions")
 	public List<SubmissionData> getUserSubmissions(@PathVariable String id, @RequestParam(required = false) String eventFilter) {
-		var user = parseUserId(id);
+		var user = getSingleUser(id);
 		EventData filter = null;
 		if (eventFilter != null) {
 			filter = eventService.getEventById(eventFilter);
@@ -106,7 +101,7 @@ public class UserController {
 
 	@PatchMapping("/user/{id}")
 	public void editUserData(@PathVariable String id, @RequestBody UserPatchData data) throws IOException {
-		var user = parseUserId(id);
+		var user = getSingleUser(id);
 
 		// Check permissions
 		// In order for the request to be allowed, the person making the request needs

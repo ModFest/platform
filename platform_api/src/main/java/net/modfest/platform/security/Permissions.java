@@ -23,4 +23,15 @@ public class Permissions {
 		 */
 		public static final String CREATE = "users.create";
 	}
+
+	public static class Event {
+		/**
+		 * Allows the user to bypass restrictions on if an event allows (de)registrations or not
+		 */
+		public static final String BYPASS_REGISTRATIONS = "event.bypass_registrations";
+		/**
+		 * Allows the user to (de)register people other than themselves
+		 */
+		public static final String REGISTER_OTHERS = "event.register_others";
+	}
 }
