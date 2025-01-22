@@ -1,11 +1,13 @@
 package net.modfest.platform.pojo;
 
 import com.google.gson.*;
+import lombok.With;
 import org.jspecify.annotations.NonNull;
 
 import java.util.Date;
 import java.util.List;
 
+@With
 public record EventData(@NonNull String id,
                         @NonNull String name,
                         @NonNull String subtitle,

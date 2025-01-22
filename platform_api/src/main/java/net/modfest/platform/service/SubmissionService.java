@@ -19,7 +19,7 @@ public class SubmissionService {
 	 * Retrieve all submissions made by a user
 	 * @param filter If non-null, only submissions associated with that event will be returned
 	 */
-	public Stream<SubmissionData> getAllSubmissions(UserData user, @Nullable EventData filter) {
+	public Stream<SubmissionData> getSubmissionsFromUser(UserData user, @Nullable EventData filter) {
 		var result = submissionRepository.getAll()
 			.stream()
 			.filter(submission -> submission.authors().contains(user.id()));
@@ -27,5 +27,11 @@ public class SubmissionService {
 			result = result.filter(s -> s.event().equals(filter.id()));
 		}
 		return result;
+	}
+
+	public Stream<SubmissionData> getSubmissionsFromEvent(EventData event) {
+		return submissionRepository.getAll()
+				.stream()
+				.filter(s -> s.event().equals(event.id()));
 	}
 }

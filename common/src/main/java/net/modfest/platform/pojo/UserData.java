@@ -5,6 +5,7 @@ import lombok.With;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @With
@@ -23,4 +24,14 @@ public record UserData(
     Set<String> registered,
 	@NonNull UserRole role
 ) implements Data {
+	public UserData setRegistration(EventData event, boolean registered) {
+		// Be careful to maintain immutability
+		var newSet = new HashSet<>(this.registered());
+		if (registered) {
+			newSet.add(event.id());
+		} else {
+			newSet.remove(event.id());
+		}
+		return this.withRegistered(newSet);
+	}
 }

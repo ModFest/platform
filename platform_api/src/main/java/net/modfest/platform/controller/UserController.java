@@ -101,7 +101,7 @@ public class UserController {
 			filter = eventService.getEventById(eventFilter);
 			if (filter == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event "+eventFilter+" does not exist");
 		}
-		return submissionService.getAllSubmissions(user, filter).toList();
+		return submissionService.getSubmissionsFromUser(user, filter).toList();
 	}
 
 	@PatchMapping("/user/{id}")
