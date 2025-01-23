@@ -6,10 +6,8 @@ import net.modfest.platform.repository.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,7 +38,7 @@ public class EventService {
 	public void setPhase(EventData data, EventData.Phase target) {
 		eventRepository.save(data.withPhase(target));
 		if (data.phase().canRegister() != target.canRegister()) {
-			resetRegistrationData(data);
+			fixRegistrationData(data);
 		}
 	}
 
@@ -60,7 +58,7 @@ public class EventService {
 		userService.save(user.withRegistration(event, registered));
 	}
 
-	public void resetRegistrationData(EventData event) {
+	public void fixRegistrationData(EventData event) {
 		if (event.phase().canRegister()) {
 			// The event has registrations open. Users with zero submissions can freely register
 			// and unregister. But if a user has a submission, they must be registered

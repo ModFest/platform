@@ -39,7 +39,7 @@ public class UserService {
 		return userRepository.getAll();
 	}
 
-	public void create(UserCreateData data) throws InvalidModrinthIdException, UserAlreadyExistsException {
+	public String create(UserCreateData data) throws InvalidModrinthIdException, UserAlreadyExistsException {
 		var mrUser = modrinthApi.users().getUser(data.modrinthId());
 
 		if (mrUser == null) throw new InvalidModrinthIdException();
@@ -51,8 +51,10 @@ public class UserService {
 			throw new UserAlreadyExistsException("A user with discord id "+data.discordId()+" already exists!");
 		}
 
+		var generatedId = generateUserId();
+
 		userRepository.save(new UserData(
-			generateUserId(),
+			generatedId,
 			data.name(),
 			data.name(),
 			data.pronouns(),
@@ -64,6 +66,8 @@ public class UserService {
 			Set.of(),
 			UserRole.NONE
 		));
+
+		return generatedId;
 	}
 
 	/**

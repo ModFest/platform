@@ -36,11 +36,12 @@ public class UserController {
 		return service.getAll();
 	}
 
-	@PutMapping("/users")
+	@PostMapping("/users")
 	@RequiresPermissions(Permissions.Users.CREATE)
-	public void createUser(@RequestBody UserCreateData data) {
+	public UserData createUser(@RequestBody UserCreateData data) {
 		try {
-			service.create(data);
+			var id = service.create(data);
+			return service.getByMfId(id);
 		} catch (UserService.InvalidModrinthIdException e) {
 			throw new ResponseStatusException(
 				HttpStatus.BAD_REQUEST,

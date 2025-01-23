@@ -15,6 +15,7 @@ import net.modfest.platform.pojo.CurrentEventData
 import net.modfest.platform.pojo.EventData
 import net.modfest.platform.pojo.HealthData
 import net.modfest.platform.pojo.UserCreateData
+import net.modfest.platform.pojo.UserData
 import net.modfest.platform.pojo.UserPatchData
 import net.modfest.platform.pojo.Whoami
 
@@ -68,8 +69,22 @@ class Platform(var base_url: String) {
 		return client.get("/events").unwrapErrors().body()
 	}
 
+	suspend fun getEvent(eventId: String): EventData {
+		return client.get("/event/$eventId").unwrapErrors().body()
+	}
+
 	suspend fun getEventIds(): List<String> {
 		return getEvents().map { e -> e.id }
+	}
+
+	/**
+	 * Retrieve a user by their discord id. Will be null if the user does not exist
+	 */
+	suspend fun getUser(user: UserBehavior): UserData? {
+		return client.get("/user/dc:"+user.id).apply {
+			// Map 404 errors to be null
+			if (status == HttpStatusCode.NotFound) return null
+		}.unwrapErrors().body()
 	}
 }
 
@@ -102,6 +117,12 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 			setBody(patch)
 		}.unwrapErrors();
 	}
+
+	suspend fun registerMe(event: EventData) {
+		client.put("/event/"+event.id+"/registrations/dc:"+discordUser.value) {
+			addAuth()
+		}.unwrapErrors()
+	}
 }
 
 /**
@@ -115,11 +136,11 @@ class PlatformBotFestAuthenticated(var client: HttpClient) {
 		header("BotFest-Target-User", "@self")
 	}
 
-	suspend fun createUser(data: UserCreateData) {
-		client.put("/users") {
+	suspend fun createUser(data: UserCreateData): UserData {
+		return client.post("/users") {
 			addAuth()
 			setBody(data)
-		}.unwrapErrors();
+		}.unwrapErrors().body()
 	}
 }
 
