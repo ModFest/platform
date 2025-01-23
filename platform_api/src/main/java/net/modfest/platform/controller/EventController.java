@@ -11,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
 import java.util.Collection;
 
 @RestController
@@ -37,16 +36,16 @@ public class EventController {
 	}
 
 	@PutMapping("/event/{id}/registrations/{userId}")
-	public void register(@PathVariable String id, @PathVariable String userId) throws IOException {
+	public void register(@PathVariable String id, @PathVariable String userId) {
 		setRegistration(id, userId, true);
 	}
 
 	@DeleteMapping("/event/{id}/registrations/{userId}")
-	public void unregister(@PathVariable String id, @PathVariable String userId) throws IOException {
+	public void unregister(@PathVariable String id, @PathVariable String userId) {
 		setRegistration(id, userId, false);
 	}
 
-	public void setRegistration(@PathVariable String id, @RequestBody String userId, boolean registered) throws IOException {
+	public void setRegistration(@PathVariable String id, @RequestBody String userId, boolean registered) {
 		var event = getEvent(id);
 		// Get the user as if we were requesting them from /user/{id}
 		var user = userController.getSingleUser(userId);

@@ -9,7 +9,6 @@ import nl.theepicblock.dukerinth.ModrinthApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
 
@@ -32,7 +31,7 @@ public class UserService {
 		return userRepository.getByModrinthId(modrinthId);
 	}
 
-	public void save(UserData data) throws IOException {
+	public void save(UserData data) {
 		userRepository.save(data);
 	}
 
@@ -40,7 +39,7 @@ public class UserService {
 		return userRepository.getAll();
 	}
 
-	public void create(UserCreateData data) throws IOException, InvalidModrinthIdException, UserAlreadyExistsException {
+	public void create(UserCreateData data) throws InvalidModrinthIdException, UserAlreadyExistsException {
 		var mrUser = modrinthApi.users().getUser(data.modrinthId());
 
 		if (mrUser == null) throw new InvalidModrinthIdException();

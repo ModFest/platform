@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -39,7 +38,7 @@ public class UserController {
 
 	@PutMapping("/users")
 	@RequiresPermissions(Permissions.Users.CREATE)
-	public void createUser(@RequestBody UserCreateData data) throws IOException {
+	public void createUser(@RequestBody UserCreateData data) {
 		try {
 			service.create(data);
 		} catch (UserService.InvalidModrinthIdException e) {
@@ -100,7 +99,7 @@ public class UserController {
 	}
 
 	@PatchMapping("/user/{id}")
-	public void editUserData(@PathVariable String id, @RequestBody UserPatchData data) throws IOException {
+	public void editUserData(@PathVariable String id, @RequestBody UserPatchData data) {
 		var user = getSingleUser(id);
 
 		// Check permissions

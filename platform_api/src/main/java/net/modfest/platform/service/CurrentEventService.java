@@ -8,8 +8,6 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-
 @Service
 public class CurrentEventService {
 	@Autowired
@@ -22,7 +20,7 @@ public class CurrentEventService {
 		return repository.get();
 	}
 
-	public void setCurrentEvent(@NonNull CurrentEventData data) throws IOException {
+	public void setCurrentEvent(@NonNull CurrentEventData data) {
 		// Validate that the data is correct
 		if (data.event() != null && !eventRepository.contains(data.event())) {
 			// Note that null *is* a valid event

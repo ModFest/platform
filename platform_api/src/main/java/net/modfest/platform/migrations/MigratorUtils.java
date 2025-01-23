@@ -11,16 +11,20 @@ public class MigratorUtils {
 	 * {@link Files#newDirectoryStream(Path)}. This function calculates the list of files ahead of time,
 	 * such that any file operations done by the edit function won't mess things up
 	 */
-	public static void executeForAllFiles(Path p, PathConsumer editFunction) throws IOException {
-		var pathList = new ArrayList<Path>();
-		try (var files = Files.newDirectoryStream(p)) {
-			for (var file : files) {
-				pathList.add(file);
+	public static void executeForAllFiles(Path p, PathConsumer editFunction) {
+		try {
+			var pathList = new ArrayList<Path>();
+			try (var files = Files.newDirectoryStream(p)) {
+				for (var file : files) {
+					pathList.add(file);
+				}
 			}
-		}
 
-		for (var path : pathList) {
-			editFunction.accept(path);
+			for (var path : pathList) {
+				editFunction.accept(path);
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 

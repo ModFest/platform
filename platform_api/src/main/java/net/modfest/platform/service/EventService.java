@@ -37,7 +37,7 @@ public class EventService {
 	// If the event has registrations closed:
 	//   the user is only registered if they have at least one submission
 
-	public void setPhase(EventData data, EventData.Phase target) throws IOException {
+	public void setPhase(EventData data, EventData.Phase target) {
 		eventRepository.save(data.withPhase(target));
 		if (data.phase().canRegister() != target.canRegister()) {
 			resetRegistrationData(data);
@@ -56,23 +56,18 @@ public class EventService {
 	 * Forcibly sets a user to be registered/unregistered.
 	 * WARNING: Does not take into account the phase!
 	 */
-	public void setRegistered(EventData event, UserData user, boolean registered) throws IOException {
+	public void setRegistered(EventData event, UserData user, boolean registered) {
 		userService.save(user.withRegistration(event, registered));
 	}
 
 	public void resetRegistrationData(EventData event) {
-		AtomicReference<IOException> hadException = new AtomicReference<>();
 		if (event.phase().canRegister()) {
 			// The event has registrations open. Users with zero submissions can freely register
 			// and unregister. But if a user has a submission, they must be registered
 			allEventAuthors(event).forEach(authorId -> {
 				var u = userService.getByMfId(authorId);
 				if (!u.registered().contains(event.id())) {
-					try {
-						userService.save(u.withRegistration(event, true));
-					} catch (IOException e) {
-						hadException.set(e);
-					}
+					userService.save(u.withRegistration(event, true));
 				}
 			});
 		} else {
@@ -81,17 +76,9 @@ public class EventService {
 			var authors = allEventAuthors(event).collect(Collectors.toSet());
 			for (var u : userService.getAll()) {
 				if (u.registered().contains(event.id()) != authors.contains(u.id())) {
-					try {
-						userService.save(u.withRegistration(event, authors.contains(u.id())));
-					} catch (IOException e) {
-						hadException.set(e);
-					}
+					userService.save(u.withRegistration(event, authors.contains(u.id())));
 				}
 			}
-		}
-
-		if (hadException.get() != null) {
-			throw new RuntimeException(hadException.get());
 		}
 	}
 

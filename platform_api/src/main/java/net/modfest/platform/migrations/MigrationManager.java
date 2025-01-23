@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -23,7 +22,7 @@ public class MigrationManager {
 	@Autowired
 	private JsonUtil jsonUtils;
 
-	public void migrate(ManagedDirectory root) throws IOException {
+	public void migrate(ManagedDirectory root) {
 		LOGGER.info("Checking migrations for {}", root);
 
 		var info = root.withRead(this::getInfo);
@@ -66,11 +65,11 @@ public class MigrationManager {
 		}
 	}
 
-	private void writeInfo(Path root, MigrationInfo info) throws IOException {
+	private void writeInfo(Path root, MigrationInfo info) {
 		jsonUtils.writeJson(root.resolve("info.json"), info);
 	}
 
-	private MigrationInfo getInfo(Path root) throws IOException {
+	private MigrationInfo getInfo(Path root) {
 		var migrationPath = root.resolve("info.json");
 		if (!Files.exists(migrationPath)) {
 			// Legacy stuff, if there's no info we assume it's version zero
@@ -87,6 +86,6 @@ public class MigrationManager {
 
 	@FunctionalInterface
 	public interface Migration {
-		void run(Migrator m) throws IOException;
+		void run(Migrator m);
 	}
 }

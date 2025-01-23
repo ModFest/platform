@@ -53,39 +53,43 @@ public abstract class AbstractJsonRepository<Data, Id> implements DiskCachedData
 	}
 
 	@PostConstruct
-	private void init() throws IOException {
+	private void init() {
 		// Initialize storage
 		readFromFilesystem();
 	}
 
 	@Override
 	@Locked.Write("dataLock") // Write lock, because we're writing to our internal store
-	public void readFromFilesystem() throws IOException {
+	public void readFromFilesystem() {
 		// Ensure the folder is created
-		this.root.createDirectories();
+		try {
+			this.root.createDirectories();
 
-		this.store.clear();
+			this.store.clear();
 
-		this.root.read(p -> {
-			FileUtil.iterDir(p, file -> {
-				Data data = this.jsonUtil.readJson(file, this.clazz);
+			this.root.read(p -> {
+				FileUtil.iterDir(p, file -> {
+					Data data = this.jsonUtil.readJson(file, this.clazz);
 
-				if (this.store.containsKey(getId(data))) {
-					throw new RuntimeException("Duplicate id in "+this.name+" repository! '"+getId(data)+"' appeared twice! Please resolve this manually");
-				}
+					if (this.store.containsKey(getId(data))) {
+						throw new RuntimeException("Duplicate id in " + this.name + " repository! '" + getId(data) + "' appeared twice! Please resolve this manually");
+					}
 
-				var expectedPath = p.resolve(getLocation(data));
-				if (!Objects.equals(file.toAbsolutePath(), expectedPath.toAbsolutePath())) {
-					throw new RuntimeException("Data is in the wrong location. Expected "+p.relativize(expectedPath)+" but found "+p.relativize(file));
-				}
+					var expectedPath = p.resolve(getLocation(data));
+					if (!Objects.equals(file.toAbsolutePath(), expectedPath.toAbsolutePath())) {
+						throw new RuntimeException("Data is in the wrong location. Expected " + p.relativize(expectedPath) + " but found " + p.relativize(file));
+					}
 
-				this.store.put(getId(data), data);
+					this.store.put(getId(data), data);
+				});
 			});
-		});
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Locked.Write("dataLock")
-	public void save(@NonNull Data newData) throws IOException {
+	public void save(@NonNull Data newData) {
 		// Run validations
 		var prev = this.store.get(getId(newData));
 		validateEdit(prev, newData);

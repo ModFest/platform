@@ -7,7 +7,6 @@ import com.google.gson.JsonPrimitive;
 import net.modfest.platform.misc.JsonUtil;
 import net.modfest.platform.misc.MfUserId;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -33,7 +32,7 @@ public record Migrator(JsonUtil json, Path root) {
 	 * Migrates from the old platform data format.
 	 * Changes: submissions now explicitly store which event they're from
 	 */
-	public void migrateTo1() throws IOException {
+	public void migrateTo1() {
 		var submissionPath = root.resolve("submissions");
 
 		MigratorUtils.executeForAllFiles(submissionPath, folder -> {
@@ -54,7 +53,7 @@ public record Migrator(JsonUtil json, Path root) {
 	 * V2
 	 * changes user id's to randomly generated strings
 	 */
-	public void migrateTo2() throws IOException {
+	public void migrateTo2() {
 		var uids = new HashSet<String>();
 		var old2New = new HashMap<String, String>();
 
@@ -146,7 +145,7 @@ public record Migrator(JsonUtil json, Path root) {
 	 * All users now have a role. This role may be set to "NONE", but it
 	 * can't be missing/null
 	 */
-	public void migrateTo3() throws IOException {
+	public void migrateTo3() {
 		var usersPath = root.resolve("users");
 
 		MigratorUtils.executeForAllFiles(usersPath, path -> {

@@ -1,15 +1,14 @@
 package net.modfest.platform.git;
 
-import net.modfest.platform.IOConsumer;
-import net.modfest.platform.IOFunction;
 import net.modfest.platform.configuration.GitConfig;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.EmptyCommitException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.jspecify.annotations.NonNull;
 
-import java.io.IOException;
 import java.nio.file.Path;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class GitManagedPath implements ManagedPath {
 	@NonNull
@@ -29,7 +28,7 @@ public class GitManagedPath implements ManagedPath {
 	}
 
 	@Override
-	public void write(IOConsumer<Path> runner) throws IOException {
+	public void write(Consumer<Path> runner) {
 		runner.accept(this.path);
 		try {
 			// Stage all files in the repo including new files, excluding deleted files
@@ -51,12 +50,12 @@ public class GitManagedPath implements ManagedPath {
 	}
 
 	@Override
-	public void read(IOConsumer<Path> runner) throws IOException {
+	public void read(Consumer<Path> runner) {
 		runner.accept(this.path);
 	}
 
 	@Override
-	public <R> R withRead(IOFunction<Path,R> runner) throws IOException {
+	public <R> R withRead(Function<Path,R> runner) {
 		return runner.apply(this.path);
 	}
 }

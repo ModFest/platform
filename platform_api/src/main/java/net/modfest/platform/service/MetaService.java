@@ -4,7 +4,6 @@ import net.modfest.platform.repository.DiskCachedData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -20,7 +19,7 @@ public class MetaService {
 	 * known to Spring
 	 * @return the number of stores that were reloaded. (Just so you can tell it did something)
 	 */
-	public int reloadFromDisk() throws IOException {
+	public int reloadFromDisk() {
 		int i = 0;
 		for (DiskCachedData diskBasedRepository : diskBasedRepositories) {
 			diskBasedRepository.readFromFilesystem();

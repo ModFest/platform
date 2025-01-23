@@ -25,9 +25,16 @@ public class JsonUtil {
 	/**
 	 * Read json from a file.
 	 */
-	public <T> T readJson(Path path, Class<T> clazz) throws IOException {
+	public <T> T readJson(Path path, Class<T> clazz) {
 		try (var reader = new FileReader(path.toFile(), StandardCharsets.UTF_8)) {
 			return gson.fromJson(reader, clazz);
+		} catch (IOException e) {
+			// We don't expect to get any io errors, and we don't really
+			// have a good way of dealing with them. So we can better just promote them
+			// to unchecked exceptions, since we'd be passing them up the chain any way
+			// Maybe in the future we can assure that io errors are even harder errors,
+			// and will shut the server down.
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -39,17 +46,21 @@ public class JsonUtil {
 	 * @see Gson#toJson(Object, Appendable)
 	 * @param target The file that should be written to
 	 * @param object The object to be serialized
-	 * @throws IOException
 	 */
-	public void writeJson(Path target, Object object) throws IOException {
+	public void writeJson(Path target, Object object) {
 		// Do an atomic write operation.
 		// this means we'll write to a temporary file,
 		// then copy that file atomically once done
-		var tmp = tempFile(target);
-		try (var writer = new FileWriter(tmp.toFile(), StandardCharsets.UTF_8)) {
-			gson.toJson(object, writer);
+		try {
+			var tmp = tempFile(target);
+			try (var writer = new FileWriter(tmp.toFile(), StandardCharsets.UTF_8)) {
+				gson.toJson(object, writer);
+			}
+			Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException e) {
+			// Same reasoning as in #readJson
+			throw new RuntimeException(e);
 		}
-		Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 	}
 
 	/**

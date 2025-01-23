@@ -1,7 +1,5 @@
 package net.modfest.platform.repository;
 
-import java.io.IOException;
-
 /**
  * Represents a repository that stores data in the filesystem,
  * but keeps an in-memory cache of that data instead of reading from disk on
@@ -16,5 +14,5 @@ public interface DiskCachedData {
 	 * 			 database to prevent it from being queried whilst not all entries have been filled
 	 * 			 yet.
 	 */
-	void readFromFilesystem() throws IOException;
+	void readFromFilesystem();
 }

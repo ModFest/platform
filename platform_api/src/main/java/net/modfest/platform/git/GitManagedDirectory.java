@@ -26,8 +26,14 @@ public class GitManagedDirectory extends GitManagedPath implements ManagedDirect
 	}
 
 	@Override
-	public void createDirectories() throws IOException {
-		this.write(Files::createDirectories);
+	public void createDirectories() {
+		this.write((p) -> {
+			try {
+				Files.createDirectories(p);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
 	}
 
 	private static final class GitManagedFile extends GitManagedPath implements ManagedFile{
@@ -36,8 +42,14 @@ public class GitManagedDirectory extends GitManagedPath implements ManagedDirect
 		}
 
 		@Override
-		public void createParentDirectories() throws IOException {
-			this.write(p -> Files.createDirectories(p.getParent()));
+		public void createParentDirectories() {
+			this.write(p -> {
+				try {
+					Files.createDirectories(p.getParent());
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			});
 		}
 	}
 }

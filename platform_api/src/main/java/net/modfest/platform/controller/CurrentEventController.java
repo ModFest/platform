@@ -9,8 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
-
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class CurrentEventController {
@@ -23,7 +21,7 @@ public class CurrentEventController {
 	}
 
 	@PutMapping("/currentevent/")
-	public void setCurrentEvent(@RequestBody CurrentEventData data) throws IOException {
+	public void setCurrentEvent(@RequestBody CurrentEventData data) {
 		try {
 			service.setCurrentEvent(data);
 		} catch (ValidationException e) {

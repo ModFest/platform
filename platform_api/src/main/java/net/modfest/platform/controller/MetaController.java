@@ -3,8 +3,8 @@ package net.modfest.platform.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.PostConstruct;
 import net.modfest.platform.pojo.HealthData;
-import net.modfest.platform.pojo.Whoami;
 import net.modfest.platform.pojo.UserData;
+import net.modfest.platform.pojo.Whoami;
 import net.modfest.platform.security.ModFestRealm;
 import net.modfest.platform.security.Permissions;
 import net.modfest.platform.service.MetaService;
@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
@@ -52,7 +51,7 @@ public class MetaController {
 		description = "Invalidates the in-memory caches. Will return the amount of stores that were invalidated " +
 			"(as an indication that it's doing something)")
 	@PostMapping("/meta/reload")
-	public int reload() throws IOException {
+	public int reload() {
 		return metaService.reloadFromDisk();
 	}
 

@@ -14,9 +14,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * A simple repository that stores a single bit of information.
- * @apiNote Please ensure {@link T} is an immutable class. ({@link lombok.With} is an easy way to do mutation).
- * 			This ensures that the data inside the cache can't be modified without it being properly saved to disk.
  * @param <T> The type of the data. Should be immutable!!
+ * @apiNote Please ensure {@link T} is an immutable class. ({@link lombok.With} is an easy way to do mutation).
+ * This ensures that the data inside the cache can't be modified without it being properly saved to disk.
  */
 public abstract class AbstractSingleJsonStorage<T> implements DiskCachedData {
 	@Autowired
@@ -32,7 +32,7 @@ public abstract class AbstractSingleJsonStorage<T> implements DiskCachedData {
 	private T cache;
 
 	/**
-	 * @param file file where the json should be stored
+	 * @param file  file where the json should be stored
 	 * @param clazz The class of the data stored
 	 */
 	protected AbstractSingleJsonStorage(ManagedFile file, Class<T> clazz) {
@@ -50,28 +50,32 @@ public abstract class AbstractSingleJsonStorage<T> implements DiskCachedData {
 	// the data is not initialized yet
 	@Locked.Write("dataLock")
 	@Override
-	public void readFromFilesystem() throws IOException {
-		this.file.createParentDirectories();
-		this.file.read(p -> {
-			if (!Files.exists(p)) {
-				var defaultData = this.createDefault();
-				if (defaultData == null) {
-					throw new RuntimeException(new NullPointerException("Default data is null"));
+	public void readFromFilesystem() {
+		try {
+			this.file.createParentDirectories();
+			this.file.read(p -> {
+				if (!Files.exists(p)) {
+					var defaultData = this.createDefault();
+					if (defaultData == null) {
+						throw new RuntimeException(new NullPointerException("Default data is null"));
+					}
+					writeToFile(defaultData);
 				}
-				writeToFile(defaultData);
+			});
+
+			this.file.read(p -> {
+				this.cache = this.jsonUtil.readJson(p, this.clazz);
+			});
+
+			if (this.cache == null) {
+				throw new RuntimeException(this.file + " appears broken! Please fix, or delete it and let it regenerate");
 			}
-		});
-
-		this.file.read(p -> {
-			this.cache = this.jsonUtil.readJson(p, this.clazz);
-		});
-
-		if (this.cache == null) {
-			throw new RuntimeException(this.file+" appears broken! Please fix, or delete it and let it regenerate");
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
-	private void writeToFile(T data) throws IOException {
+	private void writeToFile(T data) {
 		this.file.write(p -> {
 			this.jsonUtil.writeJson(p, data);
 		});
@@ -87,7 +91,7 @@ public abstract class AbstractSingleJsonStorage<T> implements DiskCachedData {
 	}
 
 	@Locked.Write("dataLock")
-	public void save(@NonNull T data) throws IOException {
+	public void save(@NonNull T data) {
 		writeToFile(data);
 		this.cache = data;
 	}
