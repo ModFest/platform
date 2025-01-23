@@ -1,6 +1,8 @@
 package net.modfest.platform.service;
 
 import net.modfest.platform.misc.MfUserId;
+import net.modfest.platform.misc.PlatformStandardException;
+import net.modfest.platform.pojo.PlatformErrorResponse;
 import net.modfest.platform.pojo.UserCreateData;
 import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.pojo.UserRole;
@@ -39,16 +41,22 @@ public class UserService {
 		return userRepository.getAll();
 	}
 
-	public String create(UserCreateData data) throws InvalidModrinthIdException, UserAlreadyExistsException {
+	public String create(UserCreateData data) throws InvalidModrinthIdException, PlatformStandardException {
 		var mrUser = modrinthApi.users().getUser(data.modrinthId());
 
 		if (mrUser == null) throw new InvalidModrinthIdException();
 
 		if (userRepository.getByModrinthId(mrUser.id) != null) {
-			throw new UserAlreadyExistsException("A user with modrinth id "+mrUser.id+" already exists!");
+			throw new PlatformStandardException(
+				PlatformErrorResponse.ErrorType.ALREADY_USED,
+				new PlatformErrorResponse.AlreadyExists("modrinth", mrUser.id)
+			);
 		}
 		if (userRepository.getByDiscordId(data.discordId()) != null) {
-			throw new UserAlreadyExistsException("A user with discord id "+data.discordId()+" already exists!");
+			throw new PlatformStandardException(
+				PlatformErrorResponse.ErrorType.ALREADY_USED,
+				new PlatformErrorResponse.AlreadyExists("discord", data.discordId())
+			);
 		}
 
 		var generatedId = generateUserId();

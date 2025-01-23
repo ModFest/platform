@@ -1,7 +1,8 @@
 package net.modfest.platform.service;
 
-import jakarta.validation.ValidationException;
+import net.modfest.platform.misc.PlatformStandardException;
 import net.modfest.platform.pojo.CurrentEventData;
+import net.modfest.platform.pojo.PlatformErrorResponse;
 import net.modfest.platform.repository.CurrentEventRepository;
 import net.modfest.platform.repository.EventRepository;
 import org.jspecify.annotations.NonNull;
@@ -20,11 +21,11 @@ public class CurrentEventService {
 		return repository.get();
 	}
 
-	public void setCurrentEvent(@NonNull CurrentEventData data) {
+	public void setCurrentEvent(@NonNull CurrentEventData data) throws PlatformStandardException {
 		// Validate that the data is correct
 		if (data.event() != null && !eventRepository.contains(data.event())) {
 			// Note that null *is* a valid event
-			throw new ValidationException("Current event must refer to a valid event, or null");
+			throw new PlatformStandardException(PlatformErrorResponse.ErrorType.EVENT_NO_EXIST, data.event());
 		}
 
 		// It's good!

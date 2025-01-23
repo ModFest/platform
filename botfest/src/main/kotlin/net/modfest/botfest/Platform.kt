@@ -14,6 +14,7 @@ import net.modfest.platform.gson.GsonCommon
 import net.modfest.platform.pojo.CurrentEventData
 import net.modfest.platform.pojo.EventData
 import net.modfest.platform.pojo.HealthData
+import net.modfest.platform.pojo.PlatformErrorResponse
 import net.modfest.platform.pojo.UserCreateData
 import net.modfest.platform.pojo.UserData
 import net.modfest.platform.pojo.UserPatchData
@@ -154,11 +155,9 @@ class PlatformBotFestAuthenticated(var client: HttpClient) {
  * Helper method to unwrap platform's errors into friendly exceptions
  */
 private suspend fun HttpResponse.unwrapErrors(): HttpResponse {
-	if (this.status == HttpStatusCode.BadRequest) {
-		val v: SpringBadRequest = this.body();
-		throw HttpBadRequest(v.message)
-	} else if (!this.status.isSuccess()) {
-		throw RuntimeException("Http call return "+this.status)
+	if (!this.status.isSuccess()) {
+		val v: PlatformErrorResponse = this.body();
+		throw PlatformException(v)
 	} else {
 		return this
 	}
@@ -171,5 +170,7 @@ private suspend fun HttpResponse.unwrapErrors(): HttpResponse {
 private class SpringBadRequest(val message: String) {
 }
 
-class HttpBadRequest(message: String) : Exception(message) {
+class PlatformException(val data: PlatformErrorResponse) : Exception() {
+	override val message: String
+		get() = data.toString()
 }
