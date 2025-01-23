@@ -1,6 +1,7 @@
 package net.modfest.botfest.extensions
 
 import dev.kord.core.behavior.interaction.response.edit
+import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
@@ -11,6 +12,7 @@ import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.modules.dev.unsafe.annotations.UnsafeAPI
 import dev.kordex.modules.dev.unsafe.commands.slash.InitialSlashCommandResponse
 import dev.kordex.modules.dev.unsafe.extensions.unsafeSlashCommand
+import net.modfest.botfest.MAIN_GUILD_ID
 import net.modfest.botfest.Platform
 import net.modfest.botfest.i18n.Translations
 import net.modfest.platform.pojo.UserCreateData
@@ -102,6 +104,53 @@ class Register : Extension(), KordExKoinComponent {
 						.translateNamed(
 							"event" to event.name
 						)
+				}
+			}
+		}
+
+		ephemeralSlashCommand {
+			name = Translations.Commands.Group.Event.name
+			description = Translations.Commands.Group.Event.description
+
+			guild(MAIN_GUILD_ID)
+
+			ephemeralSubCommand {
+				name = Translations.Commands.Event.Unregister.name
+				description = Translations.Commands.Event.Unregister.description
+
+				action {
+					var curEvent = platform.getCurrentEvent().event;
+
+					if (curEvent == null) {
+						respond {
+							content = Translations.Commands.Event.Unregister.Response.unavailable
+								.withContext(this@action)
+								.translateNamed()
+						}
+						return@action
+					}
+
+					val eventData = platform.getEvent(curEvent)
+					val platformUser = platform.getUser(user)
+					if (platformUser == null || !platformUser.registered.contains(curEvent)) {
+						respond {
+							content = Translations.Commands.Event.Unregister.Response.none
+								.withContext(this@action)
+								.translateNamed(
+									"event" to eventData.name
+								)
+						}
+						return@action
+					}
+
+					platform.withAuth(user).unregisterMe(eventData)
+					respond {
+						content = Translations.Commands.Event.Unregister.Response.success
+							.withContext(this@action)
+							.translateNamed(
+								"event" to eventData.name
+							)
+					}
 				}
 			}
 		}

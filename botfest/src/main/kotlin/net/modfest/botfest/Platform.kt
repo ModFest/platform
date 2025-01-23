@@ -123,6 +123,12 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 			addAuth()
 		}.unwrapErrors()
 	}
+
+	suspend fun unregisterMe(event: EventData) {
+		client.delete("/event/"+event.id+"/registrations/dc:"+discordUser.value) {
+			addAuth()
+		}.unwrapErrors()
+	}
 }
 
 /**
