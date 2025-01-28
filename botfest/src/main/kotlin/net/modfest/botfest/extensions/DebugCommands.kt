@@ -19,7 +19,7 @@ import java.util.*
 class DebugCommands : Extension(), KordExKoinComponent {
 	override val name = "debug"
 	// Store the moment that this extension was created, so we can tell approximately when the bot was started
-	val startupTime = Date.from(Instant.now())
+	val startupTime = Instant.now()
 
 	override suspend fun setup() {
 		val platform = bot.getKoin().get<Platform>()

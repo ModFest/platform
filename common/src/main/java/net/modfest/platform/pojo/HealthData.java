@@ -1,6 +1,6 @@
 package net.modfest.platform.pojo;
 
-import java.util.Date;
+import java.time.Instant;
 
-public record HealthData(String health, Date runningSince) {
+public record HealthData(String health, Instant runningSince) {
 }

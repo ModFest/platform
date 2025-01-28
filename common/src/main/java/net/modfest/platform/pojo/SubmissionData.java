@@ -10,7 +10,7 @@ public record SubmissionData(@NonNull String id,
 							 @NonNull String event,
 							 @NonNull String name,
 							 @NonNull String description,
-							 @NonNull Set<String>authors,
+							 @NonNull Set<String> authors,
 							 @NonNull JsonObject platform, // TODO
 							 @NonNull Images images,
 							 @NonNull String download,

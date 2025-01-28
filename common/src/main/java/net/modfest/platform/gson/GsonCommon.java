@@ -4,7 +4,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
 import net.modfest.platform.pojo.EventData;
 
-import java.util.Date;
+import java.time.Instant;
 
 public class GsonCommon {
 	/**
@@ -14,7 +14,7 @@ public class GsonCommon {
 		builder
 			.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
 			.registerTypeHierarchyAdapter(Enum.class, new EnumToLowerCaseJsonConverter())
-			.registerTypeAdapter(Date.class, new CustomDateDeserializer())
+			.registerTypeAdapter(Instant.class, new InstantSerializer())
 			.registerTypeAdapter(EventData.DescriptionItem.class, new EventData.DescriptionItem.TypeAdapter())
 			.setPrettyPrinting()
 			.serializeNulls()

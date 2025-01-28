@@ -9,21 +9,25 @@ import net.modfest.platform.misc.MfUserId;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Contains ad-hoc migrations to our json format
  */
 public record Migrator(JsonUtil json, Path root) {
-	static final int CURRENT_VERSION = 3;
+	static final int CURRENT_VERSION = 4;
 	static final Map<Integer,MigrationManager.Migration> MIGRATIONS = new HashMap<>();
 
 	static {
 		MIGRATIONS.put(1, Migrator::migrateTo1);
 		MIGRATIONS.put(2, Migrator::migrateTo2);
 		MIGRATIONS.put(3, Migrator::migrateTo3);
+		MIGRATIONS.put(4, Migrator::migrateTo4);
 	}
 
 
@@ -158,5 +162,45 @@ public record Migrator(JsonUtil json, Path root) {
 				json.writeJson(path, userJson);
 			}
   		});
+	}
+
+	/**
+	 * V4
+	 * Changes timestamps to ISO8086
+	 */
+	public void migrateTo4() {
+		var oldFormat = new SimpleDateFormat("MMM dd, yyyy, h:mm:ssa");
+
+		Function<String, String> toIso = str -> {
+			try {
+				// These idiosyncrasies sometimes occur within the old format
+				str = str.replace(" ", "");
+				if (str.startsWith("Sep ")) {
+					str = str.replaceFirst("Sep ", "Sept ");
+				}
+				if (str.endsWith(" AM")) {
+					str = str.replace(" AM", "AM");
+				}
+				if (str.endsWith(" PM")) {
+					str = str.replace(" PM", "PM");
+				}
+				var date = oldFormat.parse(str);
+				return date.toInstant().toString();
+			} catch (ParseException e) {
+				throw new RuntimeException(e);
+			}
+		};
+		var eventPath = root.resolve("events");
+
+		MigratorUtils.executeForAllFiles(eventPath, path -> {
+			var eventData = json.readJson(path, JsonObject.class);
+			var dates = eventData.getAsJsonArray("dates");
+			for (var date : dates) {
+				var o = date.getAsJsonObject();
+				o.addProperty("start", toIso.apply(o.get("start").getAsString()));
+				o.addProperty("end", toIso.apply(o.get("end").getAsString()));
+			}
+			json.writeJson(path, eventData);
+		});
 	}
 }

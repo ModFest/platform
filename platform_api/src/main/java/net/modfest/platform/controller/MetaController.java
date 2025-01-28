@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.util.Collection;
-import java.util.Date;
 
 /**
  * Various meta endpoints that interact with platform itself, instead of its data
@@ -28,13 +27,13 @@ public class MetaController {
 	private MetaService metaService;
 	@Autowired
 	private ModFestRealm realm;
-	private Date startupTime;
+	private Instant startupTime;
 
 	@PostConstruct
 	public void init() {
 		// Record when the controller is initializer, this should give us an approximation for
 		// how long the server has been up
-		this.startupTime = Date.from(Instant.now());
+		this.startupTime = Instant.now();
 	}
 
 	@Operation(summary = "Useful endpoint to see if the platform is still running")
