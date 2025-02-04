@@ -84,7 +84,14 @@ class Platform(var base_url: String) {
 	 * Retrieve a user by their discord id. Will be null if the user does not exist
 	 */
 	suspend fun getUser(user: UserBehavior): UserData? {
-		return client.get("/user/dc:"+user.id).apply {
+		return getUser(user.id)
+	}
+
+	/**
+	 * Retrieve a user by their discord id. Will be null if the user does not exist
+	 */
+	suspend fun getUser(user: Snowflake): UserData? {
+		return client.get("/user/dc:$user").apply {
 			// Map 404 errors to be null
 			if (status == HttpStatusCode.NotFound) return null
 		}.unwrapErrors().body()

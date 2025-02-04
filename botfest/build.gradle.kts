@@ -28,7 +28,9 @@ dependencies {
 	implementation(libs.logback.groovy)
 	implementation(libs.logging)
 
+	// Custom added dependencies (these are not part of the kordex template)
 	implementation("io.ktor:ktor-serialization-gson:3.0.2")
+	implementation("org.xerial:sqlite-jdbc:3.48.0.0")
 	implementation(project(":common"))
 }
 
