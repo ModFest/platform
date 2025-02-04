@@ -18,18 +18,22 @@ import net.modfest.botfest.i18n.Translations
 import net.modfest.platform.pojo.UserCreateData
 import org.koin.core.component.inject
 import java.util.*
+import java.util.regex.Pattern
 
 /**
  * Provides various debugging commands
  */
-class Register : Extension(), KordExKoinComponent {
-	override val name = "register"
+class EventCommands : Extension(), KordExKoinComponent {
+	override val name = "event"
 	val platform: Platform by inject()
+
+	var MODRINTH_REGEX = Pattern.compile(".*modrinth\\.com/mod/([\\w!@$()`.+,\"\\-']{3,64})/?.*");
 
 	@OptIn(UnsafeAPI::class)
 	override suspend fun setup() {
 		val platform = bot.getKoin().get<Platform>()
 
+		// Register command
 		unsafeSlashCommand {
 			name = Translations.Commands.Register.name
 			description = Translations.Commands.Register.description
@@ -108,12 +112,14 @@ class Register : Extension(), KordExKoinComponent {
 			}
 		}
 
+		// event subcommands
 		ephemeralSlashCommand {
 			name = Translations.Commands.Group.Event.name
 			description = Translations.Commands.Group.Event.description
 
 			guild(MAIN_GUILD_ID)
 
+			// unregister command
 			ephemeralSubCommand {
 				name = Translations.Commands.Event.Unregister.name
 				description = Translations.Commands.Event.Unregister.description
@@ -153,6 +159,53 @@ class Register : Extension(), KordExKoinComponent {
 					}
 				}
 			}
+
+			// command for submitting a mod
+			ephemeralSubCommand(::SubmitModal) {
+				name = Translations.Commands.Event.Submit.name
+				description = Translations.Commands.Event.Submit.description
+
+				action { modal ->
+					if (modal == null) return@action
+					val curEvent = platform.getCurrentEvent().event
+
+					if (curEvent == null) {
+						respond {
+							content = Translations.Commands.Event.Submit.Response.unavailable
+								.withContext(this@action)
+								.translateNamed()
+						}
+						return@action
+					}
+
+					val matcher = MODRINTH_REGEX.matcher(modal.modrinthUrl.value!!)
+
+					if (!matcher.find()) {
+						respond {
+							content = Translations.Commands.Event.Submit.Response.invalid
+								.withContext(this@action)
+								.translateNamed(
+									"url" to modal.modrinthUrl.value
+								)
+						}
+						return@action
+					}
+
+					val projectSlug = matcher.group(1)
+
+					val eventInfo = platform.getEvent(curEvent)
+					val submission = platform.withAuth(this.user).submitModrinth(curEvent, projectSlug)
+
+					respond {
+						content = Translations.Commands.Event.Submit.Response.success
+							.withContext(this@action)
+							.translateNamed(
+								"event" to eventInfo.name,
+								"mod" to submission.name
+							)
+					}
+				}
+			}
 		}
 	}
 
@@ -180,6 +233,20 @@ class Register : Extension(), KordExKoinComponent {
 			placeholder = Translations.Modal.Register.Pronouns.placeholder
 			minLength = 1
 			maxLength = 24
+			required = true
+		}
+	}
+
+
+
+	class SubmitModal : ModalForm() {
+		override var title: Key = Translations.Modal.Submit.title
+
+		val modrinthUrl = lineText {
+			label = Translations.Modal.Submit.Url.label
+			placeholder = Translations.Modal.Submit.Url.placeholder
+			minLength = 10
+			maxLength = 128
 			required = true
 		}
 	}

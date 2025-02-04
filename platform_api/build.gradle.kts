@@ -56,7 +56,7 @@ dependencies {
 	implementation("org.apache.shiro:shiro-web:2.0.2:jakarta")
 
 	// Modrinth api
-	implementation("nl.theepicblock:DukeRinth:0.1.0")
+	implementation("nl.theepicblock:DukeRinth:0.3.1")
 
 	// Yes, I am using lombok :(
 	compileOnly("org.projectlombok:lombok")

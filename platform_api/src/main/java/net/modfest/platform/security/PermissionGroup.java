@@ -7,13 +7,16 @@ import java.util.Set;
 
 public enum PermissionGroup {
 	UNPRIVILEGED_USERS(null, Set.of(
+		Permissions.Event.SUBMIT
 	)),
 	TEAM_MEMBERS(UNPRIVILEGED_USERS, Set.of(
 		Permissions.Meta.RELOAD,
 		Permissions.Users.LIST_ALL,
 		Permissions.Users.EDIT_OTHERS,
 		Permissions.Event.BYPASS_REGISTRATIONS,
-		Permissions.Event.REGISTER_OTHERS
+		Permissions.Event.REGISTER_OTHERS,
+		Permissions.Event.SUBMIT_BYPASS,
+		Permissions.Event.SUBMIT_OTHER
 	)),
 	/**
 	 * Note: BotFest usually performs actions on behalf of a different user.

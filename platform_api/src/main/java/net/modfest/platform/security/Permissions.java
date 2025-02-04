@@ -28,10 +28,22 @@ public class Permissions {
 		/**
 		 * Allows the user to bypass restrictions on if an event allows (de)registrations or not
 		 */
-		public static final String BYPASS_REGISTRATIONS = "event.bypass_registrations";
+		public static final String BYPASS_REGISTRATIONS = "event.register.bypass";
 		/**
 		 * Allows the user to (de)register people other than themselves
 		 */
-		public static final String REGISTER_OTHERS = "event.register_others";
+		public static final String REGISTER_OTHERS = "event.register.others";
+		/**
+		 * Allows the user to (de)submit to any events which are accepting submissions
+		 */
+		public static final String SUBMIT = "event.submit";
+		/**
+		 * Allows the user to (de)submit for other people
+		 */
+		public static final String SUBMIT_BYPASS = "event.submit.bypass";
+		/**
+		 * Allows the user to bypass restrictions on if an event allows (de)submissions or not
+		 */
+		public static final String SUBMIT_OTHER = "event.submit.others";
 	}
 }

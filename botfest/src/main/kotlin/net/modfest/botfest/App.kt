@@ -5,10 +5,7 @@ import dev.kord.common.entity.Snowflake
 import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.utils.env
 import dev.kordex.core.utils.loadModule
-import net.modfest.botfest.extensions.AdminCommands
-import net.modfest.botfest.extensions.DebugCommands
-import net.modfest.botfest.extensions.UserCommands
-import net.modfest.botfest.extensions.Register
+import net.modfest.botfest.extensions.*
 import net.modfest.botfest.i18n.Translations
 import net.modfest.platform.pojo.PlatformErrorResponse
 import net.modfest.platform.pojo.PlatformErrorResponse.AlreadyExists
@@ -42,7 +39,7 @@ suspend fun main() {
 			add(::DebugCommands)
 			add(::AdminCommands)
 			add(::UserCommands)
-			add(::Register)
+			add(::EventCommands)
 		}
 
 		errorResponse { message, type ->
