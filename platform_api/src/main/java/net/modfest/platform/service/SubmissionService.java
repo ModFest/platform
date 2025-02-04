@@ -5,12 +5,16 @@ import net.modfest.platform.pojo.SubmissionData;
 import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.repository.SubmissionRepository;
 import nl.theepicblock.dukerinth.ModrinthApi;
+import nl.theepicblock.dukerinth.VersionFilter;
 import nl.theepicblock.dukerinth.models.Project;
 import nl.theepicblock.dukerinth.models.TeamMember;
+import nl.theepicblock.dukerinth.models.Version;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -23,6 +27,9 @@ public class SubmissionService {
 	private SubmissionRepository submissionRepository;
 	@Autowired
 	private UserService userService;
+	@Lazy
+	@Autowired
+	private EventService eventService;
 	@Autowired
 	private ModrinthApi modrinth;
 
@@ -71,6 +78,13 @@ public class SubmissionService {
 		}
 
 		var authors = getUsersForRinthProject(subId);
+		var latest = getLatestModrinth(subId, eventService.getEventById(eventId));
+
+		if (latest == null) {
+			throw new RuntimeException("No latest version");
+		}
+
+		var primaryFile = latest.files.stream().filter(f -> f.primary).findAny().orElse(latest.files.get(0));
 
 		submissionRepository.save(
 			new SubmissionData(
@@ -79,9 +93,14 @@ public class SubmissionService {
 				project.title,
 				project.description,
 				authors.map(UserData::id).collect(Collectors.toSet()),
-				null, // TODO
+				new SubmissionData.FileData(
+					new SubmissionData.FileData.Modrinth(
+						project.id,
+						latest.id
+					)
+				),
 				getImages(project),
-				null, // TODO
+				primaryFile.url,
 				project.sourceUrl,
 				new SubmissionData.Awards(
 					Set.of(),
@@ -97,5 +116,18 @@ public class SubmissionService {
 			mrProject.iconUrl,
 			mrProject.gallery.stream().filter(item -> item.featured).map(item -> item.url).findFirst().orElse(null)
 		);
+	}
+
+	/**
+	 * Retrieves the most recent version of a modrinth project
+	 * @param event The event this version will be for. Used for filtering
+	 */
+	private @Nullable Version getLatestModrinth(String mrProject, EventData event) {
+		var filter = VersionFilter.ofLoader(event.mod_loader())
+			.andGameVersion(event.minecraft_version());
+		return modrinth.projects().getVersions(mrProject, filter)
+			.stream()
+			.max(Comparator.comparing(v -> v.datePublished))
+			.orElse(null);
 	}
 }
