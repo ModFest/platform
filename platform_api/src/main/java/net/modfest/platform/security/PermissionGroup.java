@@ -25,7 +25,10 @@ public enum PermissionGroup {
 	BOTFEST(null, Set.of(
 		// BotFest needs to create users. It cannot perform actions on behalf of a user
 		// if it doesn't exist yet.
-		Permissions.Users.CREATE
+		Permissions.Users.CREATE,
+		// BotFest is able to subscribe to user data changing, to enable
+		// it to give out roles
+		Permissions.Users.LIST_ALL
 	));
 
 	public final @Nullable PermissionGroup parent;

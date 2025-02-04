@@ -20,6 +20,7 @@ public class UserRepository extends AbstractJsonRepository<UserData, String> {
 	}
 
 	public UserData getByDiscordId(String discordId) {
+		if (discordId == null) return null;
 		return this.getAll()
 			.stream()
 			.filter(user -> Objects.equals(user.discordId(), discordId))
@@ -28,6 +29,7 @@ public class UserRepository extends AbstractJsonRepository<UserData, String> {
 	}
 
 	public UserData getByModrinthId(String modrinthId) {
+		if (modrinthId == null) return null;
 		return this.getAll()
 			.stream()
 			.filter(user -> Objects.equals(user.modrinthId(), modrinthId))

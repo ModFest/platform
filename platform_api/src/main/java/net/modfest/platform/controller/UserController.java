@@ -1,5 +1,6 @@
 package net.modfest.platform.controller;
 
+import net.modfest.platform.misc.EventSource;
 import net.modfest.platform.misc.ModrinthIdUtils;
 import net.modfest.platform.misc.PlatformStandardException;
 import net.modfest.platform.pojo.*;
@@ -13,8 +14,10 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Collection;
 import java.util.List;
@@ -35,6 +38,32 @@ public class UserController {
 	@RequiresPermissions(Permissions.Users.LIST_ALL)
 	public Collection<UserData> listAll() {
 		return service.getAll();
+	}
+
+	@GetMapping(value = "/users/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	@RequiresPermissions(Permissions.Users.LIST_ALL)
+	public SseEmitter subscribeUserChanges() {
+		var emitter = new SseEmitter(-1L);
+		EventSource.Subscriber<UserData> subscriber = (user) -> {
+			try {
+				emitter.send(SseEmitter.event().data(user.id()));
+			} catch (Throwable t) {
+				// Close connection and cancel subscription
+				try {
+					emitter.complete();
+				} catch (Throwable b) {
+					throw new EventSource.CancelSubscriptionException();
+				}
+			}
+		};
+		// If the emitter is closed due to any other reason: unsubscribe it
+		// *we don't want memory leaks*
+		emitter.onCompletion(() -> {
+			service.userEventSource().unsubscribe(subscriber);
+		});
+		// Add it as a subscriber
+		service.userEventSource().subscribe(subscriber);
+		return emitter;
 	}
 
 	@PostMapping("/users")

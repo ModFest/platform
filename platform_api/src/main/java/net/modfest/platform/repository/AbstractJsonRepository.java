@@ -3,6 +3,7 @@ package net.modfest.platform.repository;
 import jakarta.annotation.PostConstruct;
 import lombok.Locked;
 import net.modfest.platform.git.ManagedDirectory;
+import net.modfest.platform.misc.EventSource;
 import net.modfest.platform.misc.FileUtil;
 import net.modfest.platform.misc.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,11 +40,13 @@ public abstract class AbstractJsonRepository<Data, Id> implements DiskCachedData
 	 * This is our in-memory storage for quick lookups.
 	 * It should be kept in-sync with the filesystem
 	 */
-	private final Map<Id, Data> store = new HashMap<>();
+	private Map<Id, Data> store = new HashMap<>();
 	/**
 	 * Lock used both for writing to the filesystem and to manage {@link #store}.
 	 */
 	private final ReadWriteLock dataLock = new ReentrantReadWriteLock();
+
+	public final EventSource<Data> onDataUpdated = new EventSource<>();
 
 	public AbstractJsonRepository(@Autowired JsonUtil jsonUtil, ManagedDirectory root, String name, Class<Data> clazz) {
 		this.jsonUtil = jsonUtil;
@@ -65,7 +68,8 @@ public abstract class AbstractJsonRepository<Data, Id> implements DiskCachedData
 		try {
 			this.root.createDirectories();
 
-			this.store.clear();
+			var prevData = this.store;
+			this.store = new HashMap<>();
 
 			this.root.read(p -> {
 				FileUtil.iterDir(p, file -> {
@@ -83,6 +87,15 @@ public abstract class AbstractJsonRepository<Data, Id> implements DiskCachedData
 					this.store.put(getId(data), data);
 				});
 			});
+
+			// Check for any changes and notify listeners of them
+			if (prevData != null) {
+				this.store.forEach((key, value) -> {
+					if (!Objects.equals(value, prevData.get(key))) {
+						onDataUpdated.emit(value);
+					}
+				});
+			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -101,6 +114,8 @@ public abstract class AbstractJsonRepository<Data, Id> implements DiskCachedData
 
 		// Keep our in-memory storage up to date
 		this.store.put(getId(newData), newData);
+
+		onDataUpdated.emit(newData);
 	}
 
 	@Locked.Read("dataLock")

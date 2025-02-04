@@ -1,5 +1,6 @@
 package net.modfest.platform.service;
 
+import net.modfest.platform.misc.EventSource;
 import net.modfest.platform.misc.MfUserId;
 import net.modfest.platform.misc.PlatformStandardException;
 import net.modfest.platform.pojo.PlatformErrorResponse;
@@ -35,6 +36,13 @@ public class UserService {
 
 	public void save(UserData data) {
 		userRepository.save(data);
+	}
+
+	/**
+	 * This event source will emit an event whenever new user data is saved.
+	 */
+	public EventSource<UserData> userEventSource() {
+		return userRepository.onDataUpdated;
 	}
 
 	public Collection<UserData> getAll() {

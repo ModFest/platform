@@ -1,7 +1,6 @@
 package net.modfest.platform.controller;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonPrimitive;
 import net.modfest.platform.misc.PlatformStandardException;
 import net.modfest.platform.pojo.PlatformErrorResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +36,7 @@ public class PlatformExceptionHandler {
 	private ResponseEntity<PlatformErrorResponse> anyError(Throwable t) {
 		return toResponse(new PlatformErrorResponse(
 			PlatformErrorResponse.ErrorType.INTERNAL,
-			new JsonPrimitive(t.getMessage())
+			gson.toJsonTree(t.getMessage())
 		));
 	}
 
