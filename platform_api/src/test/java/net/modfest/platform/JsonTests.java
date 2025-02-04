@@ -3,6 +3,7 @@ package net.modfest.platform;
 import com.google.gson.GsonBuilder;
 import net.modfest.platform.gson.GsonCommon;
 import net.modfest.platform.pojo.EventData;
+import net.modfest.platform.pojo.SubmissionData;
 import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.pojo.UserRole;
 import org.junit.jupiter.api.Assertions;
@@ -49,7 +50,7 @@ public class JsonTests {
 				"The elusive blanketcon that definitely exists",
 				EventData.Phase.PLANNING,
 				List.of(
-					new EventData.DateRange("Announced", "wefefwuifhui", EventData.Phase.PLANNING, Date.from(Instant.EPOCH), Date.from(Instant.EPOCH))
+					new EventData.DateRange("Announced", "wefefwuifhui", EventData.Phase.PLANNING, Instant.EPOCH, Date.from(Instant.EPOCH))
 				),
 				new EventData.Images(
 					"a", "b", "c", "d"
@@ -65,6 +66,27 @@ public class JsonTests {
 				"boop",
 				List.of(
 					new EventData.DescriptionItem<>(new EventData.DescriptionItem.Markdown("# HELLO"))
+				)
+			),
+			new SubmissionData(
+				"a",
+				"b",
+				"a b",
+				"dawda",
+				Set.of("Bob"),
+				new SubmissionData.FileData(new SubmissionData.FileData.Modrinth(
+					"dwaodi",
+					"dwdadw"
+				)),
+				new SubmissionData.Images(
+					"e",
+					"b"
+				),
+				"https://a",
+				"bb",
+				new SubmissionData.Awards(
+					Set.of(),
+					Set.of()
 				)
 			)
 		);
