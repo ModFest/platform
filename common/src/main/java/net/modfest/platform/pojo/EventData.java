@@ -5,7 +5,6 @@ import lombok.With;
 import org.jspecify.annotations.NonNull;
 
 import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 
 @With
@@ -104,6 +103,6 @@ public record EventData(@NonNull String id,
         }
     }
 
-    public record DateRange(String name, String description, Phase phase, Instant start, Date end) {
+    public record DateRange(String name, String description, Phase phase, Instant start, Instant end) {
     }
 }

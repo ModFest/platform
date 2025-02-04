@@ -11,7 +11,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -50,7 +49,7 @@ public class JsonTests {
 				"The elusive blanketcon that definitely exists",
 				EventData.Phase.PLANNING,
 				List.of(
-					new EventData.DateRange("Announced", "wefefwuifhui", EventData.Phase.PLANNING, Instant.EPOCH, Date.from(Instant.EPOCH))
+					new EventData.DateRange("Announced", "wefefwuifhui", EventData.Phase.PLANNING, Instant.EPOCH, Instant.EPOCH)
 				),
 				new EventData.Images(
 					"a", "b", "c", "d"
