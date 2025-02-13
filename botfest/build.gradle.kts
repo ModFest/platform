@@ -118,11 +118,11 @@ docker {
 // For some reason we need to do this roundabout way, because the dev task is not yet added
 tasks.whenTaskAdded {
 	if (this.name == "dev") {
-		var address = project.property("dev.api.address")
-		var port = project.property("dev.api.port")
-		(this as JavaExec).environment(
-			"PLATFORM_API" to "${address}:${port}",
-			"PLATFORM_SECRET" to project.property("dev.botfest.shared-secret"),
-		)
+		val address = project.property("dev.api.address")
+		val port = project.property("dev.api.port")
+		val env = (this as JavaExec).environment
+		env["PLATFORM_API"] = "${address}:${port}"
+		env["PLATFORM_SECRET"] = project.property("dev.botfest.shared-secret")
+		env["ENVIRONMENT"] = "dev"
 	}
 }

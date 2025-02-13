@@ -7,8 +7,12 @@ def defaultLevel = INFO
 def defaultTarget = ConsoleTarget.SystemErr
 
 if (environment == "dev") {
+	// When running in dev, log all debug events
 	defaultLevel = DEBUG
 	defaultTarget = ConsoleTarget.SystemOut
+
+	// Except this one, this one just spams the console and isn't useful for development
+	logger("[R]:[KTOR]:[ExclusionRequestRateLimiter]", INFO)
 
 	// Silence warning about missing native PRNG
 	logger("io.ktor.util.random", ERROR)
