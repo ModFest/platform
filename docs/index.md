@@ -17,7 +17,9 @@ A conscious choice was made to have the discord bot interact via the http endpoi
 the http api and ensure it's capable. It also means that they can be hosted and restarted separately.
 
 ## Running the projects in dev
-Use `./gradlew dev` to run botfest, and `./gradlew bootRun` to run the platform api.
+Use `./gradlew bootRun` to run the platform api and `./gradlew dev` to run BotFest.
+Platform api will run without any configuration, whilst BotFest needs some setup (see [here](./botfest/about.md#dev-env)).
+
 You can configure the port and address that the platform api will use in dev in the `gradle.properties` file. This
 config is also shared with botfest, so botfest will use the right url to access the platform when run in dev.
 

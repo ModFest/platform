@@ -7,6 +7,7 @@ import dev.kord.gateway.Intent
 import dev.kord.gateway.Intents
 import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.utils.env
+import dev.kordex.core.utils.envOrNull
 import dev.kordex.core.utils.extraData
 import dev.kordex.core.utils.loadModule
 import kotlinx.coroutines.flow.launchIn
@@ -22,9 +23,9 @@ val PLATFORM_SHARED_SECRET = env("PLATFORM_SECRET")
 val MAIN_GUILD_ID = Snowflake(
 	env("MAIN_GUILD").toLong()  // Get the test server ID from the env vars or a .env file
 )
-val REGISTERED_ROLE = Snowflake(
-	env("REGISTERED_ROLE").toLong()
-)
+val REGISTERED_ROLE = envOrNull("REGISTERED_ROLE")?.let {
+	if (it.isBlank()) { null } else { Snowflake(it.toLong()) }
+}
 
 private val TOKEN = env("TOKEN")   // Get the bot's token from the env vars or a .env file
 

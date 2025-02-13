@@ -312,7 +312,11 @@ class RoleManager : Extension(), KordExKoinComponent {
 	 */
 	suspend fun managedRoles(): Set<Snowflake> {
 		val roles = HashSet<Snowflake>()
-		roles.add(REGISTERED_ROLE)
+
+		if (REGISTERED_ROLE != null) {
+			roles.add(REGISTERED_ROLE)
+		}
+
 		platform.getEvents().forEach { event ->
 			roles.add(Snowflake(event.discordRoles.participant))
 			roles.add(Snowflake(event.discordRoles.award))
@@ -331,7 +335,10 @@ class RoleManager : Extension(), KordExKoinComponent {
 			return roles
 		}
 
-		roles.add(REGISTERED_ROLE)
+		if (REGISTERED_ROLE != null) {
+			roles.add(REGISTERED_ROLE)
+		}
+
 		if (platformData.registered == null) {
 			return roles // TODO This shouldn't happen, but it seems like there are some broken users in platform
 		}
