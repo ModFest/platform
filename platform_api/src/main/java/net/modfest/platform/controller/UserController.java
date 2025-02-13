@@ -13,8 +13,10 @@ import nl.theepicblock.dukerinth.ModrinthApi;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -42,8 +44,15 @@ public class UserController {
 
 	@GetMapping(value = "/users/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
 	@RequiresPermissions(Permissions.Users.LIST_ALL)
-	public SseEmitter subscribeUserChanges() {
+	public ResponseEntity<SseEmitter> subscribeUserChanges() {
 		var emitter = new SseEmitter(-1L);
+		// Immediately send something
+		// this ensures the client has a reconnection time, but it also
+		// ensures the connection has been used. Because if the connection
+		// times out (see above) before anything was sent, some funky stuff happens
+		try {
+			emitter.send(SseEmitter.event().reconnectTime(1000));
+		} catch (Throwable e) {}
 		EventSource.Subscriber<UserData> subscriber = (user) -> {
 			try {
 				emitter.send(SseEmitter.event().data(user.id()));
@@ -63,7 +72,10 @@ public class UserController {
 		});
 		// Add it as a subscriber
 		service.userEventSource().subscribe(subscriber);
-		return emitter;
+
+		return ResponseEntity.ok()
+			.cacheControl(CacheControl.noCache())
+			.body(emitter);
 	}
 
 	@PostMapping("/users")

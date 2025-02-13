@@ -2,14 +2,17 @@ package net.modfest.botfest
 
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.UserBehavior
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.sse.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
+import io.ktor.util.logging.*
 import net.modfest.platform.gson.GsonCommon
 import net.modfest.platform.pojo.CurrentEventData
 import net.modfest.platform.pojo.EventData
@@ -21,26 +24,49 @@ import net.modfest.platform.pojo.UserCreateData
 import net.modfest.platform.pojo.UserData
 import net.modfest.platform.pojo.UserPatchData
 import net.modfest.platform.pojo.Whoami
+import nl.theepicblock.sseclient.ReconnectionInfo
+import nl.theepicblock.sseclient.SseClient
+import nl.theepicblock.sseclient.SseEvent
+import java.net.URI
+import java.net.http.HttpRequest
+import kotlin.time.Duration
 
-class Platform(var base_url: String) {
-	val client = HttpClient() {
-		defaultRequest {
-			// Set base url for all requests
-			if (!base_url.startsWith("http")) {
-				base_url = "http://$base_url";
-			}
-			url(base_url)
+val LOGGER = KotlinLogging.logger("Platform API")
 
-			// Serialize body with json by default
-			contentType(ContentType.Application.Json)
+class Platform(baseUrl: String) {
+	private val baseUrl: String
+	private val client: HttpClient
+
+	init {
+		var tmpUrl = baseUrl
+		if (!tmpUrl.startsWith("http")) {
+			tmpUrl = "http://$baseUrl";
 		}
+		tmpUrl = tmpUrl.removeSuffix("/")
+		this.baseUrl = tmpUrl
+		client = HttpClient() {
+			defaultRequest {
+				url(tmpUrl)
 
-		install(ContentNegotiation) {
-			gson {
-				GsonCommon.configureGson(this)
+				// Serialize body with json by default
+				contentType(ContentType.Application.Json)
 			}
+
+			install(ContentNegotiation) {
+				gson {
+					GsonCommon.configureGson(this)
+				}
+			}
+
+			// Server sent events
+			install(SSE) {
+				reconnectionTime = Duration.parse("5s")
+			}
+
+			install(HttpRequestRetry)
 		}
 	}
+
 
 	fun withAuth(user: UserBehavior): PlatformAuthenticated {
 		return PlatformAuthenticated(this.client, user.id)
@@ -51,7 +77,7 @@ class Platform(var base_url: String) {
 	}
 
 	fun authenticatedAsBotFest(): PlatformBotFestAuthenticated {
-		return PlatformBotFestAuthenticated(this.client)
+		return PlatformBotFestAuthenticated(this.client, this.baseUrl)
 	}
 
 	suspend fun getHealth(): HealthData {
@@ -92,6 +118,16 @@ class Platform(var base_url: String) {
 	 */
 	suspend fun getUser(user: Snowflake): UserData? {
 		return client.get("/user/dc:$user").apply {
+			// Map 404 errors to be null
+			if (status == HttpStatusCode.NotFound) return null
+		}.unwrapErrors().body()
+	}
+
+	/**
+	 * Retrieve a user by their modfest id. Will be null if the user does not exist
+	 */
+	suspend fun getUser(user: String): UserData? {
+		return client.get("/user/$user").apply {
 			// Map 404 errors to be null
 			if (status == HttpStatusCode.NotFound) return null
 		}.unwrapErrors().body()
@@ -153,8 +189,13 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
  * This will authenticate as BotFest itself. If BotFest is performing an action on behalf of
  * an already existing user, use [PlatformAuthenticated].
  */
-class PlatformBotFestAuthenticated(var client: HttpClient) {
+class PlatformBotFestAuthenticated(val client: HttpClient, val base_url: String) {
 	private fun HttpRequestBuilder.addAuth() {
+		header("BotFest-Secret", PLATFORM_SHARED_SECRET)
+		header("BotFest-Target-User", "@self")
+	}
+
+	private fun HttpRequest.Builder.addAuth() {
 		header("BotFest-Secret", PLATFORM_SHARED_SECRET)
 		header("BotFest-Target-User", "@self")
 	}
@@ -164,6 +205,40 @@ class PlatformBotFestAuthenticated(var client: HttpClient) {
 			addAuth()
 			setBody(data)
 		}.unwrapErrors().body()
+	}
+
+	fun userChanges(onEvent: (SseEvent) -> Unit, onConnect: () -> Unit): SseClient {
+		return object : SseClient() {
+			override fun onEvent(e: SseEvent?) {
+				if (e != null) onEvent(e)
+			}
+
+			override fun configureRequest(builder: HttpRequest.Builder?) {
+				builder?.uri(URI.create("$base_url/users/subscribe"))
+				builder?.addAuth()
+			}
+
+			override fun onConnect() {
+				onConnect()
+			}
+
+			override fun onReconnect(reconnectionInfo: ReconnectionInfo): java.time.Duration? {
+				if (reconnectionInfo.statusCode() == 403) {
+					LOGGER.error { "Failed to subscribe to platform. Http status code 403" }
+					return null // don't reconnect
+				}
+				if (reconnectionInfo.wasConnectionInvalid()) {
+					// Something is majorly wrong. Give the server some time
+					return java.time.Duration.ofMinutes(1)
+				} else {
+					return java.time.Duration.ofMillis(when (1) {
+						in 0..1 -> retryDelayMillis!!
+						in 2..5 -> retryDelayMillis!! * retryDelayMillis
+						else -> retryDelayMillis!! * 7
+					})
+				}
+			}
+		}
 	}
 }
 

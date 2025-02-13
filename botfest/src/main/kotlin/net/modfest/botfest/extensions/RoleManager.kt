@@ -12,16 +12,18 @@ import dev.kordex.core.extensions.event
 import dev.kordex.core.i18n.withContext
 import dev.kordex.core.koin.KordExKoinComponent
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import net.modfest.botfest.MAIN_GUILD_ID
 import net.modfest.botfest.Platform
 import net.modfest.botfest.REGISTERED_ROLE
 import net.modfest.botfest.i18n.Translations
+import nl.theepicblock.sseclient.SseClient
 import org.koin.core.component.inject
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
+import java.time.Duration
 import java.util.HashSet
 import java.util.function.Predicate
 
@@ -36,6 +38,7 @@ class RoleManager : Extension(), KordExKoinComponent {
 	override val name = "roles"
 	private val logger = KotlinLogging.logger("Role Manager")
 	private val platform: Platform by inject()
+	private var userChangeListener: SseClient? = null
 
 	private val database: Connection by lazy {
 		// `./data` should be persisted! KordEx stores some other files in there
@@ -52,14 +55,13 @@ class RoleManager : Extension(), KordExKoinComponent {
 
 		return@lazy conn;
 	}
+
 	/**
 	 * All known roles in the guild
 	 */
 	private var roles: List<Snowflake>? = null
 
 	override suspend fun setup() {
-//		val platform = bot.getKoin().get<Platform>()
-
 		// Ensure that the roles are checked on application startup
 		// this will also initialize some fields
 		fetchRoles()
@@ -79,6 +81,24 @@ class RoleManager : Extension(), KordExKoinComponent {
 				onGuildRoleUpdate(event.guild)
 			}
 		}
+
+		userChangeListener = platform.authenticatedAsBotFest().userChanges(
+			onEvent = lis@{
+				val userId = it.data ?: return@lis
+				runBlocking {
+					launch(Dispatchers.Default) {
+						val userData = platform.getUser(userId)!!
+						if (userData.discordId != null) {
+							fixUser(Snowflake(userData.discordId!!))
+						}
+					}
+				}
+			},
+			onConnect = {
+				logger.info { "Connected to Platform, listening for changes" }
+
+			}
+		)
 
 		ephemeralSlashCommand {
 			name = Translations.Commands.Fix.name
