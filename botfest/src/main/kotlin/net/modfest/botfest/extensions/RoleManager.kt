@@ -18,14 +18,14 @@ import net.modfest.botfest.MAIN_GUILD_ID
 import net.modfest.botfest.Platform
 import net.modfest.botfest.REGISTERED_ROLE
 import net.modfest.botfest.i18n.Translations
+import net.modfest.platform.pojo.UserData
 import nl.theepicblock.sseclient.SseClient
 import org.koin.core.component.inject
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
-import java.time.Duration
-import java.util.HashSet
 import java.util.function.Predicate
+import kotlin.collections.HashSet
 
 const val TABLE_NAME = "members"
 
@@ -85,6 +85,7 @@ class RoleManager : Extension(), KordExKoinComponent {
 		userChangeListener = platform.authenticatedAsBotFest().userChanges(
 			onEvent = lis@{
 				val userId = it.data ?: return@lis
+				logger.debug { "Platform informed us that $userId changed" }
 				runBlocking {
 					launch(Dispatchers.Default) {
 						val userData = platform.getUser(userId)!!
@@ -96,7 +97,12 @@ class RoleManager : Extension(), KordExKoinComponent {
 			},
 			onConnect = {
 				logger.info { "Connected to Platform, listening for changes" }
-
+				// We need to catch up on any changes that happened with platform since we last checked
+				runBlocking {
+					launch(Dispatchers.Default) {
+						fixAllUsers()
+					}
+				}
 			}
 		)
 
@@ -235,15 +241,51 @@ class RoleManager : Extension(), KordExKoinComponent {
 		}
 	}
 
+	/**
+	 * For when we resync with platform. This method will not fetch anything from discord,
+	 * it presumes the cached discord data is correct.
+	 */
+	suspend fun fixAllUsers() {
+		val users = platform.authenticatedAsBotFest().getUsers()
+
+		// Compile a list of all people who are known to have roles, but aren't
+		// currently in platform's data
+		val platformDiscordIds = users.map { u -> u.id }.toSet()
+		val nonPlatformDiscordIds = HashSet<Snowflake>()
+		database.createStatement().use {
+			val res = it.executeQuery("SELECT member FROM $TABLE_NAME")
+			while (res.next()) {
+				if (!platformDiscordIds.contains(res.getString(1))) {
+					nonPlatformDiscordIds.add(Snowflake(res.getString(1)))
+				}
+			}
+		}
+
+		for (user in users) {
+			if (user.discordId == null) return
+			fixUser(Snowflake(user.discordId!!), user)
+		}
+		for (npu in nonPlatformDiscordIds) {
+			// We can confidently pass null as the platform data,
+			// because we just listed all the users, and they weren't in there
+			fixUser(npu, null)
+		}
+	}
+
 	suspend fun fixUser(user: Snowflake) {
+		return fixUser(user, platform.getUser(user))
+	}
+
+	suspend fun fixUser(user: Snowflake, platformData: UserData?) {
 		var cache = getCachedRoles(user)
-		var expected = expectedRoles(user)
+		var expected = expectedRoles(platformData)
 		var managed = managedRoles()
 		var roleDiff = diff(cache, expected)
 
 		roleDiff.removeIf { !managed.contains(it) } // Only work on managed roles
 		roleDiff.removeIf { !roles!!.contains(it) } // Only work on roles that we know actually exist
 
+		try {
 		roleDiff.toAdd.forEach { role ->
 			logger.info { "Adding `$role` to $user (in $MAIN_GUILD_ID)" }
 			kord.rest.guild.addRoleToGuildMember(MAIN_GUILD_ID, user, role)
@@ -251,6 +293,14 @@ class RoleManager : Extension(), KordExKoinComponent {
 		roleDiff.toRemove.forEach { role ->
 			logger.info { "Removing `$role` from $user (in $MAIN_GUILD_ID)" }
 			kord.rest.guild.deleteRoleFromGuildMember(MAIN_GUILD_ID, user, role)
+		}
+		} catch (e: KtorRequestException) {
+			if (e.message?.contains("Unknown Member null") == true) {
+				// This just means the user is not in the guild. That's fine
+				return
+			} else {
+				throw e
+			}
 		}
 
 		// Put the new data into db
@@ -274,17 +324,18 @@ class RoleManager : Extension(), KordExKoinComponent {
 	/**
 	 * The roles a user *should* have.
 	 */
-	suspend fun expectedRoles(user: Snowflake): Set<Snowflake> {
+	suspend fun expectedRoles(platformData: UserData?): Set<Snowflake> {
 		val roles = HashSet<Snowflake>()
-		var platformUser = platform.getUser(user)
-
-		if (platformUser == null) {
+		if (platformData == null) {
 			// Not registered, no roles
 			return roles
 		}
 
 		roles.add(REGISTERED_ROLE)
-		platformUser.registered.forEach { event ->
+		if (platformData.registered == null) {
+			return roles // TODO This shouldn't happen, but it seems like there are some broken users in platform
+		}
+		platformData.registered.forEach { event ->
 			val eventRoles = platform.getEvent(event).discordRoles
 			roles.add(Snowflake(eventRoles.participant))
 		}

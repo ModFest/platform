@@ -209,8 +209,16 @@ class PlatformBotFestAuthenticated(val client: HttpClient, val base_url: String)
 
 	fun userChanges(onEvent: (SseEvent) -> Unit, onConnect: () -> Unit): SseClient {
 		return object : SseClient() {
+			init {
+			    this.retryDelayMillis = 5_000
+			}
+
 			override fun onEvent(e: SseEvent?) {
-				if (e != null) onEvent(e)
+				try {
+					if (e != null) onEvent(e)
+				} catch (e: Throwable) {
+					LOGGER.warn(e) { "error whilst processing SSE event "}
+				}
 			}
 
 			override fun configureRequest(builder: HttpRequest.Builder?) {
@@ -219,7 +227,12 @@ class PlatformBotFestAuthenticated(val client: HttpClient, val base_url: String)
 			}
 
 			override fun onConnect() {
-				onConnect()
+				LOGGER.debug { "Platform SSE stream connected" }
+				try {
+					onConnect()
+				} catch (e: Throwable) {
+					LOGGER.warn(e) { "error in onConnect "}
+				}
 			}
 
 			override fun onReconnect(reconnectionInfo: ReconnectionInfo): java.time.Duration? {
@@ -227,18 +240,34 @@ class PlatformBotFestAuthenticated(val client: HttpClient, val base_url: String)
 					LOGGER.error { "Failed to subscribe to platform. Http status code 403" }
 					return null // don't reconnect
 				}
-				if (reconnectionInfo.wasConnectionInvalid()) {
+				var reconnTime = if (reconnectionInfo.wasConnectionInvalid()) {
 					// Something is majorly wrong. Give the server some time
-					return java.time.Duration.ofMinutes(1)
+					java.time.Duration.ofMinutes(1)
 				} else {
-					return java.time.Duration.ofMillis(when (1) {
+					java.time.Duration.ofMillis(when (1) {
 						in 0..1 -> retryDelayMillis!!
 						in 2..5 -> retryDelayMillis!! * retryDelayMillis
 						else -> retryDelayMillis!! * 7
 					})
 				}
+				LOGGER.debug { "Attempting to reconnect to platform SSE in $reconnTime. " +
+					"(did connect = ${!reconnectionInfo.connectionFailed()}, " +
+					"was valid = ${reconnectionInfo.wasConnectionInvalid()}, " +
+					"status code = ${reconnectionInfo.statusCode()}, " +
+					"error = ${reconnectionInfo.error()})" }
+				return reconnTime
+			}
+
+			override fun onDisconnect() {
+				LOGGER.warn { "Platform SSE stream was disconnected" }
 			}
 		}
+	}
+
+	suspend fun getUsers(): List<UserData> {
+		return client.get("/users") {
+			addAuth()
+		}.unwrapErrors().body()
 	}
 }
 
