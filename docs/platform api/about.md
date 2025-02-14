@@ -25,4 +25,5 @@ The platform api has the following packages:
 
 ## Swagger UI
 The platform api exposes a Swagger UI. By default, it's located at `/swagger-ui.html`. The swagger ui is automatically
-generated based on the code.
+generated based on the code. You can put `@Operation` annotations on methods to define further information about a route,
+this is exposed in the swagger ui.
