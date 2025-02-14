@@ -213,17 +213,17 @@ class PlatformBotFestAuthenticated(val client: HttpClient, val base_url: String)
 			    this.retryDelayMillis = 5_000
 			}
 
-			override fun onEvent(e: SseEvent?) {
+			override fun onEvent(e: SseEvent) {
 				try {
-					if (e != null) onEvent(e)
+					onEvent(e)
 				} catch (e: Throwable) {
 					LOGGER.warn(e) { "error whilst processing SSE event "}
 				}
 			}
 
-			override fun configureRequest(builder: HttpRequest.Builder?) {
-				builder?.uri(URI.create("$base_url/users/subscribe"))
-				builder?.addAuth()
+			override fun configureRequest(builder: HttpRequest.Builder) {
+				builder.uri(URI.create("$base_url/users/subscribe"))
+				builder.addAuth()
 			}
 
 			override fun onConnect() {
@@ -240,13 +240,14 @@ class PlatformBotFestAuthenticated(val client: HttpClient, val base_url: String)
 					LOGGER.error { "Failed to subscribe to platform. Http status code 403" }
 					return null // don't reconnect
 				}
-				var reconnTime = if (reconnectionInfo.wasConnectionInvalid()) {
+				val reconnTime = if (reconnectionInfo.wasConnectionInvalid()) {
 					// Something is majorly wrong. Give the server some time
 					java.time.Duration.ofMinutes(1)
 				} else {
+					// TODO need to expose the number of retries made in the SSE api
 					java.time.Duration.ofMillis(when (1) {
 						in 0..1 -> retryDelayMillis!!
-						in 2..5 -> retryDelayMillis!! * retryDelayMillis
+						in 2..5 -> retryDelayMillis!! * retryDelayMillis!!
 						else -> retryDelayMillis!! * 7
 					})
 				}

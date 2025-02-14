@@ -41,7 +41,7 @@ dependencies {
 	// Custom added dependencies (these are not part of the kordex template)
 	implementation("io.ktor:ktor-serialization-gson:3.0.2")
 	implementation("org.xerial:sqlite-jdbc:3.48.0.0")
-	implementation("nl.theepicblock:java-sse-client:0.1.0")
+	implementation("nl.theepicblock:java-sse-client:0.2.0")
 	implementation(project(":common"))
 }
 
