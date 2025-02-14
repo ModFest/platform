@@ -22,3 +22,7 @@ The platform api has the following packages:
   writing of that datatype to/from disk. Repositories can also do some validation that the data written to disk is correct
 * `security`: All things related authenticating the user
 * `service`: Any business logic is contained here. It contains any operations we might want to do on our data.
+
+## Swagger UI
+The platform api exposes a Swagger UI. By default, it's located at `/swagger-ui.html`. The swagger ui is automatically
+generated based on the code.
