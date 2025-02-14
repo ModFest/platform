@@ -2,3 +2,5 @@ site_name: Platform docs
 site_description: ModFest platform internal documentation
 theme:
   name: readthedocs
+markdown_extensions:
+  - admonition

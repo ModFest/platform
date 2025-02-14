@@ -4,4 +4,4 @@ This is the project handling our user data, as well any business logic surroundi
 rest apis.
 
 The platform API is coded using Spring Boot. It's recommended to know a bit about Spring before looking too deep into
-the platform api.
+the platform api. There's a small introduction to spring [here](./spring.md).
