@@ -3,7 +3,10 @@ package net.modfest.platform.security;
 import net.modfest.platform.configuration.PlatformConfig;
 import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.security.token.BotFestToken;
+import net.modfest.platform.security.token.ModrinthToken;
 import net.modfest.platform.service.UserService;
+import nl.theepicblock.dukerinth.ModrinthApi;
+import nl.theepicblock.dukerinth.ModrinthApiException;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -22,6 +25,8 @@ public class ModFestRealm extends AuthorizingRealm {
 	private UserService userService;
 	@Autowired
 	private PlatformConfig platformConfig;
+	@Autowired
+	private ModrinthApi modrinthApi;
 
 	public ModFestRealm() {
 		this.setCredentialsMatcher(new AllowAllCredentialsMatcher());
@@ -53,6 +58,18 @@ public class ModFestRealm extends AuthorizingRealm {
 					throw new AuthenticationException("Can't find user with id "+botFestToken.targetUser());
 				}
 				return new SimpleAuthenticationInfo(data, botFestToken, "platform");
+			}
+			case ModrinthToken modrinthToken -> {
+				try {
+					var user = modrinthApi.withAuth(modrinthToken.token()).self();
+					var festUser = userService.getByModrinthId(user.id);
+					if (festUser == null) {
+						throw new AuthenticationException("Modrinth user "+user.id+" is not registered in ModFest");
+					}
+					return new SimpleAuthenticationInfo(festUser, modrinthToken, "platform");
+				} catch (ModrinthApiException e) {
+					throw new AuthenticationException(e);
+				}
 			}
 			default -> {
 				return null;
