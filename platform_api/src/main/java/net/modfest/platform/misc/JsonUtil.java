@@ -52,6 +52,7 @@ public class JsonUtil {
 		// this means we'll write to a temporary file,
 		// then copy that file atomically once done
 		try {
+			Files.createDirectories(target.getParent()); // This is non-atomic but that's fine
 			var tmp = tempFile(target);
 			try (var writer = new FileWriter(tmp.toFile(), StandardCharsets.UTF_8)) {
 				gson.toJson(object, writer);

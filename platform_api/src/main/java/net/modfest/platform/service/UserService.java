@@ -41,7 +41,7 @@ public class UserService {
 	/**
 	 * This event source will emit an event whenever new user data is saved.
 	 */
-	public EventSource<UserData> userEventSource() {
+	public EventSource<String> userEventSource() {
 		return userRepository.onDataUpdated;
 	}
 

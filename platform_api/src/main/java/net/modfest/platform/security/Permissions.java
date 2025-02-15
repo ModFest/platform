@@ -45,5 +45,9 @@ public class Permissions {
 		 * Allows the user to bypass restrictions on if an event allows (de)submissions or not
 		 */
 		public static final String SUBMIT_OTHER = "event.submit.others";
+		/**
+		 * Allows the user to add, edit, or remove things from the event's schedule
+		 */
+		public static final String EDIT_SCHEDULE = "event.schedule.edit";
 	}
 }

@@ -53,9 +53,9 @@ public class UserController {
 		try {
 			emitter.send(SseEmitter.event().reconnectTime(1000));
 		} catch (Throwable e) {}
-		EventSource.Subscriber<UserData> subscriber = (user) -> {
+		EventSource.Subscriber<String> subscriber = (userId) -> {
 			try {
-				emitter.send(SseEmitter.event().data(user.id()));
+				emitter.send(SseEmitter.event().data(userId));
 			} catch (Throwable t) {
 				// Close connection and cancel subscription
 				try {

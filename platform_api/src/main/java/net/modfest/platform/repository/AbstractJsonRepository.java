@@ -11,6 +11,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,7 +47,7 @@ public abstract class AbstractJsonRepository<Data, Id> implements DiskCachedData
 	 */
 	private final ReadWriteLock dataLock = new ReentrantReadWriteLock();
 
-	public final EventSource<Data> onDataUpdated = new EventSource<>();
+	public final EventSource<Id> onDataUpdated = new EventSource<>();
 
 	public AbstractJsonRepository(@Autowired JsonUtil jsonUtil, ManagedDirectory root, String name, Class<Data> clazz) {
 		this.jsonUtil = jsonUtil;
@@ -92,7 +93,7 @@ public abstract class AbstractJsonRepository<Data, Id> implements DiskCachedData
 			if (prevData != null) {
 				this.store.forEach((key, value) -> {
 					if (!Objects.equals(value, prevData.get(key))) {
-						onDataUpdated.emit(value);
+						onDataUpdated.emit(key);
 					}
 				});
 			}
@@ -115,7 +116,24 @@ public abstract class AbstractJsonRepository<Data, Id> implements DiskCachedData
 		// Keep our in-memory storage up to date
 		this.store.put(getId(newData), newData);
 
-		onDataUpdated.emit(newData);
+		onDataUpdated.emit(getId(newData));
+	}
+
+	@Locked.Write("dataLock")
+	public void delete(@NonNull Id id) {
+		var data = this.get(id);
+		this.root.write(p -> {
+			try {
+				Files.delete(
+					p.resolve(getLocation(data))
+				);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
+
+		this.store.remove(id);
+		onDataUpdated.emit(id);
 	}
 
 	@Locked.Read("dataLock")

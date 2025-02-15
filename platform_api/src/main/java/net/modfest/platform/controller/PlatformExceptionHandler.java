@@ -34,6 +34,7 @@ public class PlatformExceptionHandler {
 	 */
 	@ExceptionHandler(Throwable.class)
 	private ResponseEntity<PlatformErrorResponse> anyError(Throwable t) {
+		t.printStackTrace();
 		return toResponse(new PlatformErrorResponse(
 			PlatformErrorResponse.ErrorType.INTERNAL,
 			gson.toJsonTree(t.getMessage())
