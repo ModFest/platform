@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getRedirectUrl } from "../auth";
 import { getToken } from "./server_handler";
+import { LOCALSTORAGE_KEY } from "@/auth_context";
 
 export default function Home() {
 	const [failed, setFailed] = useState(false)
@@ -40,7 +41,7 @@ async function authWithModrinthOAuth(setFailed: (v: boolean) => void) {
 		return
 	}
 
-	localStorage.setItem("mr-token", JSON.stringify(token))
+	localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(token))
 
 	// TODO redirect anywhere on site
 	window.location.replace(window.location.origin)
