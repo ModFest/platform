@@ -4,6 +4,10 @@
 storage
 logs
 
+# Pnpm
+node_modules
+
+# Gradle
 .gradle
 .kotlin/
 build/
