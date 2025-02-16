@@ -8,6 +8,7 @@ import Modal from 'react-modal';
 import Form from 'next/form'
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import { Editor } from "@monaco-editor/react";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
 type SearchParamProps = {
@@ -56,14 +57,15 @@ function asString(d: FormData, key: string): string {
 function UserEdit(props: {user: UserData | undefined}) {
 	const platform = usePlatform()
 	const [success, setSuccess] = useState<boolean | undefined>(undefined)
-
 	const u = props.user
+	const [editorContent, setEditorContent] = useState("")
+
 	if (u == undefined) {
 		return <></>
 	}
 
-	const onSubmit = (data: FormData) => {
-		platform.updateUser(JSON.parse(asString(data, "user"))).then(() => {
+	const onSubmit = () => {
+		platform.updateUser(JSON.parse(editorContent)).then(() => {
 			setSuccess(true)
 		}).catch(() => {
 			setSuccess(false)
@@ -72,12 +74,12 @@ function UserEdit(props: {user: UserData | undefined}) {
 
 	return <>
 		<h1>Editing {u.id}</h1>
-		<Form action={onSubmit}>
-			<textarea className={styles["textarea"]} name="user" defaultValue={JSON.stringify(u, undefined, 4)}>
-			</textarea>
-			<br></br>
-			<button>Save</button>
-		</Form>
+		<div className={styles["textarea"]}>
+			<Editor height="100%" defaultValue={JSON.stringify(u, undefined, 4)} language="json" onChange={(e) => {if (e) { setEditorContent(e) }}}>
+			</Editor>
+		</div>
+		<br></br>
+		<button onClick={onSubmit}>Save</button>
 		{success === undefined ? <></> : success ? "Updated succesfully" : "Something went wrong whilst updating"}
 	</>
 }
