@@ -1,6 +1,3 @@
-import cz.habarta.typescript.generator.*
-import java.util.regex.Pattern
-
 plugins {
 	`java-library`
 }

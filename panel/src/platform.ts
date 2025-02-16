@@ -75,7 +75,10 @@ export class Platform {
 		return fetch(`${PLATFORM}/admin/update_user`, {
 			method: "POST",
 			body: JSON.stringify(d),
-			...this.auth.configureFetch()
+			headers: {
+				"Content-Type": "application/json",
+				...this.auth.configureFetch().headers
+			},
 		}).then(r => {
 			if (!r.ok) {
 				throw r

@@ -6,6 +6,8 @@ import { use, useState } from "react";
 import styles from "./page.module.css"
 import Modal from 'react-modal';
 import Form from 'next/form'
+import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
 type SearchParamProps = {
@@ -13,6 +15,7 @@ type SearchParamProps = {
 };
 
 export default function Home({ searchParams }: SearchParamProps) {
+	const router = useRouter()
 	const platform = usePlatform()
 	const users = platform.useAllUsers()
 	const [forceExpand, setForceExpand] = useState(false)
@@ -28,6 +31,9 @@ export default function Home({ searchParams }: SearchParamProps) {
 	</>
 	const modal = <Modal
 		isOpen={edit !== undefined}
+		onRequestClose={() => {
+			router.back()
+		}}
 		appElement={document.getElementsByTagName("body") || undefined}
 		>
 		<UserEdit user={users.find(u => u.id == edit)!}></UserEdit>
@@ -78,6 +84,7 @@ function UserEdit(props: {user: UserData | undefined}) {
 
 function UserCard(props: {user: UserData, forceExpand: boolean}) {
 	const u = props.user
+	const pathname = usePathname();
 	const [isExpanded, setExpanded] = useState(false)
 
 	const userdata = (isExpanded || props.forceExpand) ?
@@ -125,7 +132,8 @@ function UserCard(props: {user: UserData, forceExpand: boolean}) {
 
 	return <div className={styles["user-card"]}>
 		<h2>{u.name}</h2> - {u.id}
-		<button onClick={() => setExpanded(!isExpanded)}>Expand</button><br></br>
+		<button onClick={() => setExpanded(!isExpanded)}>Expand</button>
+		<Link href={pathname+"?edit="+u.id}>Edit</Link><br></br>
 		{userdata}
 	</div>
 }

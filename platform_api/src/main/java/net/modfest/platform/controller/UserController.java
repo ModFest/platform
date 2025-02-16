@@ -166,5 +166,17 @@ public class UserController {
 		service.save(newUser);
 	}
 
-	@PutMapping("/admin/")
+	@PostMapping("/admin/update_user")
+	@RequiresPermissions(Permissions.Users.FORCE_EDIT)
+	public void forceUpdateUser(@RequestBody UserData data) {
+		var subject = SecurityUtils.getSubject();
+		var edit_others = subject.isPermitted(Permissions.Users.EDIT_OTHERS);
+		var owns = PermissionUtils.owns(subject, data);
+
+		if (!owns && !edit_others) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not edit this user");
+		}
+
+		service.save(data);
+	}
 }

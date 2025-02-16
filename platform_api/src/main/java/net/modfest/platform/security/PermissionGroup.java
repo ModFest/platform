@@ -13,6 +13,7 @@ public enum PermissionGroup {
 		Permissions.Meta.RELOAD,
 		Permissions.Users.LIST_ALL,
 		Permissions.Users.EDIT_OTHERS,
+		Permissions.Users.FORCE_EDIT,
 		Permissions.Event.BYPASS_REGISTRATIONS,
 		Permissions.Event.REGISTER_OTHERS,
 		Permissions.Event.SUBMIT_BYPASS,

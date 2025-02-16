@@ -19,6 +19,10 @@ public class Permissions {
 		 */
 		public static final String EDIT_OTHERS = "users.edit_others";
 		/**
+		 * Allows editing data that's not normally editable
+		 */
+		public static final String FORCE_EDIT = "users.force_edit";
+		/**
 		 * Permission to create new users
 		 */
 		public static final String CREATE = "users.create";
