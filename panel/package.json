@@ -6,12 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "gen_ts_defs": "node gen_ts_defs.js",
-    "prebuild": "pnpm gen_ts_defs",
-    "predev": "pnpm gen_ts_defs",
-    "prestart": "pnpm gen_ts_defs",
-    "prelint": "pnpm gen_ts_defs"
+    "lint": "next lint"
   },
   "dependencies": {
     "eventsource-client": "^1.1.3",

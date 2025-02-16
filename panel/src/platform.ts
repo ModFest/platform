@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { ModfestAuth } from "./auth_context";
-import { UserData } from "./generated/defs";
 import { createEventSource } from "eventsource-client";
+import { UserData } from "./platform_types";
 
 const PLATFORM = process.env.NEXT_PUBLIC_PLATFORM_API!
 

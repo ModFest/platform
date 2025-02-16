@@ -165,4 +165,6 @@ public class UserController {
 
 		service.save(newUser);
 	}
+
+	@PutMapping("/admin/")
 }
