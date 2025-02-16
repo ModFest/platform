@@ -24,7 +24,6 @@ export default function Home({ searchParams }: SearchParamProps) {
 	const edit = use(searchParams)["edit"]
 
 	const page = <>
-		<h1>ModFest panel</h1>
 		<button onClick={() => setForceExpand(!forceExpand)}>Expand all</button>
 		{
 			users.map(u => <UserCard key={u.id} forceExpand={forceExpand} user={u}></UserCard>)
@@ -72,7 +71,7 @@ function UserEdit(props: {user: UserData | undefined}) {
 		})
 	}
 
-	return <>
+	return <main>
 		<h1>Editing {u.id}</h1>
 		<div className={styles["textarea"]}>
 			<Editor height="100%" defaultValue={JSON.stringify(u, undefined, 4)} language="json" onChange={(e) => {if (e) { setEditorContent(e) }}}>
@@ -81,7 +80,7 @@ function UserEdit(props: {user: UserData | undefined}) {
 		<br></br>
 		<button onClick={onSubmit}>Save</button>
 		{success === undefined ? <></> : success ? "Updated succesfully" : "Something went wrong whilst updating"}
-	</>
+	</main>
 }
 
 function UserCard(props: {user: UserData, forceExpand: boolean}) {
