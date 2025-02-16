@@ -6,7 +6,13 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+
+	"gen_ts_defs": "node gen_ts_defs.js",
+	"prebuild": "pnpm gen_ts_defs",
+	"predev": "pnpm gen_ts_defs",
+	"prestart": "pnpm gen_ts_defs",
+	"prelint": "pnpm gen_ts_defs"
   },
   "dependencies": {
     "react": "^19.0.0",
