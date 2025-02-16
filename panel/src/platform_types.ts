@@ -135,8 +135,8 @@ export interface UserData {
     slug: string;
     name: string;
     pronouns: string;
-    modrinthId: string;
-    discordId: string;
+    modrinth_id: string;
+    discord_id: string;
     bio: string;
     icon: string;
     badges: string[];

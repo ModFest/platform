@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { ModfestAuth } from "./auth_context";
 import { createEventSource } from "eventsource-client";
-import { UserData } from "./platform_types";
+import { UserData, UserPatchData } from "./platform_types";
 
 const PLATFORM = process.env.NEXT_PUBLIC_PLATFORM_API!
 
@@ -69,5 +69,18 @@ export class Platform {
 			return () => sse.close()
 		}, [this])
 		return users
+	}
+
+	public async updateUser(d: UserData) {
+		return fetch(`${PLATFORM}/admin/update_user`, {
+			method: "POST",
+			body: JSON.stringify(d),
+			...this.auth.configureFetch()
+		}).then(r => {
+			if (!r.ok) {
+				throw r
+			}
+			return r;
+		})
 	}
 }
