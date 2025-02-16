@@ -1,7 +1,11 @@
 "use client"
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { ModfestAuth } from "./auth_context";
+import { UserData } from "./generated/defs";
+import { createEventSource } from "eventsource-client";
+
+const PLATFORM = process.env.NEXT_PUBLIC_PLATFORM_API!
 
 export const PlatformContext = createContext<Platform | undefined>(undefined)
 
@@ -10,7 +14,7 @@ export function usePlatform(): Platform {
 }
 
 export class Platform {
-	private auth: ModfestAuth
+	private readonly auth: ModfestAuth
 
 	private constructor(auth: ModfestAuth) {
 		this.auth = auth
@@ -20,9 +24,50 @@ export class Platform {
 		return new Platform(auth)
 	}
 
-	public async getAllUsers(): Promise<any[]> {
-		return fetch("http://localhost:8070/users", {
-			...this.auth.configureFetch()
-		}).then(r => r.json())
+	public useAllUsers(): UserData[] {
+		const [users, setUsers] = useState<UserData[]>([])
+		var usersCache = users
+		useEffect(() => {
+			const refetchAllUsers = () => {
+				// Resync completely
+				fetch(`${PLATFORM}/users`, this.auth.configureFetch()).then(d => d.json()).then(data => {
+					usersCache = data
+					setUsers(data)
+				})
+			}
+
+			const sse = createEventSource({
+				url: `${PLATFORM}/users/subscribe`,
+				onConnect: refetchAllUsers,
+				onMessage: (event) => {
+					const userId = event.data
+					fetch(`${PLATFORM}/user/${userId}`, this.auth.configureFetch()).then(d => d.json()).then(newUser => {
+						for (var i = 0; i < usersCache.length; i++) {
+							if (usersCache[i].id === userId) {
+								const newData = [...usersCache]
+								if (newUser) {
+									newData[i] = newUser
+									usersCache = newData
+									setUsers(newData)
+								} else {
+									newData.splice(i, 1)
+									usersCache = newData
+									setUsers(newData)
+								}
+								return
+							}
+						}
+						// User did not previously exist
+						const newData = [newUser, ...usersCache]
+						usersCache = newData
+						setUsers(newData)
+					})
+				},
+				...this.auth.configureFetch()
+			})
+
+			return () => sse.close()
+		}, [this])
+		return users
 	}
 }

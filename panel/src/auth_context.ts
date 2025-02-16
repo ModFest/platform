@@ -24,7 +24,7 @@ export class ModfestAuth {
 		return new ModfestAuth(mrToken)
 	}
 
-	public configureFetch(): Partial<RequestInit> {
+	public configureFetch(): {headers: Record<string, string>} {
 		return {
 			headers: {
 				"Modrinth-Token": this.mrToken
