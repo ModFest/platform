@@ -10,7 +10,6 @@ export class ModfestAuth {
 	}
 
 	static readAuthData(): ModfestAuth | undefined {
-		if (typeof window === "undefined") return undefined // Check if component is being prerendered
 		const token = localStorage.getItem(LOCALSTORAGE_KEY)
 		if (token == null) {
 			return undefined

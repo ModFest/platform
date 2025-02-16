@@ -1,24 +1,27 @@
 "use client"
 
-import { readAuthData, logout } from "@/auth_context"
+import { readAuthData, logout, ModfestAuth } from "@/auth_context"
 import { Platform, PlatformContext } from "@/platform";
 import { useRouter } from "next/navigation"
-import { useEffect, useReducer } from "react";
+import { use, useEffect, useReducer, useState } from "react";
 
 export default function Template({ children }: { children: React.ReactNode }) {
+	const [auth, setAuth] = useState<ModfestAuth | undefined>(undefined)
 	const router = useRouter()
-	const auth = readAuthData()
 	// Hack to be able to force updates
 	const [, forceUpdate] = useReducer(x => x + 1, 0);
 
 	useEffect(() => {
-		if (!auth) {
+		const a = readAuthData()
+		if (!a) {
 			router.push("/auth/login")
+		} else {
+			setAuth(a)
 		}
-	})
+	}, [])
 	if (!auth) {
 		return <main>
-			<h1>Redirecting...</h1>
+			<h1>Loading...</h1>
 		</main>
 	}
 	
