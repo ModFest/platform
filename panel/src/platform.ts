@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { ModfestAuth } from "./auth_context";
 import { createEventSource } from "eventsource-client";
-import { UserData } from "./platform_types";
+import { CurrentEventData, ScheduleEntryData, UserData } from "./platform_types";
 
 const PLATFORM = getPlatformUrl()!
 
@@ -88,11 +88,28 @@ export class Platform {
 				"Content-Type": "application/json",
 				...this.auth.configureFetch().headers
 			},
-		}).then(r => {
-			if (!r.ok) {
-				throw r
-			}
-			return r;
-		})
+		}).then(throwIfNotOk)
 	}
+
+	public async getCurrentEvent(): Promise<CurrentEventData> {
+		return fetch(`${PLATFORM}/currentevent/`).then(throwIfNotOk).then(r => r.json())
+	}
+
+	public useEventSchedule(eventid: string): ScheduleEntryData[] | undefined {
+		const [schedule, setSchedule] = useState<ScheduleEntryData[] | undefined>(undefined)
+		useEffect(() => {
+			fetch(`${PLATFORM}/event/${eventid}/schedule`)
+				.then(throwIfNotOk)
+				.then(r => r.json())
+				.then(d => setSchedule(d))
+		}, [this, eventid])
+		return schedule
+	}
+}
+
+function throwIfNotOk(r: Response): Response {
+	if (!r.ok) {
+		throw r
+	}
+	return r;
 }
