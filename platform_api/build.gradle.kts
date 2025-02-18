@@ -93,7 +93,7 @@ tasks.bootRun {
 	)
 }
 
-tasks.createDockerfile { dependsOn("bootBuildImage") }
+tasks.createDockerfile { dependsOn("bootJar") }
 docker {
 	generateOnBuild = false
 
@@ -107,20 +107,27 @@ docker {
 
 		from("ghcr.io/graalvm/graalvm-community:23")
 
+		runShell("groupadd --system --gid 1001 platform")
+		runShell("useradd --system --gid 1001 --uid 1001 platform")
+		runShell("mkdir -p /app")
+		runShell("chown platform /app")
+
+		user("platform")
+
 		workdir("/app")
 
-		runShell("groupadd --system --gid 1001 app")
-		runShell("useradd --system --uid 1001 app")
-
-		val filename = tasks.bootBuildImage.get().archiveFile.get()
+		val filename = tasks.bootJar.get().archiveFile.get()
 			.asFile.relativeTo(dockerfileLocation.parentFile)
 		copy("$filename", "/app/app.jar")
 
-		runShell("mkdir -p /var/lib/platform/data")
+		runShell("mkdir -p /app/data")
 
-		env {
-			add("SERVER_PORT", "8080")
-		}
+		add(object : DockerfileCommand() {
+			override val keyword: String
+				get() = "ENV"
+
+			override fun toString(): String = "ENV SERVER_PORT=8080 PLATFORM_DATADIR=/app/data"
+		})
 
 		expose(8080)
 		entryPointExec(

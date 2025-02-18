@@ -1,0 +1,75 @@
+name: Platform API
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/**"
+      - "platform_api/**"
+      - "common/**"
+      - "gradle/**"
+      - "gradle.properties"
+      - "settings.gradle.kts"
+      - "gradlew"
+  pull_request:
+    paths:
+      - ".github/**"
+      - "platform_api/**"
+      - "common/**"
+      - "gradle/**"
+      - "gradle.properties"
+      - "settings.gradle.kts"
+      - "gradlew"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup java and gradle
+        uses: ./.github/actions/java
+
+      - name: Run check
+        run: ./gradlew platform_api:check
+
+      - name: Run test
+        run: ./gradlew platform_api:test
+  publish:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/prod'
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup java and gradle
+        uses: ./.github/actions/java
+
+      - name: Build project and generate docker file
+        run: ./gradlew platform_api:createDockerfile
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+
+      - name: Build and push docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: "platform_api/build"
+          push: true
+          tags: ghcr.io/modfest/platform_api:latest
+          labels: ${{ steps.meta.outputs.labels }}

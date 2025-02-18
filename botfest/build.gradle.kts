@@ -74,6 +74,7 @@ detekt {
 
 // Automatically generate a Dockerfile. Set `generateOnBuild` to `false` if you'd prefer to manually run the
 // `createDockerfile` task instead of having it run whenever you build.
+tasks.createDockerfile { dependsOn("build") }
 docker {
 	generateOnBuild = false
 
@@ -86,10 +87,11 @@ docker {
 
 		from("ghcr.io/graalvm/graalvm-community:23")
 
-		workdir("/bot")
-
 		runShell("groupadd --system --gid 1001 bot")
-		runShell("useradd --system --uid 1001 bot")
+		runShell("useradd --system --gid 1001 --uid 1001 bot")
+		user("bot")
+
+		workdir("/bot")
 
 		runShell("mkdir -p /bot/plugins")
 		runShell("mkdir -p /bot/data")

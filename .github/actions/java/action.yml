@@ -1,0 +1,18 @@
+# Common steps for java based projects
+# see https://docs.github.com/en/actions/sharing-automations/creating-actions/creating-a-composite-action
+
+name: 'Java+Gradle'
+runs:
+  using: "composite"
+  steps:
+    - name: Setup jdk
+      uses: actions/setup-java@v4
+      with:
+        java-version: 21
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        validate-wrappers: true
+        cache-read-only: ${{ github.ref != 'refs/heads/prod' && github.ref != 'refs/heads/dev' }}
