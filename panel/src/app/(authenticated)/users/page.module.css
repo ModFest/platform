@@ -1,0 +1,21 @@
+.user-card {
+	width: 80%;
+	border-radius: 1px;
+	border-color: var(--foreground);
+	border-bottom-style: solid;
+	border-width: 1px;
+}
+
+.user-card th {
+	padding-right: 5px;
+	text-align: right;
+}
+
+.user-card h2 {
+	display: inline;
+}
+
+.textarea {
+	width: 100%;
+	height: 500px;
+}
