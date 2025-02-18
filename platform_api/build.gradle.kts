@@ -131,8 +131,7 @@ docker {
 
 		expose(8080)
 		entryPointExec(
-			"java", "-Xms2G", "-Xmx2G",
-			"-jar", "/app/app.jar"
+			"java", "-jar", "/app/app.jar"
 		)
 		healthcheck {
 			check {

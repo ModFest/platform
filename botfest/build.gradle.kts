@@ -100,8 +100,7 @@ docker {
 		copy("libs/$filename", "/bot/bot.jar")
 
 		entryPointExec(
-			"java", "-Xms2G", "-Xmx2G",
-			"-jar", "/bot/bot.jar"
+			"java", "-jar", "/bot/bot.jar"
 		)
 	}
 }
