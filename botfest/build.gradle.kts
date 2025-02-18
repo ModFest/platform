@@ -74,7 +74,7 @@ detekt {
 
 // Automatically generate a Dockerfile. Set `generateOnBuild` to `false` if you'd prefer to manually run the
 // `createDockerfile` task instead of having it run whenever you build.
-tasks.createDockerfile { dependsOn("build") }
+tasks.createDockerfile { dependsOn("shadowJar") }
 docker {
 	generateOnBuild = false
 
@@ -96,7 +96,7 @@ docker {
 		runShell("mkdir -p /bot/plugins")
 		runShell("mkdir -p /bot/data")
 
-		val filename = tasks.jar.get().archiveFileName.get()
+		val filename = tasks.shadowJar.get().archiveFileName.get()
 		copy("libs/$filename", "/bot/bot.jar")
 
 		entryPointExec(
