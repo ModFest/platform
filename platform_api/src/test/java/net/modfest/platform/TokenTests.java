@@ -1,5 +1,6 @@
 package net.modfest.platform;
 
+import net.modfest.platform.security.token.BotFestToken;
 import net.modfest.platform.security.token.ModrinthToken;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,7 +19,8 @@ public class TokenTests {
 
 	private static List<Object> testTokens() {
 		return List.of(
-			new ModrinthToken("xXx_secret_xXx", "just some random user")
+			new BotFestToken("xXx_secret_xXx", "just some random user"),
+			new ModrinthToken("xXx_secret_xXx")
 		);
 	}
 }
