@@ -86,26 +86,16 @@ docker {
 
 		from("openjdk:21-jdk-slim")
 
-		emptyLine()
+		workdir("/bot")
+
+		runShell("groupadd --system --gid 1001 bot")
+		runShell("useradd --system --uid 1001 bot")
 
 		runShell("mkdir -p /bot/plugins")
 		runShell("mkdir -p /bot/data")
 
-		emptyLine()
-
-		copy("build/libs/$name-*-all.jar", "/bot/bot.jar")
-
-		emptyLine()
-
-		// Add volumes for locations that you need to persist. This is important!
-		volume("/bot/data")  // Storage for data files
-		volume("/bot/plugins")  // Plugin ZIP/JAR location
-
-		emptyLine()
-
-		workdir("/bot")
-
-		emptyLine()
+		val filename = tasks.jar.get().archiveFileName.get()
+		copy("libs/$filename", "/bot/bot.jar")
 
 		entryPointExec(
 			"java", "-Xms2G", "-Xmx2G",
