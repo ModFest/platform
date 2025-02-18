@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { ModfestAuth } from "./auth_context";
 import { createEventSource } from "eventsource-client";
-import { CurrentEventData, ScheduleEntryData, UserData } from "./platform_types";
+import { CurrentEventData, EventData, ScheduleEntryData, UserData } from "./platform_types";
 
 const PLATFORM = getPlatformUrl()!
 
@@ -93,6 +93,17 @@ export class Platform {
 
 	public async getCurrentEvent(): Promise<CurrentEventData> {
 		return fetch(`${PLATFORM}/currentevent/`).then(throwIfNotOk).then(r => r.json())
+	}
+
+	public useEvent(eventid: string): EventData | undefined {
+		const [event, setEvent] = useState<EventData | undefined>(undefined)
+		useEffect(() => {
+			fetch(`${PLATFORM}/event/${eventid}`)
+				.then(throwIfNotOk)
+				.then(r => r.json())
+				.then(d => setEvent(d))
+		}, [this, eventid])
+		return event
 	}
 
 	public useEventSchedule(eventid: string): ScheduleEntryData[] | undefined {

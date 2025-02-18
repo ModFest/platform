@@ -1,3 +1,5 @@
+"use client"
+import { usePlatform } from "@/platform"
 import { use } from "react"
 
 export type EventPageProps = {
@@ -7,7 +9,9 @@ export type EventPageProps = {
 
 export default function Home(props: EventPageProps) {
 	const eventid = use(props.params).eventid
+	const platform = usePlatform()
+	const e = platform.useEvent(eventid)
 	return <main>
-		<h1>Event info about {eventid}</h1>
+		<h1>Event info about {e?.name}</h1>
 	</main>
 }
