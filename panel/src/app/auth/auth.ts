@@ -1,5 +1,6 @@
 "use client"
 
 export function getRedirectUrl(): string {
-	return `${window.location.origin}/auth/callback`
+	// TODO properly handle prerendering here
+	return typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : ""
 } 

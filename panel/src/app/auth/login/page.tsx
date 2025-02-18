@@ -2,7 +2,12 @@
 
 import { getRedirectUrl } from "../auth";
 
-export default function Home() {
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
+type SearchParamProps = {
+	searchParams: SearchParams;
+};
+
+export default function Home(props: SearchParamProps) {
 	const modrinthSite = process.env.NEXT_PUBLIC_MODRINTH_SITE
 	const clientId = process.env.NEXT_PUBLIC_MODRINTH_APP_ID!
 	const callback = getRedirectUrl()
