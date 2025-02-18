@@ -1,7 +1,11 @@
+import dev.kordex.gradle.plugins.docker.file.*
+import dev.kordex.gradle.plugins.docker.file.commands.HealthcheckCommand.Check.Option
+
 plugins {
 	java
 	id("org.springframework.boot") version "3.4.0"
 	id("io.spring.dependency-management") version "1.1.6"
+	alias(libs.plugins.kordex.docker)
 }
 
 group = "net.modfest"
@@ -87,4 +91,50 @@ tasks.bootRun {
 		"SERVER_ADDRESS" to project.property("dev.api.address"),
 		"SERVER_PORT" to project.property("dev.api.port"),
 	)
+}
+
+tasks.createDockerfile { dependsOn("bootBuildImage") }
+docker {
+	generateOnBuild = false
+
+	var dockerfileLocation = project.file("build/Dockerfile")
+	// Create the Dockerfile in build/Dockerfile.
+	file(dockerfileLocation)
+
+	commands {
+		// Each function (aside from comment/emptyLine) corresponds to a Dockerfile instruction.
+		// See: https://docs.docker.com/reference/dockerfile/
+
+		from("openjdk:21-jdk-slim")
+
+		workdir("/app")
+
+		runShell("groupadd --system --gid 1001 app")
+		runShell("useradd --system --uid 1001 app")
+
+		val filename = tasks.bootBuildImage.get().archiveFile.get()
+			.asFile.relativeTo(dockerfileLocation.parentFile)
+		copy("$filename", "/app/app.jar")
+
+		runShell("mkdir -p /var/lib/platform/data")
+
+		env {
+			add("SERVER_PORT", "8080")
+		}
+
+		expose(8080)
+		entryPointExec(
+			"java", "-Xms2G", "-Xmx2G",
+			"-jar", "/app/app.jar"
+		)
+		healthcheck {
+			check {
+				option(Option.Interval("10m"))
+				option(Option.StartInterval("5s"))
+				option(Option.Retries(2))
+				option(Option.Timeout("5s"))
+				cmdShell("curl -f http://localhost:8080/health || exit 1")
+			}
+		}
+	}
 }
