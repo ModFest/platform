@@ -13,6 +13,10 @@ public class MigratorUtils {
 	 */
 	public static void executeForAllFiles(Path p, PathConsumer editFunction) {
 		try {
+			if (!Files.exists(p)) {
+				// Nothing exists, nothing to iterate
+				return;
+			}
 			var pathList = new ArrayList<Path>();
 			try (var files = Files.newDirectoryStream(p)) {
 				for (var file : files) {
