@@ -11,9 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -169,14 +167,15 @@ public record Migrator(JsonUtil json, Path root) {
 	 * Changes timestamps to ISO8086
 	 */
 	public void migrateTo4() {
-		var oldFormat = new SimpleDateFormat("MMM dd, yyyy, h:mm:ssa");
+		var oldFormat = new SimpleDateFormat("MMM dd yyyy h:mm:ssa", Locale.ROOT);
 
 		Function<String, String> toIso = str -> {
 			try {
 				// These idiosyncrasies sometimes occur within the old format
 				str = str.replace(" ", "");
-				if (str.startsWith("Sep ")) {
-					str = str.replaceFirst("Sep ", "Sept ");
+				str = str.replace(",", "");
+				if (str.startsWith("Sept ")) {
+					str = str.replaceFirst("Sept ", "Sep ");
 				}
 				if (str.endsWith(" AM")) {
 					str = str.replace(" AM", "AM");
