@@ -5,14 +5,13 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.EmptyCommitException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class GitScopeManager {
 	private final Git git;
 	private final GitConfig config;
 	private final ThreadLocal<GitScope> gitScopes = new ThreadLocal<>();
-	private final Lock scopeLock = new ReentrantLock();
+	private final ReentrantLock scopeLock = new ReentrantLock();
 
 	public GitScopeManager(Git git, GitConfig config) {
 		this.git = git;
@@ -68,11 +67,14 @@ public class GitScopeManager {
 				.setAllowEmpty(false)
 				.setSign(false)
 				.call();
-			this.scopeLock.unlock();
 		} catch (EmptyCommitException ignored) {
 			// If nothing changed we simply do not commit anything
 		} catch (GitAPIException e) {
 			throw new RuntimeException(e);
+		} finally {
+			if (this.scopeLock.isHeldByCurrentThread()) {
+				this.scopeLock.unlock();
+			}
 		}
 	}
 

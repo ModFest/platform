@@ -26,8 +26,8 @@ public class GitManagedPath implements ManagedPath {
 
 	@Override
 	public void write(Consumer<Path> runner) {
-		runner.accept(this.path);
 		this.gitScope.runWithScopedGit(git -> {
+			runner.accept(this.path);
 			// Stage all files in the repo including new files, excluding deleted files
 			git.add().addFilepattern(subPath).call();
 			// Stage all changed files, including deleted files, excluding new files

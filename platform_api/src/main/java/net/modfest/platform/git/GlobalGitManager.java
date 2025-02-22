@@ -11,13 +11,21 @@ public class GlobalGitManager {
 	@Autowired
 	private List<GitRootPath> gitPaths;
 
-	public void withScope(GitScope scope, Runnable r) {
+	public void setScope(GitScope scope) {
 		for (var p : gitPaths) {
 			p.getScopeManager().setScope(scope);
 		}
-		r.run();
+	}
+
+	public void closeScope() {
 		for (var p : gitPaths) {
 			p.getScopeManager().closeScope();
 		}
+	}
+
+	public void withScope(GitScope scope, Runnable r) {
+		setScope(scope);
+		r.run();
+		closeScope();
 	}
 }
