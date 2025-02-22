@@ -4,17 +4,9 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { ModfestAuth } from "./auth_context";
 import { createEventSource } from "eventsource-client";
 import { CurrentEventData, EventData, ScheduleEntryData, UserData } from "./platform_types";
+import { getPlatformUrl } from "./env_vars";
 
 const PLATFORM = getPlatformUrl()!
-
-function getPlatformUrl(): string | undefined {
-	if (process.env.NEXT_PUBLIC_PLATFORM_API) {
-		return process.env.NEXT_PUBLIC_PLATFORM_API
-	}
-	if (process.env.NODE_ENV === "development" && process.env.DEV_SERVER_URL) {
-		return process.env.DEV_SERVER_URL
-	}
-}
 
 export const PlatformContext = createContext<Platform | undefined>(undefined)
 

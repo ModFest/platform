@@ -1,5 +1,6 @@
 "use client"
 
+import { getModrinthAppId, getModrinthSite } from "@/env_vars";
 import { getRedirectUrl } from "../auth";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
@@ -8,8 +9,8 @@ type SearchParamProps = {
 };
 
 export default function Home(props: SearchParamProps) {
-	const modrinthSite = process.env.NEXT_PUBLIC_MODRINTH_SITE
-	const clientId = process.env.NEXT_PUBLIC_MODRINTH_APP_ID!
+	const modrinthSite = getModrinthSite()
+	const clientId = getModrinthAppId()
 	const callback = getRedirectUrl()
 	const scope = `USER_READ`
 

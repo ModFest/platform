@@ -1,8 +1,10 @@
 "use server"
 
+import { getModrinthApi, getModrinthAppId } from "@/env_vars"
+
 export async function getToken(code: string, redirect_uri: string): Promise<ModrinthToken> {
 	// This function is run on the server, it needs access to the client secret
-	const modrinthApi = process.env.NEXT_PUBLIC_MODRINTH_API
+	const modrinthApi = getModrinthApi()
 
 	var result = await fetch(`${modrinthApi}/_internal/oauth/token`, {
 		method: "POST",
@@ -12,7 +14,7 @@ export async function getToken(code: string, redirect_uri: string): Promise<Modr
 		},
 		body: new URLSearchParams({
 			code: code!,
-			client_id: process.env.NEXT_PUBLIC_MODRINTH_APP_ID!,
+			client_id: getModrinthAppId()!,
 			redirect_uri: redirect_uri,
 			grant_type: "authorization_code"
 		})
