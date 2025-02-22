@@ -1,6 +1,7 @@
 package net.modfest.platform.migrations;
 
 import lombok.With;
+import net.modfest.platform.git.GitScope;
 import net.modfest.platform.git.ManagedDirectory;
 import net.modfest.platform.misc.JsonUtil;
 import org.slf4j.Logger;
@@ -43,24 +44,26 @@ public class MigrationManager {
 
 		for (int v = info.currentVersion; v < Migrator.CURRENT_VERSION; v++) {
 			int curV = v;
-			root.write(p -> {
-				var curinfo = getInfo(p);
+			root.runWithScope(new GitScope(String.format("Migrating from v%s to %s", curV, curV+1)), () -> {
+				root.write(p -> {
+					var curinfo = getInfo(p);
 
-				var migrator = new Migrator(jsonUtils, p);
-				var migration = Migrator.MIGRATIONS.get(curV + 1);
-				if (migration == null) {
-					throw new IllegalStateException("No migration function to get from v"+curV+" to v"+(curV+1));
-				}
-				LOGGER.info("Migrating from v{} to {}", curV, curV+1);
+					var migrator = new Migrator(jsonUtils, p);
+					var migration = Migrator.MIGRATIONS.get(curV + 1);
+					if (migration == null) {
+						throw new IllegalStateException("No migration function to get from v"+curV+" to v"+(curV+1));
+					}
+					LOGGER.info("Migrating from v{} to {}", curV, curV+1);
 
-				curinfo = curinfo.withMigrationInProgress(true);
-				writeInfo(p, curinfo); // Immediately write, if the app crashes beyond this point it'll be able to tell on next boot
+					curinfo = curinfo.withMigrationInProgress(true);
+					writeInfo(p, curinfo); // Immediately write, if the app crashes beyond this point it'll be able to tell on next boot
 
-				// Run migration
-				migration.run(migrator);
+					// Run migration
+					migration.run(migrator);
 
-				curinfo = new MigrationInfo(curV + 1, false);
-				writeInfo(p, curinfo);
+					curinfo = new MigrationInfo(curV + 1, false);
+					writeInfo(p, curinfo);
+				});
 			});
 		}
 	}
