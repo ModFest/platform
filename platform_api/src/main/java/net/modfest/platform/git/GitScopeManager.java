@@ -19,11 +19,19 @@ public class GitScopeManager {
 		this.config = config;
 	}
 
-	public void runWithScope(GitScope scope, Runnable r) {
+	public void setScope(GitScope scope) {
 		this.gitScopes.set(scope);
-		r.run();
-		finalizeScope(scope);
+	}
+
+	public void closeScope() {
+		finalizeScope(this.gitScopes.get());
 		this.gitScopes.remove();
+	}
+
+	public void runWithScope(GitScope scope, Runnable r) {
+		setScope(scope);
+		r.run();
+		closeScope();
 	}
 
 	void runWithScopedGit(GitFunction r) {

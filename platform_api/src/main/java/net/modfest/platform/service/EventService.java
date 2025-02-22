@@ -1,5 +1,8 @@
 package net.modfest.platform.service;
 
+import jakarta.annotation.PostConstruct;
+import net.modfest.platform.git.GitScope;
+import net.modfest.platform.git.GlobalGitManager;
 import net.modfest.platform.pojo.EventData;
 import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.repository.EventRepository;
@@ -20,6 +23,8 @@ public class EventService {
 	private SubmissionService submissionService;
 	@Autowired
 	private UserService userService;
+	@Autowired
+	private GlobalGitManager git;
 
 	public EventData getEventById(String id) {
 		return eventRepository.get(id);
@@ -84,5 +89,14 @@ public class EventService {
 		return submissionService
 			.getSubmissionsFromEvent(event)
 			.flatMap(e -> e.authors().stream());
+	}
+
+	@PostConstruct
+	public void fixAllRegistrationData() {
+		git.withScope(new GitScope("Fix registration data"), () -> {
+			for (var e : getAll()) {
+				fixRegistrationData(e);
+			}
+		});
 	}
 }

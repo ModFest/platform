@@ -115,6 +115,10 @@ public class GitRootPath extends GitManagedDirectory implements ManagedDirectory
 		gitScope.getGitUnscoped().close();
 	}
 
+	public GitScopeManager getScopeManager() {
+		return this.gitScope;
+	}
+
 	private interface RemoteConsumer {
 		void accept(String name, URIish uri) throws GitAPIException;
 	}
