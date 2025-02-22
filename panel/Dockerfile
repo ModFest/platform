@@ -16,6 +16,10 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY . .
 
+# Setting up the NEXT_PUBLIC env vars, since these are baked into the app
+ENV NEXT_PUBLIC_PLATFORM_API="https://platform.modfest.net"
+ENV NEXT_PUBLIC_MODRINTH_APP_ID="W4kLEJ3V"
+
 # Install dependencies via pnpm
 # I'm using caching as described in https://pnpm.io/docker
 ENV PNPM_HOME="/pnpm"
