@@ -5,8 +5,11 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRefNameException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
+import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.URIish;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.IOException;
@@ -18,9 +21,18 @@ import java.util.concurrent.TimeUnit;
 
 public class GitRootPath extends GitManagedDirectory implements ManagedDirectory, AutoCloseable {
 	private final List<URIish> remotes = new ArrayList<>();
+	private final @Nullable CredentialsProvider credentials;
 
 	public GitRootPath(Path path, GitConfig config) throws IOException {
 		super(config, createScopeMngr(path, config), path, ".");
+		if (config.getAuthpassword() != null) {
+			this.credentials = new UsernamePasswordCredentialsProvider(
+				config.getAuthuser(),
+				config.getAuthpassword()
+			);
+		} else {
+			this.credentials = null;
+		}
 	}
 
 	private static GitScopeManager createScopeMngr(Path path, GitConfig conf) throws IOException {
@@ -87,10 +99,14 @@ public class GitRootPath extends GitManagedDirectory implements ManagedDirectory
 	@Scheduled(fixedRate = 1, timeUnit = TimeUnit.MINUTES)
 	private void pushGitRepo() throws GitAPIException {
 		forAllRemotes((name, _uri) -> {
-			this.gitScope.getGitUnscoped().push()
+			var git = this.gitScope.getGitUnscoped();
+			var push = git.push()
 				.setRemote(name)
-				.setForce(true)
-				.call();
+				.setForce(true);
+			if (this.credentials != null) {
+				push = push.setCredentialsProvider(this.credentials);
+			}
+			push.call();
 		});
 	}
 

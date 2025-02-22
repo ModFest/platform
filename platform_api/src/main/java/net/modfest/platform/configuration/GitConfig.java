@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -19,4 +20,8 @@ public class GitConfig {
 	@NonNull
 	@Email
 	private String email;
+	@Nullable
+	private String authuser;
+	@Nullable
+	private String authpassword;
 }
