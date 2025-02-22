@@ -91,7 +91,7 @@ public record Migrator(JsonUtil json, Path root) {
 				var newAuthors = new JsonArray();
 				for (var a : authors) {
 					var author = a.getAsString();
-					if (!old2New.containsKey(author)) {
+					if (!old2New.containsKey(author) && !old2New.containsKey(author.toLowerCase(Locale.ROOT))) {
 						// This is a user who isn't present in our users list!
 						// we will create them a new identity
 						String uid;
@@ -104,6 +104,7 @@ public record Migrator(JsonUtil json, Path root) {
 						newAuthors.add(uid);
 					} else {
 						var uid = old2New.get(author);
+						if (uid == null) uid = old2New.get(author.toLowerCase(Locale.ROOT));
 						eventParticipants.get(eventName).add(uid);
 						newAuthors.add(uid);
 					}
