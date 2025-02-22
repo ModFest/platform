@@ -319,7 +319,7 @@ class RoleManager : Extension(), KordExKoinComponent {
 
 		platform.getEvents().forEach { event ->
 			roles.add(Snowflake(event.discordRoles.participant))
-			roles.add(Snowflake(event.discordRoles.award))
+//			roles.add(Snowflake(event.discordRoles.award))
 		}
 		// TODO caching
 		return roles
