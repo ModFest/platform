@@ -339,9 +339,6 @@ class RoleManager : Extension(), KordExKoinComponent {
 			roles.add(REGISTERED_ROLE)
 		}
 
-		if (platformData.registered == null) {
-			return roles // TODO This shouldn't happen, but it seems like there are some broken users in platform
-		}
 		platformData.registered.forEach { event ->
 			val eventRoles = platform.getEvent(event).discordRoles
 			roles.add(Snowflake(eventRoles.participant))

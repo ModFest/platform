@@ -18,7 +18,7 @@ import java.util.function.Function;
  * Contains ad-hoc migrations to our json format
  */
 public record Migrator(JsonUtil json, Path root) {
-	static final int CURRENT_VERSION = 4;
+	static final int CURRENT_VERSION = 5;
 	static final Map<Integer,MigrationManager.Migration> MIGRATIONS = new HashMap<>();
 
 	static {
@@ -26,6 +26,7 @@ public record Migrator(JsonUtil json, Path root) {
 		MIGRATIONS.put(2, Migrator::migrateTo2);
 		MIGRATIONS.put(3, Migrator::migrateTo3);
 		MIGRATIONS.put(4, Migrator::migrateTo4);
+		MIGRATIONS.put(5, Migrator::migrateTo5);
 	}
 
 
@@ -201,6 +202,24 @@ public record Migrator(JsonUtil json, Path root) {
 				o.addProperty("end", toIso.apply(o.get("end").getAsString()));
 			}
 			json.writeJson(path, eventData);
+		});
+	}
+
+	/**
+	 * V5
+	 * The "registered" field inside of user data is now mandatory
+	 */
+	public void migrateTo5() {
+		var userPath = root.resolve("users");
+		MigratorUtils.executeForAllFiles(userPath, path -> {
+			var userJson = json.readJson(path, JsonObject.class);
+			var registered = userJson.get("registered");
+			if (registered == null || !registered.isJsonArray()) {
+				// Default to the empty list
+				userJson.add("registered", new JsonArray());
+				// Write the new json
+				json.writeJson(path, userJson);
+			}
 		});
 	}
 }
