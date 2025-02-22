@@ -20,7 +20,11 @@ public class GitRootPath extends GitManagedDirectory implements ManagedDirectory
 	private final List<URIish> remotes = new ArrayList<>();
 
 	public GitRootPath(Path path, GitConfig config) throws IOException {
-		super(config, createGit(path, config), path, ".");
+		super(config, createScopeMngr(path, config), path, ".");
+	}
+
+	private static GitScopeManager createScopeMngr(Path path, GitConfig conf) throws IOException {
+		return new GitScopeManager(createGit(path, conf), conf);
 	}
 
 	private static Git createGit(Path path, GitConfig conf) throws IOException {
@@ -73,7 +77,7 @@ public class GitRootPath extends GitManagedDirectory implements ManagedDirectory
 	 */
 	private void setGitRemotes() throws GitAPIException {
 		forAllRemotes((name, uri) -> {
-			this.git.remoteSetUrl()
+			this.gitScope.getGitUnscoped().remoteSetUrl()
 				.setRemoteName(name)
 				.setRemoteUri(uri)
 				.call();
@@ -83,7 +87,7 @@ public class GitRootPath extends GitManagedDirectory implements ManagedDirectory
 	@Scheduled(fixedRate = 1, timeUnit = TimeUnit.MINUTES)
 	private void pushGitRepo() throws GitAPIException {
 		forAllRemotes((name, _uri) -> {
-			this.git.push()
+			this.gitScope.getGitUnscoped().push()
 				.setRemote(name)
 				.setForce(true)
 				.call();
@@ -92,7 +96,7 @@ public class GitRootPath extends GitManagedDirectory implements ManagedDirectory
 
 	@Override
 	public void close() throws Exception {
-		git.close();
+		gitScope.getGitUnscoped().close();
 	}
 
 	private interface RemoteConsumer {
