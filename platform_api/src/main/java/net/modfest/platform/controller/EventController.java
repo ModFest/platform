@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -77,6 +78,12 @@ public class EventController {
 							: "You don't have permissions to unregister people other than yourself");
 		}
 		eventService.setRegistered(event, user, registered);
+	}
+
+	@GetMapping("/event/{eventId}/submissions")
+	public List<SubmissionData> getSubmissions(@PathVariable String eventId) {
+		var event = getEvent(eventId);
+		return service.getSubmissionsFromEvent(event).toList();
 	}
 
 	@PostMapping("/event/{eventId}/submissions")
