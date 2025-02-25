@@ -13,12 +13,13 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /**
  * Contains ad-hoc migrations to our json format
  */
 public record Migrator(JsonUtil json, Path root) {
-	static final int CURRENT_VERSION = 5;
+	static final int CURRENT_VERSION = 6;
 	static final Map<Integer,MigrationManager.Migration> MIGRATIONS = new HashMap<>();
 
 	static {
@@ -27,6 +28,7 @@ public record Migrator(JsonUtil json, Path root) {
 		MIGRATIONS.put(3, Migrator::migrateTo3);
 		MIGRATIONS.put(4, Migrator::migrateTo4);
 		MIGRATIONS.put(5, Migrator::migrateTo5);
+		MIGRATIONS.put(6, Migrator::migrateTo6);
 	}
 
 
@@ -221,5 +223,70 @@ public record Migrator(JsonUtil json, Path root) {
 				json.writeJson(path, userJson);
 			}
 		});
+	}
+
+	/**
+	 * V6
+	 * Submission data no longer has a "download" field.
+	 * The "github" platform type was removed.
+	 * There's now an "other" platform type which can optionally contain a
+	 * homepage url (used for frontend) and/or a download url (used for pack)
+	 */
+	public void migrateTo6() {
+		var cursePattern = Pattern.compile("(https://www\\.curseforge\\.com/minecraft/mc-mods/[^/.]+)(/files)?");
+		var modrinthPattern = Pattern.compile("https://cdn\\.modrinth\\.com/data/([^/]+)/versions/([^/]+)/.*");
+		var submissions = root.resolve("submissions");
+		MigratorUtils.executeForAllFiles(submissions, eventDir -> {
+			MigratorUtils.executeForAllFiles(eventDir, submissionFile -> {
+				var submission = json.readJson(submissionFile, JsonObject.class);
+				var id = submission.get("id");
+				try {
+					var downloadLink = submission.has("download") ? submission.get("download").getAsString() : null;
+					submission.remove("download");
+
+					var platformData = submission.get("platform");
+					var type = platformData == null ? "unknown" : platformData.getAsJsonObject().get("type").getAsString();
+					if (type.equals("unknown")) {
+						var newPlatformData = new JsonObject();
+						newPlatformData.addProperty("type", "other");
+						var cfMatch = downloadLink == null ? null : cursePattern.matcher(downloadLink);
+						if (downloadLink != null && cfMatch.matches()) {
+							newPlatformData.add("downloadUrl", JsonNull.INSTANCE);
+							newPlatformData.addProperty("homepageUrl", cfMatch.group(1));
+						} else {
+							newPlatformData.addProperty("downloadUrl", downloadLink);
+							newPlatformData.add("homepageUrl", JsonNull.INSTANCE);
+						}
+						submission.add("platform", newPlatformData);
+					} else {
+						if (type.equals("github")) {
+							throw new IllegalStateException("Github project type no longer exists");
+						} else if (!type.equals("modrinth")) {
+							throw new IllegalStateException("Project type "+type+" is invalid");
+						} else {
+							// Some sanity checks on the data
+							if (downloadLink != null) {
+								var matcher = modrinthPattern.matcher(downloadLink);
+								if (!matcher.matches()) {
+									throw new IllegalStateException("Modrinth project should have modrinth download url");
+								}
+								var projId = platformData.getAsJsonObject().get("project_id").getAsString();
+								var versId = platformData.getAsJsonObject().get("version_id").getAsString();
+								if (!matcher.group(1).equals(projId)) {
+									throw new IllegalStateException("project id in download url doesn't match modrinth project data");
+								}
+								if (!matcher.group(2).equals(versId) && !matcher.group(2).contains(".")) {
+									throw new IllegalStateException("version id in download url doesn't match modrinth project data");
+								}
+							}
+						}
+					}
+					json.writeJson(submissionFile, submission);
+				} catch (Throwable e) {
+					throw new IllegalStateException("Error migrating "+id, e);
+				}
+			});
+		});
+
 	}
 }

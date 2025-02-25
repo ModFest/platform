@@ -84,8 +84,6 @@ public class SubmissionService {
 			throw new RuntimeException("No latest version");
 		}
 
-		var primaryFile = latest.files.stream().filter(f -> f.primary).findAny().orElse(latest.files.get(0));
-
 		submissionRepository.save(
 			new SubmissionData(
 				subId,
@@ -93,14 +91,13 @@ public class SubmissionService {
 				project.title,
 				project.description,
 				authors.map(UserData::id).collect(Collectors.toSet()),
-				new SubmissionData.FileData(
-					new SubmissionData.FileData.Modrinth(
+				new SubmissionData.AssociatedData(
+					new SubmissionData.AssociatedData.Modrinth(
 						project.id,
 						latest.id
 					)
 				),
 				getImages(project),
-				primaryFile.url,
 				project.sourceUrl,
 				new SubmissionData.Awards(
 					Set.of(),
