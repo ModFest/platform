@@ -37,6 +37,7 @@ public class UserDbTests {
 		"https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/GOODSMILE_Racing_Komatti-Mirai_EV_TT_Zero.jpg/1920px-GOODSMILE_Racing_Komatti-Mirai_EV_TT_Zero.jpg",
 		Set.of(),
 		Set.of(),
+		Set.of(),
 		UserRole.TEAM_MEMBER
 	);
 
