@@ -12,7 +12,6 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
-import io.ktor.util.logging.*
 import net.modfest.platform.gson.GsonCommon
 import net.modfest.platform.pojo.CurrentEventData
 import net.modfest.platform.pojo.EventData
@@ -161,6 +160,18 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		client.patch("/user/@me") {
 			addAuth()
 			setBody(patch)
+		}.unwrapErrors();
+	}
+
+	suspend fun addMinecraft(username: String) {
+		client.put("/user/@me/minecraft/$username") {
+			addAuth()
+		}.unwrapErrors();
+	}
+
+	suspend fun removeMinecraft(username: String) {
+		client.delete("/user/@me/minecraft/$username") {
+			addAuth()
 		}.unwrapErrors();
 	}
 

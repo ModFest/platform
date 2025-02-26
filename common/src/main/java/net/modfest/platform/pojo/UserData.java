@@ -22,6 +22,7 @@ public record UserData(
 	@Nullable String icon,
     Set<String> badges,
     Set<String> registered,
+    Set<String> minecraftAccounts,
 	@NonNull UserRole role
 ) implements Data {
 	public UserData withRegistration(EventData event, boolean registered) {

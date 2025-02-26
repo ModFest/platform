@@ -1,22 +1,16 @@
 package net.modfest.botfest.extensions
 
 import dev.kordex.core.commands.Arguments
-import dev.kordex.core.commands.application.slash.converters.ChoiceEnum
-import dev.kordex.core.commands.application.slash.converters.impl.enumChoice
-import dev.kordex.core.commands.application.slash.converters.impl.stringChoice
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.commands.converters.impl.string
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
-import dev.kordex.core.i18n.types.Key
 import dev.kordex.core.i18n.withContext
 import dev.kordex.core.koin.KordExKoinComponent
 import net.modfest.botfest.MAIN_GUILD_ID
 import net.modfest.botfest.Platform
 import net.modfest.botfest.i18n.Translations
-import net.modfest.platform.pojo.CurrentEventData
-import net.modfest.platform.pojo.UserData
 import net.modfest.platform.pojo.UserPatchData
 import org.koin.core.component.inject
 
@@ -54,6 +48,38 @@ class UserCommands : Extension(), KordExKoinComponent {
 					}
 				}
 			}
+
+			// Allows the user to add a minecraft username
+			ephemeralSubCommand(::MinecraftUsernameArgs) {
+				name = Translations.Commands.User.Minecraft.Add.name
+				description = Translations.Commands.User.Minecraft.Add.description
+
+				action {
+					platform.withAuth(this.user).addMinecraft(this.arguments.username)
+
+					respond {
+						content = Translations.Commands.User.Minecraft.Add.response
+							.withContext(this@action)
+							.translateNamed()
+					}
+				}
+			}
+
+			// Allows the user to remove a minecraft username
+			ephemeralSubCommand(::MinecraftUsernameArgs) {
+				name = Translations.Commands.User.Minecraft.Remove.name
+				description = Translations.Commands.User.Minecraft.Remove.description
+
+				action {
+					platform.withAuth(this.user).removeMinecraft(this.arguments.username)
+
+					respond {
+						content = Translations.Commands.User.Minecraft.Remove.response
+							.withContext(this@action)
+							.translateNamed()
+					}
+				}
+			}
 		}
 	}
 
@@ -69,6 +95,13 @@ class UserCommands : Extension(), KordExKoinComponent {
 		val bio by optionalString {
 			name = Translations.Arguments.Setuser.Bio.name
 			description = Translations.Arguments.Setuser.Bio.description
+		}
+	}
+
+	inner class MinecraftUsernameArgs : Arguments() {
+		val username by string {
+			name = Translations.Arguments.Minecraft.Username.name
+			description = Translations.Arguments.Minecraft.Username.description
 		}
 	}
 }

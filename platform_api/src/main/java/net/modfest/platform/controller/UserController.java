@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -164,6 +165,53 @@ public class UserController {
 		}
 
 		service.save(newUser);
+	}
+
+	@PutMapping("/user/{id}/minecraft/{username}")
+	public void addUserMinecraft(@PathVariable String id, @PathVariable String username) {
+		var user = getSingleUser(id);
+
+		// Check permissions
+		// In order for the request to be allowed, the person making the request needs
+		// to either be editing their own data, or they need to have the EDIT_OTHERS permission
+		var subject = SecurityUtils.getSubject();
+		var edit_others = subject.isPermitted(Permissions.Users.EDIT_OTHERS);
+		var owns = PermissionUtils.owns(subject, user);
+
+		if (!owns && !edit_others) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not edit this user");
+		}
+
+		// Perform operation
+		var accounts = new HashSet<>(user.minecraftAccounts());
+		// TODO: actually fetch the UUID and validate existence
+		accounts.add(username);
+		service.save(user.withMinecraftAccounts(accounts));
+	}
+
+	@DeleteMapping("/user/{id}/minecraft/{username}")
+	public void deleteUserMinecraft(@PathVariable String id, @PathVariable String username) {
+		var user = getSingleUser(id);
+
+		// Check permissions
+		// In order for the request to be allowed, the person making the request needs
+		// to either be editing their own data, or they need to have the EDIT_OTHERS permission
+		var subject = SecurityUtils.getSubject();
+		var edit_others = subject.isPermitted(Permissions.Users.EDIT_OTHERS);
+		var owns = PermissionUtils.owns(subject, user);
+
+		if (!owns && !edit_others) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not edit this user");
+		}
+
+		// Perform operation
+		var accounts = new HashSet<>(user.minecraftAccounts());
+		// TODO: actually fetch the UUID and validate existence
+		if (!accounts.contains(username)) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "That minecraft account isn't associated with this user");
+		}
+		accounts.remove(username);
+		service.save(user.withMinecraftAccounts(accounts));
 	}
 
 	@PostMapping("/admin/update_user")

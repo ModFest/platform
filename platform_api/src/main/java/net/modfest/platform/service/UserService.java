@@ -80,6 +80,7 @@ public class UserService {
 			mrUser.avatarUrl,
 			Set.of(),
 			Set.of(),
+			Set.of(),
 			UserRole.NONE
 		));
 
