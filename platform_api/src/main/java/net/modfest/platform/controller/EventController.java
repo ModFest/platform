@@ -2,6 +2,7 @@ package net.modfest.platform.controller;
 
 import net.modfest.platform.pojo.EventData;
 import net.modfest.platform.pojo.SubmissionData;
+import net.modfest.platform.pojo.SubmissionPatchData;
 import net.modfest.platform.pojo.SubmitRequest;
 import net.modfest.platform.security.PermissionUtils;
 import net.modfest.platform.security.Permissions;
@@ -111,5 +112,22 @@ public class EventController {
 		}
 
 		return service.makeModrinthSubmission(eventId, submission.modrinthProject());
+	}
+
+	@PatchMapping("/event/{eventId}/submission/{subId}")
+	public void editSubmissionData(@PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionPatchData editData) {
+		getEvent(eventId);
+		var subject = SecurityUtils.getSubject();
+		var can_others = subject.isPermitted(Permissions.Event.EDIT_OTHER_SUBMISSION);
+		var submission = service.getSubmission(eventId, subId);
+		if (submission == null) {
+			throw new IllegalArgumentException();// TODO
+		}
+		if (!PermissionUtils.owns(subject, submission) && !can_others) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+				"You do not have permissions to edit this data");
+		}
+
+		service.editSubmission(submission, editData);
 	}
 }

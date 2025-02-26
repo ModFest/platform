@@ -31,12 +31,11 @@ class EventCommands : Extension(), KordExKoinComponent {
 
 	@OptIn(UnsafeAPI::class)
 	override suspend fun setup() {
-		val platform = bot.getKoin().get<Platform>()
-
 		// Register command
 		unsafeSlashCommand {
 			name = Translations.Commands.Register.name
 			description = Translations.Commands.Register.description
+			guild(MAIN_GUILD_ID)
 
 			// We're using KordEx's unsafe api here, because our modal is optional and has prefilled fields.
 			// This means we're responsible for initiating the response

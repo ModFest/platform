@@ -1,12 +1,14 @@
 package net.modfest.platform.pojo;
 
 import com.google.gson.*;
+import lombok.With;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.Set;
 
+@With
 public record SubmissionData(@NonNull String id,
 							 @NonNull String event,
 							 @NonNull String name,
@@ -36,6 +38,7 @@ public record SubmissionData(@NonNull String id,
 			public static final String KEY = "modrinth";
 		}
 
+		@With
 		public record Other(@Nullable String homepageUrl, @Nullable String downloadUrl) {
 			public static final String KEY = "other";
 		}

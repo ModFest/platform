@@ -19,6 +19,7 @@ import net.modfest.platform.pojo.EventData
 import net.modfest.platform.pojo.HealthData
 import net.modfest.platform.pojo.PlatformErrorResponse
 import net.modfest.platform.pojo.SubmissionData
+import net.modfest.platform.pojo.SubmissionPatchData
 import net.modfest.platform.pojo.SubmitRequest
 import net.modfest.platform.pojo.UserCreateData
 import net.modfest.platform.pojo.UserData
@@ -106,6 +107,10 @@ class Platform(baseUrl: String) {
 		return getEvents().map { e -> e.id }
 	}
 
+	suspend fun getUserSubmissions(user: Snowflake): List<SubmissionData> {
+		return client.get("/user/dc:${user.value}/submissions").unwrapErrors().body()
+	}
+
 	/**
 	 * Retrieve a user by their discord id. Will be null if the user does not exist
 	 */
@@ -169,6 +174,13 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 			addAuth()
 			setBody(SubmitRequest(mrId))
 		}.unwrapErrors().body()
+	}
+
+	suspend fun editSubmissionData(eventId: String, subId: String, edit: SubmissionPatchData) {
+		client.patch("/event/$eventId/submission/$subId") {
+			addAuth()
+			setBody(edit)
+		}
 	}
 
 	suspend fun registerMe(event: EventData) {

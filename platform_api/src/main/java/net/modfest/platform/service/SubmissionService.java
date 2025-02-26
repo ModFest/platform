@@ -2,6 +2,7 @@ package net.modfest.platform.service;
 
 import net.modfest.platform.pojo.EventData;
 import net.modfest.platform.pojo.SubmissionData;
+import net.modfest.platform.pojo.SubmissionPatchData;
 import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.repository.SubmissionRepository;
 import nl.theepicblock.dukerinth.ModrinthApi;
@@ -32,6 +33,31 @@ public class SubmissionService {
 	private EventService eventService;
 	@Autowired
 	private ModrinthApi modrinth;
+
+	public SubmissionData getSubmission(String eventId, String subId) {
+		return submissionRepository.get(new SubmissionRepository.SubmissionId(eventId, subId));
+	}
+
+	public void editSubmission(SubmissionData data, SubmissionPatchData edit) {
+		if (edit.name() != null) {
+			data = data.withName(edit.name());
+		}
+		if (edit.description() != null) {
+			data = data.withDescription(edit.description());
+		}
+		if (edit.sourceUrl() != null) {
+			data = data.withSource(edit.sourceUrl().isBlank() ? null : edit.sourceUrl());
+		}
+		if (edit.homepage() != null) {
+			if (data.platform().inner() instanceof SubmissionData.AssociatedData.Other o) {
+				var newInner = o.withHomepageUrl(edit.homepage().isBlank() ? null : edit.homepage());
+				data = data.withPlatform(new SubmissionData.AssociatedData(newInner));
+			} else {
+				throw new IllegalStateException();
+			}
+		}
+		submissionRepository.save(data);
+	}
 
 	/**
 	 * Retrieve all submissions made by a user

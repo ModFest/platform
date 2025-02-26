@@ -42,13 +42,17 @@ public class Permissions {
 		 */
 		public static final String SUBMIT = "event.submit";
 		/**
-		 * Allows the user to (de)submit for other people
+		 * Allows the user to bypass restrictions on if an event allows (de)submissions or not
 		 */
 		public static final String SUBMIT_BYPASS = "event.submit.bypass";
 		/**
-		 * Allows the user to bypass restrictions on if an event allows (de)submissions or not
+		 * Allows the user to (de)submit for other people
 		 */
 		public static final String SUBMIT_OTHER = "event.submit.others";
+		/**
+		 * Allows the user to edit other people's submissions
+		 */
+		public static final String EDIT_OTHER_SUBMISSION = "submission.edit.others";
 		/**
 		 * Allows the user to add, edit, or remove things from the event's schedule
 		 */
