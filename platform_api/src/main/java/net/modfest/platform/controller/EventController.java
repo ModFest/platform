@@ -3,7 +3,7 @@ package net.modfest.platform.controller;
 import net.modfest.platform.pojo.EventData;
 import net.modfest.platform.pojo.SubmissionData;
 import net.modfest.platform.pojo.SubmissionPatchData;
-import net.modfest.platform.pojo.SubmitRequest;
+import net.modfest.platform.pojo.SubmitRequestModrinth;
 import net.modfest.platform.security.PermissionUtils;
 import net.modfest.platform.security.Permissions;
 import net.modfest.platform.service.EventService;
@@ -87,9 +87,9 @@ public class EventController {
 		return service.getSubmissionsFromEvent(event).toList();
 	}
 
-	@PostMapping("/event/{eventId}/submissions")
+	@PostMapping(value = "/event/{eventId}/submissions", params = "type=modrinth")
 	@RequiresPermissions(Permissions.Event.SUBMIT)
-	public SubmissionData makeSubmission(@PathVariable String eventId, @RequestBody SubmitRequest submission) {
+	public SubmissionData makeSubmission(@PathVariable String eventId, @RequestBody SubmitRequestModrinth submission) {
 		var event = getEvent(eventId);
 		var subject = SecurityUtils.getSubject();
 		var bypass = subject.isPermitted(Permissions.Event.SUBMIT_BYPASS);
