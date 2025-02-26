@@ -12,14 +12,15 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
-import io.ktor.util.logging.*
 import net.modfest.platform.gson.GsonCommon
 import net.modfest.platform.pojo.CurrentEventData
 import net.modfest.platform.pojo.EventData
 import net.modfest.platform.pojo.HealthData
 import net.modfest.platform.pojo.PlatformErrorResponse
 import net.modfest.platform.pojo.SubmissionData
-import net.modfest.platform.pojo.SubmitRequest
+import net.modfest.platform.pojo.SubmissionPatchData
+import net.modfest.platform.pojo.SubmitRequestModrinth
+import net.modfest.platform.pojo.SubmitRequestOther
 import net.modfest.platform.pojo.UserCreateData
 import net.modfest.platform.pojo.UserData
 import net.modfest.platform.pojo.UserPatchData
@@ -106,6 +107,10 @@ class Platform(baseUrl: String) {
 		return getEvents().map { e -> e.id }
 	}
 
+	suspend fun getUserSubmissions(user: Snowflake): List<SubmissionData> {
+		return client.get("/user/dc:${user.value}/submissions").unwrapErrors().body()
+	}
+
 	/**
 	 * Retrieve a user by their discord id. Will be null if the user does not exist
 	 */
@@ -165,10 +170,24 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 	}
 
 	suspend fun submitModrinth(eventId: String, mrId: String): SubmissionData {
-		return client.post("/event/$eventId/submissions") {
+		return client.post("/event/$eventId/submissions?type=modrinth") {
 			addAuth()
-			setBody(SubmitRequest(mrId))
+			setBody(SubmitRequestModrinth(mrId))
 		}.unwrapErrors().body()
+	}
+
+	suspend fun submitOther(eventId: String, data: SubmitRequestOther): SubmissionData {
+		return client.post("/event/$eventId/submissions?type=other") {
+			addAuth()
+			setBody(data)
+		}.unwrapErrors().body()
+	}
+
+	suspend fun editSubmissionData(eventId: String, subId: String, edit: SubmissionPatchData) {
+		client.patch("/event/$eventId/submission/$subId") {
+			addAuth()
+			setBody(edit)
+		}
 	}
 
 	suspend fun registerMe(event: EventData) {

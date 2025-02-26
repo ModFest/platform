@@ -51,6 +51,7 @@ suspend fun main() {
 			add(::UserCommands)
 			add(::EventCommands)
 			add(::RoleManager)
+			add(::SubmissionCommands)
 		}
 
 		errorResponse { message, type ->

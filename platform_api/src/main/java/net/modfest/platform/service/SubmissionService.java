@@ -1,8 +1,6 @@
 package net.modfest.platform.service;
 
-import net.modfest.platform.pojo.EventData;
-import net.modfest.platform.pojo.SubmissionData;
-import net.modfest.platform.pojo.UserData;
+import net.modfest.platform.pojo.*;
 import net.modfest.platform.repository.SubmissionRepository;
 import nl.theepicblock.dukerinth.ModrinthApi;
 import nl.theepicblock.dukerinth.VersionFilter;
@@ -14,10 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,6 +27,31 @@ public class SubmissionService {
 	private EventService eventService;
 	@Autowired
 	private ModrinthApi modrinth;
+
+	public SubmissionData getSubmission(String eventId, String subId) {
+		return submissionRepository.get(new SubmissionRepository.SubmissionId(eventId, subId));
+	}
+
+	public void editSubmission(SubmissionData data, SubmissionPatchData edit) {
+		if (edit.name() != null) {
+			data = data.withName(edit.name());
+		}
+		if (edit.description() != null) {
+			data = data.withDescription(edit.description());
+		}
+		if (edit.sourceUrl() != null) {
+			data = data.withSource(edit.sourceUrl().isBlank() ? null : edit.sourceUrl());
+		}
+		if (edit.homepage() != null) {
+			if (data.platform().inner() instanceof SubmissionData.AssociatedData.Other o) {
+				var newInner = o.withHomepageUrl(edit.homepage().isBlank() ? null : edit.homepage());
+				data = data.withPlatform(new SubmissionData.AssociatedData(newInner));
+			} else {
+				throw new IllegalStateException();
+			}
+		}
+		submissionRepository.save(data);
+	}
 
 	/**
 	 * Retrieve all submissions made by a user
@@ -67,7 +87,43 @@ public class SubmissionService {
 			.filter(Objects::nonNull);
 	}
 
-	public SubmissionData makeModrinthSubmission(String eventId, String mrProjectId) {
+	public SubmissionData makeSubmissionOther(EventData event, Set<UserData> authors, SubmitRequestOther submitData) {
+		var subId = submitData.name()
+			.toLowerCase(Locale.ROOT)
+			.replace(" ", "_")
+			.replaceAll("[^a-z0-9_\\-\\s]", "");
+		if (subId.isBlank()) {
+			throw new IllegalStateException();
+		}
+		var idKey = new SubmissionRepository.SubmissionId(event.id(), subId);
+		if (submissionRepository.contains(idKey)) {
+			// TODO friendlier error message for duplicates
+			throw new IllegalStateException();
+		}
+		var submission = new SubmissionData(
+			subId,
+			event.id(),
+			submitData.name(),
+			submitData.description(),
+			authors.stream().map(a -> a.id()).collect(Collectors.toSet()),
+			new SubmissionData.AssociatedData(
+				new SubmissionData.AssociatedData.Other(
+					submitData.homepage(),
+					submitData.downloadUrl()
+				)
+			),
+			new SubmissionData.Images(null, null),
+			submitData.sourceUrl(),
+			new SubmissionData.Awards(
+				Set.of(),
+				Set.of()
+			)
+		);
+		submissionRepository.save(submission);
+		return submission;
+	}
+
+	public SubmissionData makeSubmissionModrinth(String eventId, String mrProjectId) {
 		var project = modrinth.projects().getProject(mrProjectId);
 		var subId = project.slug; // Normalize id by using slug. Just in case the user entered an actual id
 		if (subId == null) subId = project.id;
@@ -84,8 +140,6 @@ public class SubmissionService {
 			throw new RuntimeException("No latest version");
 		}
 
-		var primaryFile = latest.files.stream().filter(f -> f.primary).findAny().orElse(latest.files.get(0));
-
 		submissionRepository.save(
 			new SubmissionData(
 				subId,
@@ -93,14 +147,13 @@ public class SubmissionService {
 				project.title,
 				project.description,
 				authors.map(UserData::id).collect(Collectors.toSet()),
-				new SubmissionData.FileData(
-					new SubmissionData.FileData.Modrinth(
+				new SubmissionData.AssociatedData(
+					new SubmissionData.AssociatedData.Modrinth(
 						project.id,
 						latest.id
 					)
 				),
 				getImages(project),
-				primaryFile.url,
 				project.sourceUrl,
 				new SubmissionData.Awards(
 					Set.of(),

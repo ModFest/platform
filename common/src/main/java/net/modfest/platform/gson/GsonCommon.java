@@ -17,7 +17,7 @@ public class GsonCommon {
 			.registerTypeHierarchyAdapter(Enum.class, new EnumToLowerCaseJsonConverter())
 			.registerTypeAdapter(Instant.class, new InstantSerializer())
 			.registerTypeAdapter(EventData.DescriptionItem.class, new EventData.DescriptionItem.TypeAdapter())
-			.registerTypeAdapter(SubmissionData.FileData.class, new SubmissionData.FileData.TypeAdapter())
+			.registerTypeAdapter(SubmissionData.AssociatedData.class, new SubmissionData.AssociatedData.TypeAdapter())
 			.setPrettyPrinting()
 			.serializeNulls()
 			.setLenient();

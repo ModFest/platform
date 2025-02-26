@@ -1,6 +1,6 @@
 package net.modfest.platform.pojo;
 
-public record SubmitRequest(
+public record SubmitRequestModrinth(
 	String modrinthProject
 ) {
 }

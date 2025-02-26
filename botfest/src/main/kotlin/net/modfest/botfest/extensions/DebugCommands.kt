@@ -28,7 +28,7 @@ class DebugCommands : Extension(), KordExKoinComponent {
 			name = Translations.Commands.Group.Debug.name
 			description = Translations.Commands.Group.Debug.description
 
-			guild(MAIN_GUILD_ID)  // Otherwise it will take up to an hour to update
+			guild(MAIN_GUILD_ID) // Otherwise it will take up to an hour to update
 
 			// View health of the bot and platform
 			ephemeralSubCommand {
