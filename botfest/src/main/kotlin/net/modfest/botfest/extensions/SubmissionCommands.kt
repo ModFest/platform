@@ -2,6 +2,7 @@ package net.modfest.botfest.extensions
 
 import dev.kord.core.behavior.interaction.response.edit
 import dev.kordex.core.commands.Arguments
+import dev.kordex.core.commands.application.slash.converters.impl.stringChoice
 import dev.kordex.core.commands.converters.impl.string
 import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.core.extensions.Extension
