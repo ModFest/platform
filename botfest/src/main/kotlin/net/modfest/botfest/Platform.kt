@@ -20,6 +20,7 @@ import net.modfest.platform.pojo.PlatformErrorResponse
 import net.modfest.platform.pojo.SubmissionData
 import net.modfest.platform.pojo.SubmissionPatchData
 import net.modfest.platform.pojo.SubmitRequestModrinth
+import net.modfest.platform.pojo.SubmitRequestOther
 import net.modfest.platform.pojo.UserCreateData
 import net.modfest.platform.pojo.UserData
 import net.modfest.platform.pojo.UserPatchData
@@ -172,6 +173,13 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		return client.post("/event/$eventId/submissions?type=modrinth") {
 			addAuth()
 			setBody(SubmitRequestModrinth(mrId))
+		}.unwrapErrors().body()
+	}
+
+	suspend fun submitOther(eventId: String, data: SubmitRequestOther): SubmissionData {
+		return client.post("/event/$eventId/submissions?type=other") {
+			addAuth()
+			setBody(data)
 		}.unwrapErrors().body()
 	}
 

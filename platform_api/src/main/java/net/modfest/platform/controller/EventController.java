@@ -1,9 +1,6 @@
 package net.modfest.platform.controller;
 
-import net.modfest.platform.pojo.EventData;
-import net.modfest.platform.pojo.SubmissionData;
-import net.modfest.platform.pojo.SubmissionPatchData;
-import net.modfest.platform.pojo.SubmitRequestModrinth;
+import net.modfest.platform.pojo.*;
 import net.modfest.platform.security.PermissionUtils;
 import net.modfest.platform.security.Permissions;
 import net.modfest.platform.service.EventService;
@@ -18,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -87,9 +85,34 @@ public class EventController {
 		return service.getSubmissionsFromEvent(event).toList();
 	}
 
-	@PostMapping(value = "/event/{eventId}/submissions", params = "type=modrinth")
+	@PostMapping(value = "/event/{eventId}/submissions", params = "type=other")
 	@RequiresPermissions(Permissions.Event.SUBMIT)
-	public SubmissionData makeSubmission(@PathVariable String eventId, @RequestBody SubmitRequestModrinth submission) {
+	public SubmissionData makeSubmissionOther(@PathVariable String eventId, @RequestBody SubmitRequestOther submission) {
+		var event = getEvent(eventId);
+		var subject = SecurityUtils.getSubject();
+		var bypass = subject.isPermitted(Permissions.Event.SUBMIT_BYPASS);
+		var can_others = subject.isPermitted(Permissions.Event.SUBMIT_OTHER);
+
+		var authors = submission.authors()
+			.stream()
+			.map(id -> userController.getSingleUser(id)).collect(Collectors.toSet());
+		var self = authors.stream().anyMatch(d -> PermissionUtils.owns(subject, d));
+
+		if (!event.phase().canSubmit() && !bypass) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Event does not accept submissions");
+		}
+
+		if (!self && !can_others) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+				"You don't have permissions to submit for people other than yourself");
+		}
+
+		return service.makeSubmissionOther(event, authors, submission);
+	}
+
+		@PostMapping(value = "/event/{eventId}/submissions", params = "type=modrinth")
+	@RequiresPermissions(Permissions.Event.SUBMIT)
+	public SubmissionData makeSubmissionModrinth(@PathVariable String eventId, @RequestBody SubmitRequestModrinth submission) {
 		var event = getEvent(eventId);
 		var subject = SecurityUtils.getSubject();
 		var bypass = subject.isPermitted(Permissions.Event.SUBMIT_BYPASS);
@@ -111,7 +134,7 @@ public class EventController {
 				"You don't have permissions to submit for people other than yourself");
 		}
 
-		return service.makeModrinthSubmission(eventId, submission.modrinthProject());
+		return service.makeSubmissionModrinth(eventId, submission.modrinthProject());
 	}
 
 	@PatchMapping("/event/{eventId}/submission/{subId}")
