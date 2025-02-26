@@ -41,6 +41,7 @@ public class JsonTests {
 				"https://i.imgflip.com/4awf2i.jpg",
 				Set.of("Badge"),
 				Set.of("bc2+5i"),
+				Set.of("abcd"),
 				UserRole.TEAM_MEMBER
 			),
 			new EventData(
