@@ -182,10 +182,14 @@ public class UserController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not edit this user");
 		}
 
+		String uuid = service.getMinecraftId(username);
+		if (uuid == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "A minecraft profile with that username does not exist");
+		}
+
 		// Perform operation
 		var accounts = new HashSet<>(user.minecraftAccounts());
-		// TODO: actually fetch the UUID and validate existence
-		accounts.add(username);
+		accounts.add(uuid);
 		service.save(user.withMinecraftAccounts(accounts));
 	}
 
@@ -204,13 +208,17 @@ public class UserController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not edit this user");
 		}
 
+		String uuid = service.getMinecraftId(username);
+		if (uuid == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "A minecraft profile with that username does not exist");
+		}
+
 		// Perform operation
 		var accounts = new HashSet<>(user.minecraftAccounts());
-		// TODO: actually fetch the UUID and validate existence
-		if (!accounts.contains(username)) {
+		if (!accounts.contains(uuid)) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "That minecraft account isn't associated with this user");
 		}
-		accounts.remove(username);
+		accounts.remove(uuid);
 		service.save(user.withMinecraftAccounts(accounts));
 	}
 
