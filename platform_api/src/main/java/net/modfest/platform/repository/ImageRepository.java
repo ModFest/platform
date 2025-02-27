@@ -1,5 +1,6 @@
 package net.modfest.platform.repository;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
 import net.modfest.platform.git.GitScope;
 import net.modfest.platform.git.ManagedDirectory;
@@ -15,6 +16,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Set;
 
@@ -43,6 +45,25 @@ public class ImageRepository {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	/**
+	 * Gets the root path. This provides no guarantees for atomicity.
+	 */
+	public Path getRootPathUnsafe() {
+		return imageStore.withRead(r -> r);
+	}
+
+	public @Nullable ImageInfo getImageInfo(String id) {
+		return this.imageStore.withRead(path -> {
+			for (var ext : supportedExtensions) {
+				if (Files.exists(path.resolve(id+"."+ext))) {
+					return new ImageInfo(ext);
+				}
+			}
+			// File not found
+			return null;
+		});
 	}
 
 	public void download(URI url, String id) {
@@ -90,4 +111,6 @@ public class ImageRepository {
 	private static <T> T last(T[] d) {
 		return d[d.length-1];
 	}
+
+	public record ImageInfo(String extension) {}
 }

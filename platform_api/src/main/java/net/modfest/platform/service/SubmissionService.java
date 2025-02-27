@@ -142,7 +142,7 @@ public class SubmissionService {
 			throw new RuntimeException("No latest version");
 		}
 
-		imageService.downloadSubmissionImage(project.iconUrl, eventId, subId, ImageService.SubmissionImageType.ICON);
+		imageService.downloadSubmissionImage(project.iconUrl, subKey, ImageService.SubmissionImageType.ICON);
 		submissionRepository.save(
 			new SubmissionData(
 				subId,
