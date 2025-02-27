@@ -126,14 +126,17 @@ public class UserController {
 	}
 
 	@GetMapping("/user/{id}/submissions")
-	public List<SubmissionData> getUserSubmissions(@PathVariable String id, @RequestParam(required = false) String eventFilter) {
+	public List<SubmissionResponseData> getUserSubmissions(@PathVariable String id, @RequestParam(required = false) String eventFilter) {
 		var user = getSingleUser(id);
 		EventData filter = null;
 		if (eventFilter != null) {
 			filter = eventService.getEventById(eventFilter);
 			if (filter == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event "+eventFilter+" does not exist");
 		}
-		return submissionService.getSubmissionsFromUser(user, filter).toList();
+		return submissionService
+			.getSubmissionsFromUser(user, filter)
+			.map(SubmissionResponseData::fromData)
+			.toList();
 	}
 
 	@PatchMapping("/user/{id}")

@@ -114,7 +114,7 @@ public class SubmissionService {
 					submitData.downloadUrl()
 				)
 			),
-			new SubmissionData.Images(null, null),
+			new SubmissionResponseData.Images(null, null),
 			submitData.sourceUrl(),
 			new SubmissionData.Awards(
 				Set.of(),
@@ -167,8 +167,8 @@ public class SubmissionService {
 		return submissionRepository.get(subKey);
 	}
 
-	private static SubmissionData.Images getImages(Project mrProject) {
-		return new SubmissionData.Images(
+	private static SubmissionResponseData.Images getImages(Project mrProject) {
+		return new SubmissionResponseData.Images(
 			mrProject.iconUrl,
 			mrProject.gallery.stream().filter(item -> item.featured).map(item -> item.url).findFirst().orElse(null)
 		);

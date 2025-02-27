@@ -15,13 +15,10 @@ public record SubmissionData(@NonNull String id,
 							 @NonNull String description,
 							 @NonNull Set<String> authors,
 							 SubmissionData.@NonNull AssociatedData platform,
-							 @NonNull Images images,
+							 SubmissionResponseData.@NonNull Images images,
 							 @Nullable String source,
 							 @NonNull Awards awards
 	) implements Data {
-
-	public record Images(@Nullable String icon, @Nullable String screenshot) {
-	}
 
 	public record Awards(Set<String> theme, Set<String> extra) {
 	}

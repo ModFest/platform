@@ -80,14 +80,17 @@ public class EventController {
 	}
 
 	@GetMapping("/event/{eventId}/submissions")
-	public List<SubmissionData> getSubmissions(@PathVariable String eventId) {
+	public List<SubmissionResponseData> getSubmissions(@PathVariable String eventId) {
 		var event = getEvent(eventId);
-		return service.getSubmissionsFromEvent(event).toList();
+		return service
+			.getSubmissionsFromEvent(event)
+			.map(SubmissionResponseData::fromData)
+			.toList();
 	}
 
 	@PostMapping(value = "/event/{eventId}/submissions", params = "type=other")
 	@RequiresPermissions(Permissions.Event.SUBMIT)
-	public SubmissionData makeSubmissionOther(@PathVariable String eventId, @RequestBody SubmitRequestOther submission) {
+	public SubmissionResponseData makeSubmissionOther(@PathVariable String eventId, @RequestBody SubmitRequestOther submission) {
 		var event = getEvent(eventId);
 		var subject = SecurityUtils.getSubject();
 		var bypass = subject.isPermitted(Permissions.Event.SUBMIT_BYPASS);
@@ -107,12 +110,12 @@ public class EventController {
 				"You don't have permissions to submit for people other than yourself");
 		}
 
-		return service.makeSubmissionOther(event, authors, submission);
+		return SubmissionResponseData.fromData(service.makeSubmissionOther(event, authors, submission));
 	}
 
 		@PostMapping(value = "/event/{eventId}/submissions", params = "type=modrinth")
 	@RequiresPermissions(Permissions.Event.SUBMIT)
-	public SubmissionData makeSubmissionModrinth(@PathVariable String eventId, @RequestBody SubmitRequestModrinth submission) {
+	public SubmissionResponseData makeSubmissionModrinth(@PathVariable String eventId, @RequestBody SubmitRequestModrinth submission) {
 		var event = getEvent(eventId);
 		var subject = SecurityUtils.getSubject();
 		var bypass = subject.isPermitted(Permissions.Event.SUBMIT_BYPASS);
@@ -134,7 +137,7 @@ public class EventController {
 				"You don't have permissions to submit for people other than yourself");
 		}
 
-		return service.makeSubmissionModrinth(eventId, submission.modrinthProject());
+		return SubmissionResponseData.fromData(service.makeSubmissionModrinth(eventId, submission.modrinthProject()));
 	}
 
 	@PatchMapping("/event/{eventId}/submission/{subId}")
