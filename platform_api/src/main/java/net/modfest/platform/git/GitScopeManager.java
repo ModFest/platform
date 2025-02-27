@@ -75,22 +75,28 @@ public class GitScopeManager {
 		return this.git;
 	}
 
+	GitScope getCurrentScope() {
+		return this.gitScopes.get();
+	}
+
 	private void finalizeScope(GitScope scope) {
 		// We only need to commit if the scope was locked for use in writing
 		if (this.scopeLock.isHeldByCurrentThread()) {
 			try {
-				this.git.commit()
+				var commit = this.git.commit()
 					.setAuthor(config.getUser(), config.getEmail())
 					.setMessage(scope.commitMessage())
 					.setAllowEmpty(false)
 					.setSign(false)
 					.call();
+				scope.setFinalized(commit.name());
 			} catch (EmptyCommitException ignored) {
 				// If nothing changed we simply do not commit anything
 			} catch (GitAPIException e) {
 				throw new RuntimeException(e);
 			} finally {
 				this.scopeLock.unlock();
+				scope.setFinalized();
 			}
 		}
 	}

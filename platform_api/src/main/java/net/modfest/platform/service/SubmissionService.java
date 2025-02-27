@@ -26,6 +26,8 @@ public class SubmissionService {
 	@Autowired
 	private EventService eventService;
 	@Autowired
+	private ImageService imageService;
+	@Autowired
 	private ModrinthApi modrinth;
 
 	public SubmissionData getSubmission(String eventId, String subId) {
@@ -140,6 +142,7 @@ public class SubmissionService {
 			throw new RuntimeException("No latest version");
 		}
 
+		imageService.downloadSubmissionImage(project.iconUrl, eventId, subId, ImageService.SubmissionImageType.ICON);
 		submissionRepository.save(
 			new SubmissionData(
 				subId,
