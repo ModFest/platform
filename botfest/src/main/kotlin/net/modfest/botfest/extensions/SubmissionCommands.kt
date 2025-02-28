@@ -1,11 +1,14 @@
 package net.modfest.botfest.extensions
 
+import dev.kord.common.entity.DiscordPartialEmoji
 import dev.kord.core.behavior.interaction.response.edit
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.converters.impl.stringChoice
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.application.slash.group
 import dev.kordex.core.commands.converters.impl.string
+import dev.kordex.core.components.components
+import dev.kordex.core.components.ephemeralStringSelectMenu
 import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
@@ -17,6 +20,11 @@ import dev.kordex.core.utils.suggestStringCollection
 import dev.kordex.modules.dev.unsafe.annotations.UnsafeAPI
 import dev.kordex.modules.dev.unsafe.commands.slash.InitialSlashCommandResponse
 import dev.kordex.modules.dev.unsafe.extensions.unsafeSubCommand
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.addAll
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import net.modfest.botfest.MAIN_GUILD_ID
 import net.modfest.botfest.Platform
 import net.modfest.botfest.i18n.Translations
@@ -24,8 +32,10 @@ import net.modfest.platform.pojo.SubmissionData.AssociatedData.Other
 import net.modfest.platform.pojo.SubmissionPatchData
 import net.modfest.platform.pojo.SubmitRequestOther
 import org.koin.core.component.inject
+import java.nio.file.Files
 import java.util.*
 import java.util.regex.Pattern
+import kotlin.io.path.Path
 
 /**
  * Provides various debugging commands
@@ -36,7 +46,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 	var MODRINTH_REGEX = Pattern.compile(".*modrinth\\.com/mod/([\\w!@$()`.+,\"\\-']{3,64})/?.*");
 
-	@OptIn(UnsafeAPI::class)
+	@OptIn(UnsafeAPI::class, ExperimentalSerializationApi::class)
 	override suspend fun setup() {
 		// Commands for submitting
 		ephemeralSlashCommand {
@@ -128,6 +138,69 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 								"event" to eventInfo.name,
 								"mod" to submission.name
 							)
+					}
+				}
+			}
+
+			ephemeralSubCommand {
+				name = Translations.Commands.Event.Submit.Event.name
+				description = Translations.Commands.Event.Submit.Event.description
+
+				action {
+					respond {
+						content = Translations.Modal.Submit.Event.Type.question
+							.withContext(this@action)
+							.translateNamed()
+						components {
+							ephemeralStringSelectMenu(::SubmitModalEvent) {
+								option(Translations.Modal.Submit.Event.Type.Panel.label, "panel") {
+									description = Translations.Modal.Submit.Event.Type.Panel.description
+									emoji = DiscordPartialEmoji(name = "\uD83D\uDCE3")
+								}
+								option(Translations.Modal.Submit.Event.Type.Keynote.label, "keynote") {
+									description = Translations.Modal.Submit.Event.Type.Keynote.description
+									emoji = DiscordPartialEmoji(name = "\uD83D\uDCFA")
+								}
+								option(Translations.Modal.Submit.Event.Type.Qna.label, "qna") {
+									description = Translations.Modal.Submit.Event.Type.Qna.description
+									emoji = DiscordPartialEmoji(name = "\u2753")
+								}
+								option(Translations.Modal.Submit.Event.Type.Other.label, "other") {
+									description = Translations.Modal.Submit.Event.Type.Other.description
+									emoji = DiscordPartialEmoji(name = "\uD83D\uDCAD")
+								}
+
+								action { modal ->
+									val menuResponse = this.selected
+									if (modal == null) {
+										respond {
+											content = Translations.Modal.Submit.Event.Response.error
+												.withContext(this@action)
+												.translateNamed()
+										}
+									} else {
+										Files.writeString(
+											Path("./data/").resolve(UUID.randomUUID().toString()+".json"),
+											buildJsonObject {
+												putJsonArray("type") {
+													addAll(menuResponse)
+												}
+												put("title", modal.event_title.value)
+												put("description", modal.desc.value)
+												put("collabs", modal.collabs.value)
+												put("extra", modal.extra.value)
+												put("submitter", this@action.user.id.toString())
+											}.toString()
+										)
+										respond {
+											content = Translations.Modal.Submit.Event.Response.success
+												.withContext(this@action)
+												.translateNamed()
+										}
+									}
+								}
+							}
+						}
 					}
 				}
 			}
@@ -320,6 +393,34 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			label = Translations.Modal.Submission.Downloadurl.label
 			placeholder = Translations.Modal.Submission.Downloadurl.placeholder
 			maxLength = 128
+			required = false
+		}
+	}
+
+	class SubmitModalEvent : ModalForm() {
+		override var title: Key = Translations.Modal.Submit.Event.title;
+
+		val event_title = lineText {
+			label = Translations.Modal.Submit.Event.Title.label
+			placeholder = Translations.Modal.Submit.Event.Title.placeholder
+			required = true
+		}
+
+		val desc = paragraphText {
+			label = Translations.Modal.Submit.Event.Desc.label
+			placeholder = Translations.Modal.Submit.Event.Desc.placeholder
+			required = true
+		}
+
+		val collabs = paragraphText {
+			label = Translations.Modal.Submit.Event.Collabs.label
+			placeholder = Translations.Modal.Submit.Event.Collabs.placeholder
+			required = false
+		}
+
+		val extra = paragraphText {
+			label = Translations.Modal.Submit.Event.Extra.label
+			placeholder = Translations.Modal.Submit.Event.Extra.placeholder
 			required = false
 		}
 	}
