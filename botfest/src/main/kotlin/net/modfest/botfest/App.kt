@@ -2,16 +2,10 @@ package net.modfest.botfest
 
 import com.google.gson.Gson
 import dev.kord.common.entity.Snowflake
-import dev.kord.gateway.ALL
-import dev.kord.gateway.Intent
-import dev.kord.gateway.Intents
 import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.utils.env
 import dev.kordex.core.utils.envOrNull
-import dev.kordex.core.utils.extraData
 import dev.kordex.core.utils.loadModule
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.subscribe
 import net.modfest.botfest.extensions.*
 import net.modfest.botfest.i18n.Translations
 import net.modfest.platform.pojo.PlatformErrorResponse
@@ -36,6 +30,9 @@ suspend fun main() {
 				loadModule {
 					single {
 						Platform(PLATFORM_API_URL)
+					}
+					single {
+						CommandReferences()
 					}
 				}
 			}
