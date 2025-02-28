@@ -3,6 +3,7 @@ package net.modfest.botfest.extensions
 import dev.kord.common.entity.DiscordPartialEmoji
 import dev.kord.core.behavior.interaction.response.edit
 import dev.kordex.core.commands.Arguments
+import dev.kordex.core.commands.application.slash.EphemeralSlashCommand
 import dev.kordex.core.commands.application.slash.EphemeralSlashCommandContext
 import dev.kordex.core.commands.application.slash.converters.impl.stringChoice
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
@@ -50,6 +51,8 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 	@OptIn(UnsafeAPI::class, ExperimentalSerializationApi::class)
 	override suspend fun setup() {
+		var slashIcon: EphemeralSlashCommand<ImageArg, ModalForm>? = null
+		var slashScreenshot: EphemeralSlashCommand<ImageArg, ModalForm>? = null
 		// Commands for submitting
 		ephemeralSlashCommand {
 			name = Translations.Commands.Event.Submit.name
@@ -134,11 +137,14 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val eventInfo = platform.getEvent(curEvent)
 
 					respond {
-						content = Translations.Commands.Event.Submit.Response.success
+						content = Translations.Commands.Event.Submit.Other.Response.success
 							.withContext(this@action)
 							.translateNamed(
 								"event" to eventInfo.name,
-								"mod" to submission.name
+								"mod" to submission.name,
+								"subId" to submission.id,
+								"slashIcon" to slashIcon?.mention,
+								"slashScreenshot" to slashScreenshot?.mention,
 							)
 					}
 				}
@@ -293,7 +299,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			group(Translations.Commands.Submission.EditImage.label) {
 				description = Translations.Commands.Submission.EditImage.description
 
-				ephemeralSubCommand(::ImageArg) {
+				slashIcon = ephemeralSubCommand(::ImageArg) {
 					name = Translations.Commands.Submission.EditImage.Icon.label
 					description = Translations.Commands.Submission.EditImage.Icon.description
 
@@ -302,7 +308,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					}
 				}
 
-				ephemeralSubCommand(::ImageArg) {
+				slashScreenshot = ephemeralSubCommand(::ImageArg) {
 					name = Translations.Commands.Submission.EditImage.Screenshot.label
 					description = Translations.Commands.Submission.EditImage.Screenshot.description
 
