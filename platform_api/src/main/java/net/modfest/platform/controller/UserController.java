@@ -1,5 +1,6 @@
 package net.modfest.platform.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import net.modfest.platform.misc.EventSource;
 import net.modfest.platform.misc.ModrinthIdUtils;
 import net.modfest.platform.misc.PlatformStandardException;
@@ -126,7 +127,7 @@ public class UserController {
 	}
 
 	@GetMapping("/user/{id}/submissions")
-	public List<SubmissionResponseData> getUserSubmissions(@PathVariable String id, @RequestParam(required = false) String eventFilter) {
+	public List<SubmissionResponseData> getUserSubmissions(HttpServletRequest request, @PathVariable String id, @RequestParam(required = false) String eventFilter) {
 		var user = getSingleUser(id);
 		EventData filter = null;
 		if (eventFilter != null) {
@@ -135,7 +136,7 @@ public class UserController {
 		}
 		return submissionService
 			.getSubmissionsFromUser(user, filter)
-			.map(SubmissionResponseData::fromData)
+			.map(s -> submissionService.addResponseInfo(request, s))
 			.toList();
 	}
 

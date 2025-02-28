@@ -1,5 +1,6 @@
 package net.modfest.platform.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import net.modfest.platform.pojo.*;
 import net.modfest.platform.repository.SubmissionRepository;
 import nl.theepicblock.dukerinth.ModrinthApi;
@@ -114,7 +115,6 @@ public class SubmissionService {
 					submitData.downloadUrl()
 				)
 			),
-			new SubmissionResponseData.Images(null, null),
 			submitData.sourceUrl(),
 			new SubmissionData.Awards(
 				Set.of(),
@@ -143,6 +143,10 @@ public class SubmissionService {
 		}
 
 		imageService.downloadSubmissionImage(project.iconUrl, subKey, ImageService.SubmissionImageType.ICON);
+		var galleryUrl = getGalleryUrl(project);
+		if (galleryUrl != null) {
+			imageService.downloadSubmissionImage(galleryUrl, subKey, ImageService.SubmissionImageType.SCREENSHOT);
+		}
 		submissionRepository.save(
 			new SubmissionData(
 				subId,
@@ -156,7 +160,6 @@ public class SubmissionService {
 						latest.id
 					)
 				),
-				getImages(project),
 				project.sourceUrl,
 				new SubmissionData.Awards(
 					Set.of(),
@@ -167,11 +170,13 @@ public class SubmissionService {
 		return submissionRepository.get(subKey);
 	}
 
-	private static SubmissionResponseData.Images getImages(Project mrProject) {
-		return new SubmissionResponseData.Images(
-			mrProject.iconUrl,
-			mrProject.gallery.stream().filter(item -> item.featured).map(item -> item.url).findFirst().orElse(null)
-		);
+	private static @Nullable String getGalleryUrl(Project mrProject) {
+		return mrProject.gallery
+			.stream()
+			.filter(item -> item.featured)
+			.map(item -> item.url)
+			.findFirst()
+			.orElse(null);
 	}
 
 	/**
@@ -185,5 +190,19 @@ public class SubmissionService {
 			.stream()
 			.max(Comparator.comparing(v -> v.datePublished))
 			.orElse(null);
+	}
+
+	/**
+	 * Adds data which is only available in the http response, but not actually stored
+	 */
+	public SubmissionResponseData addResponseInfo(HttpServletRequest request, SubmissionData data) {
+		var subKey = new SubmissionRepository.SubmissionId(data.event(), data.id());
+		return SubmissionResponseData.fromData(
+			data,
+			new SubmissionResponseData.Images(
+				imageService.getImageUrl(request, subKey, ImageService.SubmissionImageType.ICON),
+				imageService.getImageUrl(request, subKey, ImageService.SubmissionImageType.SCREENSHOT)
+			)
+		);
 	}
 }

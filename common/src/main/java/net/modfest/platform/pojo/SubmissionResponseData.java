@@ -21,7 +21,7 @@ public record SubmissionResponseData(@NonNull String id,
 	public record Images(@Nullable String icon, @Nullable String screenshot) {
 	}
 
-	public static SubmissionResponseData fromData(SubmissionData data) {
+	public static SubmissionResponseData fromData(SubmissionData data, Images images) {
 		return new SubmissionResponseData(
 			data.id(),
 			data.event(),
@@ -29,7 +29,7 @@ public record SubmissionResponseData(@NonNull String id,
 			data.description(),
 			data.authors(),
 			data.platform(),
-			data.images(),
+			images,
 			data.source(),
 			data.awards()
 		);

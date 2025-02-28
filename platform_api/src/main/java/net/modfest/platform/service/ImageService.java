@@ -34,11 +34,8 @@ public class ImageService {
 		String imageCdn = config.getImageCdnUrl();
 		if (imageCdn == null) {
 			// Platform will be acting as the cdn
-			var baseUrl = request.getRequestURL().toString();
-			if (baseUrl.endsWith("/")) {
-				baseUrl = baseUrl.substring(0, baseUrl.length()-1);
-			}
-			imageCdn = baseUrl+"/imagecdn";
+			var baseUrl = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort();
+			imageCdn = baseUrl+"/imagecdn/";
 		}
 		return imageCdn+getImageLocationKey(subKey, type)+"."+imageInfo.extension();
 	}

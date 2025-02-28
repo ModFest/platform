@@ -2,8 +2,11 @@ package net.modfest.platform.controller;
 
 import net.modfest.platform.repository.ImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +17,7 @@ import java.nio.file.Files;
 
 // This controller will only be active if no image cdn was specified.
 // In prod, you should specify an image cdn
-@ConditionalOnProperty(name = "platform.image-cdn-url", matchIfMissing = true)
+@Conditional(ImageCdn.ImageCdnCondition.class)
 @RestController
 public class ImageCdn {
 	@Autowired
@@ -49,5 +52,14 @@ public class ImageCdn {
 			response.contentType(MediaType.APPLICATION_OCTET_STREAM);
 		}
 		return response.body(new FileSystemResource(resolvedPath));
+	}
+
+	static class ImageCdnCondition implements Condition {
+		@Override
+		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			System.out.println("eee "+context.getEnvironment().containsProperty("platform.imagecdnurl"));
+			System.out.println("fff "+context.getEnvironment().containsProperty("platform.image-cdn-url"));
+			return !context.getEnvironment().containsProperty("platform.imagecdnurl");
+		}
 	}
 }
