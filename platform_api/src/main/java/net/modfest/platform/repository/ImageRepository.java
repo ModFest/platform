@@ -91,11 +91,12 @@ public class ImageRepository {
 				var originalSha = originalScope.commitSha();
 				var gitScope = originalSha == null ? originalScope : new GitScope("Writing image for #"+originalSha);
 				this.imageStore.runWithScope(gitScope, () -> {
-					this.imageStore.write(path -> {
+					this.imageStore.writePerformant((path, logger) -> {
 						var writePath = path.resolve(id+"."+extension);
 						try {
 							Files.createDirectories(writePath.getParent());
 							Files.write(writePath, response.body(), StandardOpenOption.CREATE);
+							logger.logWrite(writePath);
 						} catch (IOException e) {
 							throw new RuntimeException(e);
 						}

@@ -4,6 +4,7 @@ import net.modfest.platform.configuration.GitConfig;
 import org.jspecify.annotations.NonNull;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -33,6 +34,20 @@ public class GitManagedPath implements ManagedPath {
 			// Stage all changed files, including deleted files, excluding new files
 			git.add().addFilepattern(subPath).setUpdate(true).call();
 		});
+	}
+
+	@Override
+	public void writePerformant(PerformantWriter runner) {
+		var editedPaths = new ArrayList<Path>();
+		runner.doWrite(this.path, editedPaths::add);
+		if (!editedPaths.isEmpty()) {
+			this.gitScope.runWithScopedGit(git -> {
+				for (var p : editedPaths) {
+					System.out.println("EE "+this.subPath+"/"+this.path.relativize(p));
+					git.add().addFilepattern(this.subPath+"/"+this.path.relativize(p)).call();
+				}
+			});
+		}
 	}
 
 	@Override
