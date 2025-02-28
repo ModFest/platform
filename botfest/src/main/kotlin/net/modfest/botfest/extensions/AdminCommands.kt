@@ -2,6 +2,7 @@ package net.modfest.botfest.extensions
 
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
+import dev.kordex.core.commands.converters.impl.attachment
 import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand

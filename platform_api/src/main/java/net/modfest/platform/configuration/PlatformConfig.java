@@ -32,6 +32,9 @@ public class PlatformConfig {
 	private String botFestSecret;
 	@Getter
 	@Nullable
+	private String imageCdnUrl;
+	@Getter
+	@Nullable
 	private String gitRemote;
 
 	// These are bean dependencies, not a config value

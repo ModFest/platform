@@ -17,8 +17,8 @@ import net.modfest.platform.pojo.CurrentEventData
 import net.modfest.platform.pojo.EventData
 import net.modfest.platform.pojo.HealthData
 import net.modfest.platform.pojo.PlatformErrorResponse
-import net.modfest.platform.pojo.SubmissionData
 import net.modfest.platform.pojo.SubmissionPatchData
+import net.modfest.platform.pojo.SubmissionResponseData
 import net.modfest.platform.pojo.SubmitRequestModrinth
 import net.modfest.platform.pojo.SubmitRequestOther
 import net.modfest.platform.pojo.UserCreateData
@@ -107,7 +107,7 @@ class Platform(baseUrl: String) {
 		return getEvents().map { e -> e.id }
 	}
 
-	suspend fun getUserSubmissions(user: Snowflake): List<SubmissionData> {
+	suspend fun getUserSubmissions(user: Snowflake): List<SubmissionResponseData> {
 		return client.get("/user/dc:${user.value}/submissions").unwrapErrors().body()
 	}
 
@@ -169,14 +169,14 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		}.unwrapErrors();
 	}
 
-	suspend fun submitModrinth(eventId: String, mrId: String): SubmissionData {
+	suspend fun submitModrinth(eventId: String, mrId: String): SubmissionResponseData {
 		return client.post("/event/$eventId/submissions?type=modrinth") {
 			addAuth()
 			setBody(SubmitRequestModrinth(mrId))
 		}.unwrapErrors().body()
 	}
 
-	suspend fun submitOther(eventId: String, data: SubmitRequestOther): SubmissionData {
+	suspend fun submitOther(eventId: String, data: SubmitRequestOther): SubmissionResponseData {
 		return client.post("/event/$eventId/submissions?type=other") {
 			addAuth()
 			setBody(data)

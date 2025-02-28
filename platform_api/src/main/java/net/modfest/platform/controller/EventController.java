@@ -1,5 +1,6 @@
 package net.modfest.platform.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import net.modfest.platform.pojo.*;
 import net.modfest.platform.security.PermissionUtils;
 import net.modfest.platform.security.Permissions;
@@ -80,14 +81,17 @@ public class EventController {
 	}
 
 	@GetMapping("/event/{eventId}/submissions")
-	public List<SubmissionData> getSubmissions(@PathVariable String eventId) {
+	public List<SubmissionResponseData> getSubmissions(HttpServletRequest request, @PathVariable String eventId) {
 		var event = getEvent(eventId);
-		return service.getSubmissionsFromEvent(event).toList();
+		return service
+			.getSubmissionsFromEvent(event)
+			.map(s -> service.addResponseInfo(request, s))
+			.toList();
 	}
 
 	@PostMapping(value = "/event/{eventId}/submissions", params = "type=other")
 	@RequiresPermissions(Permissions.Event.SUBMIT)
-	public SubmissionData makeSubmissionOther(@PathVariable String eventId, @RequestBody SubmitRequestOther submission) {
+	public SubmissionResponseData makeSubmissionOther(HttpServletRequest request, @PathVariable String eventId, @RequestBody SubmitRequestOther submission) {
 		var event = getEvent(eventId);
 		var subject = SecurityUtils.getSubject();
 		var bypass = subject.isPermitted(Permissions.Event.SUBMIT_BYPASS);
@@ -107,12 +111,12 @@ public class EventController {
 				"You don't have permissions to submit for people other than yourself");
 		}
 
-		return service.makeSubmissionOther(event, authors, submission);
+		return service.addResponseInfo(request, service.makeSubmissionOther(event, authors, submission));
 	}
 
-		@PostMapping(value = "/event/{eventId}/submissions", params = "type=modrinth")
+	@PostMapping(value = "/event/{eventId}/submissions", params = "type=modrinth")
 	@RequiresPermissions(Permissions.Event.SUBMIT)
-	public SubmissionData makeSubmissionModrinth(@PathVariable String eventId, @RequestBody SubmitRequestModrinth submission) {
+	public SubmissionResponseData makeSubmissionModrinth(HttpServletRequest request, @PathVariable String eventId, @RequestBody SubmitRequestModrinth submission) {
 		var event = getEvent(eventId);
 		var subject = SecurityUtils.getSubject();
 		var bypass = subject.isPermitted(Permissions.Event.SUBMIT_BYPASS);
@@ -134,7 +138,7 @@ public class EventController {
 				"You don't have permissions to submit for people other than yourself");
 		}
 
-		return service.makeSubmissionModrinth(eventId, submission.modrinthProject());
+		return service.addResponseInfo(request, service.makeSubmissionModrinth(eventId, submission.modrinthProject()));
 	}
 
 	@PatchMapping("/event/{eventId}/submission/{subId}")

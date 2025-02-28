@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
  * Contains ad-hoc migrations to our json format
  */
 public record Migrator(JsonUtil json, Path root) {
-	static final int CURRENT_VERSION = 6;
+	static final int CURRENT_VERSION = 7;
 	static final Map<Integer,MigrationManager.Migration> MIGRATIONS = new HashMap<>();
 
 	static {
@@ -29,6 +29,7 @@ public record Migrator(JsonUtil json, Path root) {
 		MIGRATIONS.put(4, Migrator::migrateTo4);
 		MIGRATIONS.put(5, Migrator::migrateTo5);
 		MIGRATIONS.put(6, Migrator::migrateTo6);
+		MIGRATIONS.put(7, Migrator::migrateTo7);
 	}
 
 
@@ -287,6 +288,22 @@ public record Migrator(JsonUtil json, Path root) {
 				}
 			});
 		});
+	}
 
+	/**
+	 * V7
+	 * Images are now stored directly inside platform instead of storing links to the images.
+	 * Unfortunately a lot of links are dead, so this migration makes no attempt at retrieving them.
+	 * Please get a list of images beforehand.
+	 */
+	public void migrateTo7() {
+		var submissions = root.resolve("submissions");
+		MigratorUtils.executeForAllFiles(submissions, eventDir -> {
+			MigratorUtils.executeForAllFiles(eventDir, submissionFile -> {
+				var submission = json.readJson(submissionFile, JsonObject.class);
+				submission.remove("images");
+				json.writeJson(submissionFile, submission);
+			});
+		});
 	}
 }
