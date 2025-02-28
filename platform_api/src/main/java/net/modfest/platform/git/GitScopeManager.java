@@ -57,6 +57,11 @@ public class GitScopeManager {
 	void runWithScopedGit(GitFunction r) {
 		var threadScope = gitScopes.get();
 		try {
+			if (threadScope == null) {
+				// There wasn't any active scope, so we're going to open a new one which closes immediately after
+				// this function
+				setScope(new GitScope("PLATFORM CHANGE"));
+			}
 			if (!scopeLock.tryLock(10, TimeUnit.SECONDS)) {
 				// This is a pretty serious error condition which should not be happening
 				// so I'm okay with doing some dirty hacks as long as we get the debug information to fix this
@@ -72,10 +77,8 @@ public class GitScopeManager {
 			throw new RuntimeException(e);
 		} finally {
 			if (threadScope == null) {
-				// There wasn't any active scope, so we pretend there's an anonymous scope.
-				// The anonymous scope will close immediately
-				var anonymousScope = new GitScope("PLATFORM CHANGE");
-				finalizeScope(anonymousScope);
+				// Since we created an anonymous scope we got to close it
+				closeScope();
 			}
 		}
 	}
