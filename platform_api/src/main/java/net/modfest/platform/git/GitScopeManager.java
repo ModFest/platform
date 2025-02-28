@@ -9,6 +9,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class GitScopeManager {
@@ -32,7 +33,14 @@ public class GitScopeManager {
 	}
 
 	public void setScope(GitScope scope) {
+		Objects.requireNonNull(scope);
+		var oldScope = this.gitScopes.get();
+		if (oldScope != null && this.scopeLock.isHeldByCurrentThread()) {
+			LOGGER.error("Tried to nest {} inside of {}", scope, oldScope);
+			throw new IllegalStateException("Illegal git scope nesting. See logs");
+		}
 		this.gitScopes.set(scope);
+
 	}
 
 	public void closeScope() {
@@ -56,12 +64,12 @@ public class GitScopeManager {
 	 */
 	void runWithScopedGit(GitFunction r) {
 		var threadScope = gitScopes.get();
+		if (threadScope == null) {
+			// There wasn't any active scope, so we're going to open a new one which closes immediately after
+			// this function
+			setScope(new GitScope("PLATFORM CHANGE"));
+		}
 		try {
-			if (threadScope == null) {
-				// There wasn't any active scope, so we're going to open a new one which closes immediately after
-				// this function
-				setScope(new GitScope("PLATFORM CHANGE"));
-			}
 			if (!scopeLock.tryLock(10, TimeUnit.SECONDS)) {
 				// This is a pretty serious error condition which should not be happening
 				// so I'm okay with doing some dirty hacks as long as we get the debug information to fix this
@@ -91,6 +99,7 @@ public class GitScopeManager {
 	}
 
 	private void finalizeScope(GitScope scope) {
+		Objects.requireNonNull(scope);
 		// We only need to commit if the scope was locked for use in writing
 		if (this.scopeLock.isHeldByCurrentThread()) {
 			try {
