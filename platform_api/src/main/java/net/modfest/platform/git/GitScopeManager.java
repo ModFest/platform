@@ -70,13 +70,15 @@ public class GitScopeManager {
 			setScope(new GitScope("PLATFORM CHANGE"));
 		}
 		try {
-			if (!scopeLock.tryLock(10, TimeUnit.SECONDS)) {
-				// This is a pretty serious error condition which should not be happening
-				// so I'm okay with doing some dirty hacks as long as we get the debug information to fix this
-				var owner = scopeLock.getOwner();
-				var scope = ThreadLocalHack.getValueOfOtherThread(gitScopes, owner);
-				LOGGER.error("Platform failed to obtain git lock. We're blocked on {} and waiting for it to commit: {}", owner, scope);
-				throw new RuntimeException("Major timeout error. Waiting on a change to be committed to git before we can start writing.");
+			if (!this.scopeLock.isHeldByCurrentThread()) {
+				if (!scopeLock.tryLock(10, TimeUnit.SECONDS)) {
+					// This is a pretty serious error condition which should not be happening
+					// so I'm okay with doing some dirty hacks as long as we get the debug information to fix this
+					var owner = scopeLock.getOwner();
+					var scope = ThreadLocalHack.getValueOfOtherThread(gitScopes, owner);
+					LOGGER.error("Platform failed to obtain git lock. We're blocked on {} and waiting for it to commit: {}", owner, scope);
+					throw new RuntimeException("Major timeout error. Waiting on a change to be committed to git before we can start writing.");
+				}
 			}
 			// The lock is now owned by this thread, which means that our
 			// thread scope is the active scope.
