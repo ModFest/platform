@@ -26,13 +26,14 @@ public class GitManagedDirectory extends GitManagedPath implements ManagedDirect
 
 	@Override
 	public void createDirectories() {
-		this.write((p) -> {
+		// TODO If we use write here it'll take a long time for git to add everything
+//		this.write((p) -> {
 			try {
-				Files.createDirectories(p);
+				Files.createDirectories(this.path);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-		});
+//		});
 	}
 
 	private static final class GitManagedFile extends GitManagedPath implements ManagedFile{
