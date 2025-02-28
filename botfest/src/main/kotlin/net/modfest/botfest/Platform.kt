@@ -187,7 +187,14 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		client.patch("/event/$eventId/submission/$subId") {
 			addAuth()
 			setBody(edit)
-		}
+		}.unwrapErrors()
+	}
+
+	suspend fun editSubmissionImage(eventId: String, subId: String, type: String, url: String) {
+		client.patch("/event/$eventId/submission/$subId/image/$type") {
+			addAuth()
+			setBody(url)
+		}.unwrapErrors()
 	}
 
 	suspend fun registerMe(event: EventData) {

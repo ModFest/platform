@@ -2,9 +2,11 @@ package net.modfest.platform.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import net.modfest.platform.pojo.*;
+import net.modfest.platform.repository.SubmissionRepository;
 import net.modfest.platform.security.PermissionUtils;
 import net.modfest.platform.security.Permissions;
 import net.modfest.platform.service.EventService;
+import net.modfest.platform.service.ImageService;
 import net.modfest.platform.service.SubmissionService;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -27,6 +29,8 @@ public class EventController {
 	private EventService eventService;
 	@Autowired
 	private UserController userController;
+	@Autowired
+	private ImageService imageService;
 
 	@GetMapping("/events")
 	public Collection<EventData> getAllEvents() {
@@ -144,17 +148,44 @@ public class EventController {
 	@PatchMapping("/event/{eventId}/submission/{subId}")
 	public void editSubmissionData(@PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionPatchData editData) {
 		getEvent(eventId);
-		var subject = SecurityUtils.getSubject();
-		var can_others = subject.isPermitted(Permissions.Event.EDIT_OTHER_SUBMISSION);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
 			throw new IllegalArgumentException();// TODO
 		}
-		if (!PermissionUtils.owns(subject, submission) && !can_others) {
+
+		if (!canEdit(submission)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
 				"You do not have permissions to edit this data");
 		}
 
 		service.editSubmission(submission, editData);
+	}
+
+	@PatchMapping("/event/{eventId}/submission/{subId}/image/{type}")
+	public void editSubmissionImage(@PathVariable String eventId, @PathVariable String subId, @PathVariable String type, @RequestBody String url) {
+		getEvent(eventId);
+		var submission = service.getSubmission(eventId, subId);
+		if (submission == null) {
+			throw new IllegalArgumentException();// TODO
+		}
+
+		if (!canEdit(submission)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+				"You do not have permissions to edit this data");
+		}
+
+		var typeEnum = switch (type) {
+			case "icon" -> ImageService.SubmissionImageType.ICON;
+			case "screenshot" -> ImageService.SubmissionImageType.SCREENSHOT;
+			case null, default -> throw new IllegalArgumentException("Invalid type "+type);
+		};
+
+		imageService.downloadSubmissionImage(url, new SubmissionRepository.SubmissionId(eventId, subId), typeEnum);
+	}
+
+	private boolean canEdit(SubmissionData submission) {
+		var subject = SecurityUtils.getSubject();
+		var can_others = subject.isPermitted(Permissions.Event.EDIT_OTHER_SUBMISSION);
+		return PermissionUtils.owns(subject, submission) || can_others;
 	}
 }

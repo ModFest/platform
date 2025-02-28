@@ -3,9 +3,11 @@ package net.modfest.botfest.extensions
 import dev.kord.common.entity.DiscordPartialEmoji
 import dev.kord.core.behavior.interaction.response.edit
 import dev.kordex.core.commands.Arguments
+import dev.kordex.core.commands.application.slash.EphemeralSlashCommandContext
 import dev.kordex.core.commands.application.slash.converters.impl.stringChoice
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.application.slash.group
+import dev.kordex.core.commands.converters.impl.attachment
 import dev.kordex.core.commands.converters.impl.string
 import dev.kordex.core.components.components
 import dev.kordex.core.components.ephemeralStringSelectMenu
@@ -142,6 +144,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 				}
 			}
 
+			// Submit an event / panel
 			ephemeralSubCommand {
 				name = Translations.Commands.Event.Submit.Event.name
 				description = Translations.Commands.Event.Submit.Event.description
@@ -206,12 +209,14 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			}
 		}
 
+		// Other submission related commands
 		ephemeralSlashCommand {
 			name = Translations.Commands.Group.Submission.name
 			description = Translations.Commands.Group.Submission.description
 
 			guild(MAIN_GUILD_ID)
 
+			// Edit submission data
 			unsafeSubCommand(::SubmissionArg) {
 				name = Translations.Commands.Submission.Edit.name
 				description = Translations.Commands.Submission.Edit.description
@@ -283,10 +288,67 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					}
 				}
 			}
+
+			// Edit submissions images
+			group(Translations.Commands.Submission.EditImage.label) {
+				description = Translations.Commands.Submission.EditImage.description
+
+				ephemeralSubCommand(::ImageArg) {
+					name = Translations.Commands.Submission.EditImage.Icon.label
+					description = Translations.Commands.Submission.EditImage.Icon.description
+
+					action {
+						imageCommandAction("icon")
+					}
+				}
+
+				ephemeralSubCommand(::ImageArg) {
+					name = Translations.Commands.Submission.EditImage.Screenshot.label
+					description = Translations.Commands.Submission.EditImage.Screenshot.description
+
+					action {
+						imageCommandAction("screenshot")
+					}
+				}
+			}
 		}
 	}
 
-	inner class SubmissionArg : Arguments() {
+	private suspend fun EphemeralSlashCommandContext<ImageArg, ModalForm>.imageCommandAction(type: String) {
+		val subId = this.arguments.submission
+		val curEvent = platform.getCurrentEvent().event
+		if (curEvent == null) {
+			respond {
+				content = Translations.Commands.Event.Submit.Response.unavailable
+					.withContext(this@imageCommandAction)
+					.translateNamed()
+			}
+			return
+		}
+
+		val submission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+
+		if (submission == null) {
+			respond {
+				content = Translations.Commands.Submission.Edit.Response.notfound
+					.withContext(this@imageCommandAction)
+					.translateNamed(
+						"subId" to subId
+					)
+			}
+			return
+		}
+
+		platform.withAuth(this.user).editSubmissionImage(curEvent, subId, type, this.arguments.image.url)
+
+		respond {
+			content = Translations.Commands.Submission.EditImage.Response.success
+				.withContext(this@imageCommandAction)
+				.translateNamed()
+		}
+	}
+
+	open inner class SubmissionArg : Arguments() {
 		val submission by string {
 			name = Translations.Arguments.Submission.Edit.name
 			description = Translations.Arguments.Submission.Edit.description
@@ -298,6 +360,16 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						.filter { it.event == curEvent }
 						.map { it.id }
 				)
+			}
+		}
+	}
+
+	inner class ImageArg : SubmissionArg() {
+		val image by attachment {
+			name = Translations.Arguments.Submission.EditImage.name
+			description = Translations.Arguments.Submission.EditImage.description
+			validate {
+				value.isImage
 			}
 		}
 	}

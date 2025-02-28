@@ -122,9 +122,9 @@ public class GitScopeManager {
 				throw new RuntimeException(e);
 			} finally {
 				this.scopeLock.unlock();
-				scope.setFinalized();
 			}
 		}
+		scope.setFinalized();
 	}
 
 	public interface GitFunction {
