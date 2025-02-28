@@ -77,10 +77,6 @@ public class JsonTests {
 					"dwaodi",
 					"dwdadw"
 				)),
-				new SubmissionData.Images(
-					"e",
-					"b"
-				),
 				"bb",
 				new SubmissionData.Awards(
 					Set.of(),
