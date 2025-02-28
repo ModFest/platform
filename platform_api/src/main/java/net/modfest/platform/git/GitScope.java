@@ -33,4 +33,9 @@ public class GitScope {
 	void setFinalized() {
 		finalized = true;
 	}
+
+	@Override
+	public String toString() {
+		return "GitScope["+commitMessage+"]("+finalized+", "+commitSha+")";
+	}
 }
