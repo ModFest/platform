@@ -43,8 +43,9 @@ public class GitManagedDirectory extends GitManagedPath implements ManagedDirect
 
 		@Override
 		public void createParentDirectories() {
-			this.write(p -> {
+			this.writePerformant((p, logger) -> {
 				try {
+					// Git doesn't really do stuff with directories, so I think it's fine not to log this?
 					Files.createDirectories(p.getParent());
 				} catch (IOException e) {
 					throw new RuntimeException(e);
