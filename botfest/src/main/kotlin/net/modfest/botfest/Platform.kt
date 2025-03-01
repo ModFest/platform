@@ -123,8 +123,11 @@ class Platform(baseUrl: String) {
 	 */
 	suspend fun getUser(user: Snowflake): UserData? {
 		return client.get("/user/dc:$user").apply {
+			System.out.println("tst"+status)
 			// Map 404 errors to be null
-			if (status == HttpStatusCode.NotFound) return null
+			if (status == HttpStatusCode.NotFound) {
+				return@getUser null
+			}
 		}.unwrapErrors().body()
 	}
 

@@ -150,7 +150,7 @@ class EventCommands : Extension(), KordExKoinComponent {
 
 		var platformUser = platform.getUser(user)
 
-		var message = if (platformUser == null) {
+		val message = if (platformUser == null) {
 			val modal = RegisterModal()
 
 			modal.displayName.initialValue = user.asMember(MAIN_GUILD_ID).effectiveName.toKey(Locale.UK)

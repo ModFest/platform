@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * This class is responsible for mapping internal java exceptions to
@@ -34,6 +35,15 @@ public class PlatformExceptionHandler {
 	 */
 	@ExceptionHandler(Throwable.class)
 	private ResponseEntity<PlatformErrorResponse> anyError(Throwable t) {
+		if (t instanceof ResponseStatusException e) {
+			return new ResponseEntity<>(
+				new PlatformErrorResponse(
+					PlatformErrorResponse.ErrorType.INTERNAL,
+					gson.toJsonTree(e.getBody())
+				),
+				e.getStatusCode()
+			);
+		}
 		t.printStackTrace();
 		return toResponse(new PlatformErrorResponse(
 			PlatformErrorResponse.ErrorType.INTERNAL,
