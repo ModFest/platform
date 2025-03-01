@@ -109,8 +109,10 @@ public abstract class AbstractJsonRepository<Data, Id> implements DiskCachedData
 		validateEdit(prev, newData);
 
 		// Write data to json file first
-		this.root.write(p -> {
-			this.jsonUtil.writeJson(p.resolve(getLocation(newData)), newData);
+		this.root.writePerformant((p, logger) -> {
+			var newLocation = p.resolve(getLocation(newData));
+			this.jsonUtil.writeJson(newLocation, newData);
+			logger.logWrite(newLocation);
 		});
 
 		// Keep our in-memory storage up to date
