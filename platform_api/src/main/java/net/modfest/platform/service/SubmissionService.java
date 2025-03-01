@@ -86,7 +86,7 @@ public class SubmissionService {
 		return Stream.concat(
 			members.stream(),
 			(organization == null ? List.<TeamMember>of() : organization.members).stream()
-		).map(mrData -> userService.getByMfId(mrData.user.id))
+		).map(mrData -> userService.getByModrinthId(mrData.user.id))
 			.filter(Objects::nonNull);
 	}
 
