@@ -386,8 +386,6 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		val name = lineText {
 			label = Translations.Modal.Submission.Name.label
 			placeholder = Translations.Modal.Submission.Name.placeholder
-			minLength = 2
-			maxLength = 128
 			required = true
 			translateInitialValue = false
 		}
@@ -395,8 +393,6 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		val description = lineText {
 			label = Translations.Modal.Submission.Description.label
 			placeholder = Translations.Modal.Submission.Description.placeholder
-			minLength = 1
-			maxLength = 128
 			required = true
 			translateInitialValue = false
 		}
@@ -404,8 +400,6 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		val source = lineText {
 			label = Translations.Modal.Submission.Source.label
 			placeholder = Translations.Modal.Submission.Source.placeholder
-			minLength = 0
-			maxLength = 128
 			required = false
 			translateInitialValue = false
 		}
@@ -415,8 +409,6 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		val homepage = lineText {
 			label = Translations.Modal.Submission.Homepage.label
 			placeholder = Translations.Modal.Submission.Homepage.placeholder
-			minLength = 1
-			maxLength = 128
 			required = true
 			translateInitialValue = false
 		}
