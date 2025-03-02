@@ -136,7 +136,7 @@ public class SubmissionService {
 		}
 
 		var authors = getUsersForRinthProject(subId);
-		var latest = getLatestModrinth(subId, eventService.getEventById(eventId));
+		var latest = getLatestModrinth(subId, eventService.getEventById(eventId), project.projectType);
 
 		imageService.downloadSubmissionImage(project.iconUrl, subKey, ImageService.SubmissionImageType.ICON);
 		var galleryUrl = getGalleryUrl(project);
@@ -177,10 +177,13 @@ public class SubmissionService {
 
 	/**
 	 * Retrieves the most recent version of a modrinth project
-	 * @param event The event this version will be for. Used for filtering
+	 *
+	 * @param event       The event this version will be for. Used for filtering
+	 * @param projectType The modrinth project type. Used for filtering
 	 */
-	private @Nullable Version getLatestModrinth(String mrProject, EventData event) {
-		var filter = VersionFilter.ofLoader(event.mod_loader())
+	private @Nullable Version getLatestModrinth(String mrProject, EventData event, String projectType) {
+		if (projectType.equals("modpack")) return null;
+		var filter = ((projectType.equals("mod") || projectType.equals("plugin")) ? VersionFilter.ofLoader(event.mod_loader()) : VersionFilter.all())
 			.andGameVersion(event.minecraft_version());
 		return modrinth.projects().getVersions(mrProject, filter)
 			.stream()
