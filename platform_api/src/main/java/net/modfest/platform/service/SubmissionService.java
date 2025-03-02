@@ -187,7 +187,7 @@ public class SubmissionService {
 	 */
 	private @Nullable Version getLatestModrinth(String mrProject, EventData event, String projectType) {
 		if (projectType.equals("modpack")) return null;
-		var filter = ((projectType.equals("mod") || projectType.equals("plugin")) ? VersionFilter.ofLoader(event.mod_loader()) : VersionFilter.all())
+		var filter = VersionFilter.ofLoaders(List.of(event.mod_loader(), "minecraft", "datapack", "iris"))
 			.andGameVersion(event.minecraft_version());
 		return modrinth.projects().getVersions(mrProject, filter)
 			.stream()
