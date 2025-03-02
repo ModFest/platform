@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
  * Contains ad-hoc migrations to our json format
  */
 public record Migrator(JsonUtil json, Path root) {
-	static final int CURRENT_VERSION = 7;
+	static final int CURRENT_VERSION = 8;
 	static final Map<Integer,MigrationManager.Migration> MIGRATIONS = new HashMap<>();
 
 	static {
@@ -30,6 +30,7 @@ public record Migrator(JsonUtil json, Path root) {
 		MIGRATIONS.put(5, Migrator::migrateTo5);
 		MIGRATIONS.put(6, Migrator::migrateTo6);
 		MIGRATIONS.put(7, Migrator::migrateTo7);
+		MIGRATIONS.put(8, Migrator::migrateTo8);
 	}
 
 
@@ -304,6 +305,24 @@ public record Migrator(JsonUtil json, Path root) {
 				submission.remove("images");
 				json.writeJson(submissionFile, submission);
 			});
+		});
+	}
+
+	/**
+	 * V6
+	 * The "minecraft_accounts" field inside user data has been added
+	 */
+	public void migrateTo8() {
+		var userPath = root.resolve("users");
+		MigratorUtils.executeForAllFiles(userPath, path -> {
+			var userJson = json.readJson(path, JsonObject.class);
+			var minecraftAccounts = userJson.get("minecraft_accounts");
+			if (minecraftAccounts == null || !minecraftAccounts.isJsonArray()) {
+				// Default to the empty list
+				userJson.add("minecraft_accounts", new JsonArray());
+				// Write the new json
+				json.writeJson(path, userJson);
+			}
 		});
 	}
 }

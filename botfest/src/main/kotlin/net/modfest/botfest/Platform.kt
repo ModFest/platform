@@ -172,6 +172,18 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		}.unwrapErrors();
 	}
 
+	suspend fun addMinecraft(username: String) {
+		client.put("/user/@me/minecraft/$username") {
+			addAuth()
+		}.unwrapErrors();
+	}
+
+	suspend fun removeMinecraft(username: String) {
+		client.delete("/user/@me/minecraft/$username") {
+			addAuth()
+		}.unwrapErrors();
+	}
+
 	suspend fun submitModrinth(eventId: String, mrId: String): SubmissionResponseData {
 		return client.post("/event/$eventId/submissions?type=modrinth") {
 			addAuth()
