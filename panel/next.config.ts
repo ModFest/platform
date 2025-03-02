@@ -31,6 +31,8 @@ export default async function createConfig(phase: string): Promise<NextConfig> {
 	return withBundleAnalyzer({
 		output: "standalone",
 		env: env,
+		// Enable source maps in prod
+		productionBrowserSourceMaps: true,
 		// TODO these shouldn't really be ignored
 		eslint: {
 			ignoreDuringBuilds: true,

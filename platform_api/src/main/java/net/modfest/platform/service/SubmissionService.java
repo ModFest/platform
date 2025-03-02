@@ -56,6 +56,10 @@ public class SubmissionService {
 		submissionRepository.save(data);
 	}
 
+	public void deleteSubmission(String eventId, String subId) {
+		submissionRepository.delete(new SubmissionRepository.SubmissionId(eventId, subId));
+	}
+
 	/**
 	 * Retrieve all submissions made by a user
 	 * @param filter If non-null, only submissions associated with that event will be returned
@@ -86,7 +90,7 @@ public class SubmissionService {
 		return Stream.concat(
 			members.stream(),
 			(organization == null ? List.<TeamMember>of() : organization.members).stream()
-		).map(mrData -> userService.getByMfId(mrData.user.id))
+		).map(mrData -> userService.getByModrinthId(mrData.user.id))
 			.filter(Objects::nonNull);
 	}
 
@@ -108,7 +112,7 @@ public class SubmissionService {
 			event.id(),
 			submitData.name(),
 			submitData.description(),
-			authors.stream().map(a -> a.id()).collect(Collectors.toSet()),
+			authors.stream().map(UserData::id).collect(Collectors.toSet()),
 			new SubmissionData.AssociatedData(
 				new SubmissionData.AssociatedData.Other(
 					submitData.homepage(),
@@ -136,11 +140,7 @@ public class SubmissionService {
 		}
 
 		var authors = getUsersForRinthProject(subId);
-		var latest = getLatestModrinth(subId, eventService.getEventById(eventId));
-
-		if (latest == null) {
-			throw new RuntimeException("No latest version");
-		}
+		var latest = getLatestModrinth(subId, eventService.getEventById(eventId), project.projectType);
 
 		imageService.downloadSubmissionImage(project.iconUrl, subKey, ImageService.SubmissionImageType.ICON);
 		var galleryUrl = getGalleryUrl(project);
@@ -157,7 +157,7 @@ public class SubmissionService {
 				new SubmissionData.AssociatedData(
 					new SubmissionData.AssociatedData.Modrinth(
 						project.id,
-						latest.id
+						latest == null ? null : latest.id
 					)
 				),
 				project.sourceUrl,
@@ -181,10 +181,13 @@ public class SubmissionService {
 
 	/**
 	 * Retrieves the most recent version of a modrinth project
-	 * @param event The event this version will be for. Used for filtering
+	 *
+	 * @param event       The event this version will be for. Used for filtering
+	 * @param projectType The modrinth project type. Used for filtering
 	 */
-	private @Nullable Version getLatestModrinth(String mrProject, EventData event) {
-		var filter = VersionFilter.ofLoader(event.mod_loader())
+	private @Nullable Version getLatestModrinth(String mrProject, EventData event, String projectType) {
+		if (projectType.equals("modpack")) return null;
+		var filter = VersionFilter.ofLoaders(List.of(event.mod_loader(), "minecraft", "datapack", "iris"))
 			.andGameVersion(event.minecraft_version());
 		return modrinth.projects().getVersions(mrProject, filter)
 			.stream()

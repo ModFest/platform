@@ -57,8 +57,6 @@ public class ImageCdn {
 	static class ImageCdnCondition implements Condition {
 		@Override
 		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-			System.out.println("eee "+context.getEnvironment().containsProperty("platform.imagecdnurl"));
-			System.out.println("fff "+context.getEnvironment().containsProperty("platform.image-cdn-url"));
 			return !context.getEnvironment().containsProperty("platform.imagecdnurl");
 		}
 	}

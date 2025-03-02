@@ -123,8 +123,11 @@ class Platform(baseUrl: String) {
 	 */
 	suspend fun getUser(user: Snowflake): UserData? {
 		return client.get("/user/dc:$user").apply {
+			System.out.println("tst"+status)
 			// Map 404 errors to be null
-			if (status == HttpStatusCode.NotFound) return null
+			if (status == HttpStatusCode.NotFound) {
+				return@getUser null
+			}
 		}.unwrapErrors().body()
 	}
 
@@ -199,7 +202,20 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		client.patch("/event/$eventId/submission/$subId") {
 			addAuth()
 			setBody(edit)
-		}
+		}.unwrapErrors()
+	}
+
+	suspend fun deleteSubmission(eventId: String, subId: String) {
+		client.delete("/event/$eventId/submission/$subId") {
+			addAuth()
+		}.unwrapErrors()
+	}
+
+	suspend fun editSubmissionImage(eventId: String, subId: String, type: String, url: String) {
+		client.patch("/event/$eventId/submission/$subId/image/$type") {
+			addAuth()
+			setBody(url)
+		}.unwrapErrors()
 	}
 
 	suspend fun registerMe(event: EventData) {

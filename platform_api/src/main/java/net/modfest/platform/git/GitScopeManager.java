@@ -1,13 +1,19 @@
 package net.modfest.platform.git;
 
 import net.modfest.platform.configuration.GitConfig;
+import net.modfest.platform.misc.PfReentrantLock;
+import net.modfest.platform.misc.ThreadLocalHack;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.EmptyCommitException;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public class GitScopeManager {
+	private static final Logger LOGGER = LoggerFactory.getLogger(GitScopeManager.class);
 	private final Git git;
 	private final GitConfig config;
 	private final ThreadLocal<GitScope> gitScopes = new ThreadLocal<>();
@@ -19,7 +25,7 @@ public class GitScopeManager {
 	 * ¹ Often a scope will be set but nothing will actually be written and no locking is needed.
 	 *   For example, each request sets a scope.
 	 */
-	private final ReentrantLock scopeLock = new ReentrantLock();
+	private final PfReentrantLock scopeLock = new PfReentrantLock();
 
 	public GitScopeManager(Git git, GitConfig config) {
 		this.git = git;
@@ -27,7 +33,14 @@ public class GitScopeManager {
 	}
 
 	public void setScope(GitScope scope) {
+		Objects.requireNonNull(scope);
+		var oldScope = this.gitScopes.get();
+		if (oldScope != null && this.scopeLock.isHeldByCurrentThread()) {
+			LOGGER.error("Tried to nest {} inside of {}", scope, oldScope);
+			throw new IllegalStateException("Illegal git scope nesting. See logs");
+		}
 		this.gitScopes.set(scope);
+
 	}
 
 	public void closeScope() {
@@ -51,19 +64,31 @@ public class GitScopeManager {
 	 */
 	void runWithScopedGit(GitFunction r) {
 		var threadScope = gitScopes.get();
+		if (threadScope == null) {
+			// There wasn't any active scope, so we're going to open a new one which closes immediately after
+			// this function
+			setScope(new GitScope("PLATFORM CHANGE"));
+		}
 		try {
-			scopeLock.lock();
+			if (!this.scopeLock.isHeldByCurrentThread()) {
+				if (!scopeLock.tryLock(10, TimeUnit.SECONDS)) {
+					// This is a pretty serious error condition which should not be happening
+					// so I'm okay with doing some dirty hacks as long as we get the debug information to fix this
+					var owner = scopeLock.getOwner();
+					var scope = ThreadLocalHack.getValueOfOtherThread(gitScopes, owner);
+					LOGGER.error("Platform failed to obtain git lock. We're blocked on {} and waiting for it to commit: {}", owner, scope);
+					throw new RuntimeException("Major timeout error. Waiting on a change to be committed to git before we can start writing.");
+				}
+			}
 			// The lock is now owned by this thread, which means that our
 			// thread scope is the active scope.
 			r.accept(this.git);
-		} catch (GitAPIException e) {
+		} catch (GitAPIException | InterruptedException e) {
 			throw new RuntimeException(e);
 		} finally {
 			if (threadScope == null) {
-				// There wasn't any active scope, so we pretend there's an anonymous scope.
-				// The anonymous scope will close immediately
-				var anonymousScope = new GitScope("PLATFORM CHANGE");
-				finalizeScope(anonymousScope);
+				// Since we created an anonymous scope we got to close it
+				closeScope();
 			}
 		}
 	}
@@ -80,6 +105,7 @@ public class GitScopeManager {
 	}
 
 	private void finalizeScope(GitScope scope) {
+		Objects.requireNonNull(scope);
 		// We only need to commit if the scope was locked for use in writing
 		if (this.scopeLock.isHeldByCurrentThread()) {
 			try {
@@ -96,9 +122,9 @@ public class GitScopeManager {
 				throw new RuntimeException(e);
 			} finally {
 				this.scopeLock.unlock();
-				scope.setFinalized();
 			}
 		}
+		scope.setFinalized();
 	}
 
 	public interface GitFunction {

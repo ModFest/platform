@@ -84,6 +84,7 @@ tasks.withType<Test> {
 
 // Default properties when running in dev
 tasks.bootRun {
+	jvmArguments.add("--add-opens=java.base/java.lang=ALL-UNNAMED") // For debugging only
 	environment(
 		"PLATFORM_DATADIR" to project.rootDir.resolve("run/data"),
 		"PLATFORM_LOGSDIR" to project.rootDir.resolve("run/logs"),
@@ -131,7 +132,7 @@ docker {
 
 		expose(8080)
 		entryPointExec(
-			"java", "-jar", "/app/app.jar"
+			"java", "--add-opens=java.base/java.lang=ALL-UNNAMED", "-jar", "/app/app.jar"
 		)
 		healthcheck {
 			check {

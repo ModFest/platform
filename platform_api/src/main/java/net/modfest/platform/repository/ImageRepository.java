@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 
 @Repository
 @Scope("singleton")
@@ -88,14 +89,20 @@ public class ImageRepository {
 			if (response.statusCode() != 200) {
 				LOGGER.error("Failed to store image {}. Got status code {}", url, response.statusCode());
 			} else {
-				var originalSha = originalScope.commitSha();
+				String originalSha = null;
+				try {
+					originalSha = originalScope.commitSha();
+				} catch (TimeoutException e) {
+					LOGGER.warn("Image request can't be attributed to original commit", e);
+				}
 				var gitScope = originalSha == null ? originalScope : new GitScope("Writing image for #"+originalSha);
 				this.imageStore.runWithScope(gitScope, () -> {
-					this.imageStore.write(path -> {
+					this.imageStore.writePerformant((path, logger) -> {
 						var writePath = path.resolve(id+"."+extension);
 						try {
 							Files.createDirectories(writePath.getParent());
 							Files.write(writePath, response.body(), StandardOpenOption.CREATE);
+							logger.logWrite(writePath);
 						} catch (IOException e) {
 							throw new RuntimeException(e);
 						}
