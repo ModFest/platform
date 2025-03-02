@@ -5,7 +5,6 @@ import dev.kord.core.behavior.interaction.response.edit
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.EphemeralSlashCommand
 import dev.kordex.core.commands.application.slash.EphemeralSlashCommandContext
-import dev.kordex.core.commands.application.slash.converters.impl.stringChoice
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.application.slash.group
 import dev.kordex.core.commands.converters.impl.attachment
@@ -47,7 +46,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 	override val name = "submission"
 	val platform: Platform by inject()
 
-	var MODRINTH_REGEX = Pattern.compile(".*modrinth\\.com/mod/([\\w!@$()`.+,\"\\-']{3,64})/?.*");
+	var MODRINTH_REGEX = Pattern.compile(".*modrinth\\.com/(project|mod|resourcepack|datapack|shader|plugin|modpack)/([\\w!@$()`.+,\"\\-']{3,64})/?.*")
 
 	@OptIn(UnsafeAPI::class, ExperimentalSerializationApi::class)
 	override suspend fun setup() {
@@ -468,7 +467,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 	}
 
 	class SubmitModalEvent : ModalForm() {
-		override var title: Key = Translations.Modal.Submit.Event.title;
+		override var title: Key = Translations.Modal.Submit.Event.title
 
 		val event_title = lineText {
 			label = Translations.Modal.Submit.Event.Title.label

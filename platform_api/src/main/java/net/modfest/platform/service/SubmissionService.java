@@ -108,7 +108,7 @@ public class SubmissionService {
 			event.id(),
 			submitData.name(),
 			submitData.description(),
-			authors.stream().map(a -> a.id()).collect(Collectors.toSet()),
+			authors.stream().map(UserData::id).collect(Collectors.toSet()),
 			new SubmissionData.AssociatedData(
 				new SubmissionData.AssociatedData.Other(
 					submitData.homepage(),
@@ -138,10 +138,6 @@ public class SubmissionService {
 		var authors = getUsersForRinthProject(subId);
 		var latest = getLatestModrinth(subId, eventService.getEventById(eventId));
 
-		if (latest == null) {
-			throw new RuntimeException("No latest version");
-		}
-
 		imageService.downloadSubmissionImage(project.iconUrl, subKey, ImageService.SubmissionImageType.ICON);
 		var galleryUrl = getGalleryUrl(project);
 		if (galleryUrl != null) {
@@ -157,7 +153,7 @@ public class SubmissionService {
 				new SubmissionData.AssociatedData(
 					new SubmissionData.AssociatedData.Modrinth(
 						project.id,
-						latest.id
+						latest == null ? null : latest.id
 					)
 				),
 				project.sourceUrl,
