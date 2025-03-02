@@ -59,12 +59,18 @@ class UserCommands : Extension(), KordExKoinComponent {
 					description = Translations.Commands.User.Minecraft.Add.description
 
 					action {
-						platform.withAuth(this.user).addMinecraft(this.arguments.username)
+						val username = this.arguments.username
+						platform.withAuth(this.user).addMinecraft(username)
+
+						val user = platform.getUser(this.user)
 
 						respond {
 							content = Translations.Commands.User.Minecraft.Add.response
 								.withContext(this@action)
-								.translateNamed()
+								.translateNamed(
+									"username" to username,
+									"uuid" to user?.minecraftAccounts?.first() // Incorrect, but not sure how to fix.
+								)
 						}
 					}
 				}
@@ -75,12 +81,15 @@ class UserCommands : Extension(), KordExKoinComponent {
 					description = Translations.Commands.User.Minecraft.Remove.description
 
 					action {
-						platform.withAuth(this.user).removeMinecraft(this.arguments.username)
+						val username = this.arguments.username
+						platform.withAuth(this.user).removeMinecraft(username)
 
 						respond {
 							content = Translations.Commands.User.Minecraft.Remove.response
 								.withContext(this@action)
-								.translateNamed()
+								.translateNamed(
+									"username" to username
+								)
 						}
 					}
 				}
