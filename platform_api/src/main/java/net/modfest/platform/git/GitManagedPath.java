@@ -46,6 +46,11 @@ public class GitManagedPath implements ManagedPath {
 	}
 
 	@Override
+	public GitScope getCurrentScope() {
+		return this.gitScope.getCurrentScope();
+	}
+
+	@Override
 	public void runWithScope(GitScope scope, Runnable r) {
 		this.gitScope.runWithScope(scope, r);
 	}

@@ -2,6 +2,7 @@ package net.modfest.botfest.extensions
 
 import dev.kord.core.behavior.interaction.response.edit
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
+import dev.kordex.core.commands.application.slash.group
 import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
@@ -15,6 +16,7 @@ import dev.kordex.modules.dev.unsafe.extensions.unsafeSlashCommand
 import net.modfest.botfest.MAIN_GUILD_ID
 import net.modfest.botfest.Platform
 import net.modfest.botfest.i18n.Translations
+import net.modfest.platform.pojo.SubmitRequestOther
 import net.modfest.platform.pojo.UserCreateData
 import org.koin.core.component.inject
 import java.util.*
@@ -31,12 +33,11 @@ class EventCommands : Extension(), KordExKoinComponent {
 
 	@OptIn(UnsafeAPI::class)
 	override suspend fun setup() {
-		val platform = bot.getKoin().get<Platform>()
-
 		// Register command
 		unsafeSlashCommand {
 			name = Translations.Commands.Register.name
 			description = Translations.Commands.Register.description
+			guild(MAIN_GUILD_ID)
 
 			// We're using KordEx's unsafe api here, because our modal is optional and has prefilled fields.
 			// This means we're responsible for initiating the response
@@ -160,49 +161,94 @@ class EventCommands : Extension(), KordExKoinComponent {
 				}
 			}
 
-			// command for submitting a mod
-			ephemeralSubCommand(::SubmitModal) {
-				name = Translations.Commands.Event.Submit.name
+
+			// commands for submitting
+			group(Translations.Commands.Event.Submit.name) {
 				description = Translations.Commands.Event.Submit.description
 
-				action { modal ->
-					if (modal == null) return@action
-					val curEvent = platform.getCurrentEvent().event
+				// Submitting a modrinth project
+				ephemeralSubCommand(::SubmitModalModrinth) {
+					name = Translations.Commands.Event.Submit.Modrinth.name
+					description = Translations.Commands.Event.Submit.Modrinth.description
 
-					if (curEvent == null) {
-						respond {
-							content = Translations.Commands.Event.Submit.Response.unavailable
-								.withContext(this@action)
-								.translateNamed()
+					action { modal ->
+						if (modal == null) return@action
+						val curEvent = platform.getCurrentEvent().event
+
+						if (curEvent == null) {
+							respond {
+								content = Translations.Commands.Event.Submit.Response.unavailable
+									.withContext(this@action)
+									.translateNamed()
+							}
+							return@action
 						}
-						return@action
-					}
 
-					val matcher = MODRINTH_REGEX.matcher(modal.modrinthUrl.value!!)
+						val matcher = MODRINTH_REGEX.matcher(modal.modrinthUrl.value!!)
 
-					if (!matcher.find()) {
+						if (!matcher.find()) {
+							respond {
+								content = Translations.Commands.Event.Submit.Response.invalid
+									.withContext(this@action)
+									.translateNamed(
+										"url" to modal.modrinthUrl.value
+									)
+							}
+							return@action
+						}
+
+						val projectSlug = matcher.group(1)
+
+						val eventInfo = platform.getEvent(curEvent)
+						val submission = platform.withAuth(this.user).submitModrinth(curEvent, projectSlug)
+
 						respond {
-							content = Translations.Commands.Event.Submit.Response.invalid
+							content = Translations.Commands.Event.Submit.Response.success
 								.withContext(this@action)
 								.translateNamed(
-									"url" to modal.modrinthUrl.value
+									"event" to eventInfo.name,
+									"mod" to submission.name
 								)
 						}
-						return@action
 					}
+				}
 
-					val projectSlug = matcher.group(1)
+				// Submitting a non-modrinth project
+				ephemeralSubCommand(::SubmitModalOther) {
+					name = Translations.Commands.Event.Submit.Other.name
+					description = Translations.Commands.Event.Submit.Other.description
 
-					val eventInfo = platform.getEvent(curEvent)
-					val submission = platform.withAuth(this.user).submitModrinth(curEvent, projectSlug)
+					action { modal ->
+						if (modal == null) return@action
+						val curEvent = platform.getCurrentEvent().event
 
-					respond {
-						content = Translations.Commands.Event.Submit.Response.success
-							.withContext(this@action)
-							.translateNamed(
-								"event" to eventInfo.name,
-								"mod" to submission.name
-							)
+						if (curEvent == null) {
+							respond {
+								content = Translations.Commands.Event.Submit.Response.unavailable
+									.withContext(this@action)
+									.translateNamed()
+							}
+							return@action
+						}
+
+						val submission = platform.withAuth(this.user).submitOther(curEvent, SubmitRequestOther(
+							modal.name.value!!,
+							modal.description.value!!,
+							setOf("dc:"+user.id),
+							modal.homepage.value.convertBlankToNull(),
+							modal.sourcecode.value.convertBlankToNull(),
+							modal.downloadUrl.value.convertBlankToNull()
+						))
+						val eventInfo = platform.getEvent(curEvent)
+
+						respond {
+							content = Translations.Commands.Event.Submit.Response.success
+								.withContext(this@action)
+								.translateNamed(
+									"event" to eventInfo.name,
+									"mod" to submission.name
+								)
+						}
 					}
 				}
 			}
@@ -239,7 +285,7 @@ class EventCommands : Extension(), KordExKoinComponent {
 
 
 
-	class SubmitModal : ModalForm() {
+	class SubmitModalModrinth : ModalForm() {
 		override var title: Key = Translations.Modal.Submit.title
 
 		val modrinthUrl = lineText {
@@ -250,4 +296,49 @@ class EventCommands : Extension(), KordExKoinComponent {
 			required = true
 		}
 	}
+
+	class SubmitModalOther : ModalForm() {
+		override var title: Key = Translations.Modal.Submit.title
+
+		val name = lineText {
+			label = Translations.Modal.Submission.Name.label
+			placeholder = Translations.Modal.Submission.Name.placeholder
+			minLength = 1
+			maxLength = 128
+			required = true
+		}
+
+		val description = lineText {
+			label = Translations.Modal.Submission.Description.label
+			placeholder = Translations.Modal.Submission.Description.placeholder
+			minLength = 1
+			maxLength = 256
+			required = true
+		}
+
+		val homepage = lineText {
+			label = Translations.Modal.Submission.Homepage.label
+			placeholder = Translations.Modal.Submission.Homepage.placeholder
+			maxLength = 128
+			required = false
+		}
+
+		val sourcecode = lineText {
+			label = Translations.Modal.Submission.Source.extendedlabel
+			placeholder = Translations.Modal.Submission.Source.placeholder
+			maxLength = 128
+			required = false
+		}
+
+		val downloadUrl = lineText {
+			label = Translations.Modal.Submission.Downloadurl.label
+			placeholder = Translations.Modal.Submission.Downloadurl.placeholder
+			maxLength = 128
+			required = false
+		}
+	}
+}
+
+private fun String?.convertBlankToNull(): String? {
+	return if (this.isNullOrBlank()) { null } else { this }
 }

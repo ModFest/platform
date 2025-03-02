@@ -74,7 +74,7 @@ public class JsonTests {
 				"a b",
 				"dawda",
 				Set.of("Bob"),
-				new SubmissionData.FileData(new SubmissionData.FileData.Modrinth(
+				new SubmissionData.AssociatedData(new SubmissionData.AssociatedData.Modrinth(
 					"dwaodi",
 					"dwdadw"
 				)),
@@ -82,7 +82,6 @@ public class JsonTests {
 					"e",
 					"b"
 				),
-				"https://a",
 				"bb",
 				new SubmissionData.Awards(
 					Set.of(),

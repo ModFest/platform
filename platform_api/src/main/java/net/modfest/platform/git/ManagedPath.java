@@ -12,5 +12,6 @@ public interface ManagedPath {
 	void write(Consumer<Path> runner);
 	void read(Consumer<Path> runner);
 	<R> R withRead(Function<Path, R> runner);
+	GitScope getCurrentScope();
 	void runWithScope(GitScope scope, Runnable r);
 }

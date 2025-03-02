@@ -18,7 +18,8 @@ public enum PermissionGroup {
 		Permissions.Event.REGISTER_OTHERS,
 		Permissions.Event.SUBMIT_BYPASS,
 		Permissions.Event.SUBMIT_OTHER,
-		Permissions.Event.EDIT_SCHEDULE
+		Permissions.Event.EDIT_SCHEDULE,
+		Permissions.Event.EDIT_OTHER_SUBMISSION
 	)),
 	/**
 	 * Note: BotFest usually performs actions on behalf of a different user.
