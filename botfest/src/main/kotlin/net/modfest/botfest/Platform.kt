@@ -193,6 +193,12 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		}.unwrapErrors()
 	}
 
+	suspend fun deleteSubmission(eventId: String, subId: String) {
+		client.delete("/event/$eventId/submission/$subId") {
+			addAuth()
+		}.unwrapErrors()
+	}
+
 	suspend fun editSubmissionImage(eventId: String, subId: String, type: String, url: String) {
 		client.patch("/event/$eventId/submission/$subId/image/$type") {
 			addAuth()

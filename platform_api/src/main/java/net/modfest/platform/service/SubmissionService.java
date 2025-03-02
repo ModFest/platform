@@ -56,6 +56,10 @@ public class SubmissionService {
 		submissionRepository.save(data);
 	}
 
+	public void deleteSubmission(String eventId, String subId) {
+		submissionRepository.delete(new SubmissionRepository.SubmissionId(eventId, subId));
+	}
+
 	/**
 	 * Retrieve all submissions made by a user
 	 * @param filter If non-null, only submissions associated with that event will be returned

@@ -294,6 +294,50 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 				}
 			}
 
+			// Delete submission data
+			unsafeSubCommand(::SubmissionArg) {
+				name = Translations.Commands.Submission.Delete.name
+				description = Translations.Commands.Submission.Delete.description
+
+				initialResponse = InitialSlashCommandResponse.None
+
+				action {
+					val subId = this.arguments.submission
+					val curEvent = platform.getCurrentEvent().event
+					if (curEvent == null) {
+						ackEphemeral {
+							content = Translations.Commands.Event.Submit.Response.unavailable
+								.withContext(this@action)
+								.translateNamed()
+						}
+						return@action
+					}
+
+					val submission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+
+					if (submission == null) {
+						ackEphemeral {
+							content = Translations.Commands.Submission.Edit.Response.notfound
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+						return@action
+					}
+
+					platform.withAuth(this.user).deleteSubmission(curEvent, subId)
+
+					ackEphemeral {
+						content = Translations.Commands.Submission.Edit.Response.success
+							.withContext(this@action)
+							.translateNamed(
+								"subId" to subId
+							)
+					}
+				}
+			}
+
 			// Edit submissions images
 			group(Translations.Commands.Submission.EditImage.label) {
 				description = Translations.Commands.Submission.EditImage.description

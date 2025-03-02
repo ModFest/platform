@@ -183,6 +183,22 @@ public class EventController {
 		imageService.downloadSubmissionImage(url, new SubmissionRepository.SubmissionId(eventId, subId), typeEnum);
 	}
 
+	@DeleteMapping("/event/{eventId}/submission/{subId}")
+	public void deleteSubmission(@PathVariable String eventId, @PathVariable String subId) {
+		getEvent(eventId);
+		var submission = service.getSubmission(eventId, subId);
+		if (submission == null) {
+			throw new IllegalArgumentException();// TODO
+		}
+
+		if (!canEdit(submission)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+				"You do not have permissions to edit this data");
+		}
+
+		service.deleteSubmission(eventId, subId);
+	}
+
 	private boolean canEdit(SubmissionData submission) {
 		var subject = SecurityUtils.getSubject();
 		var can_others = subject.isPermitted(Permissions.Event.EDIT_OTHER_SUBMISSION);
