@@ -90,7 +90,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						return@action
 					}
 
-					val projectSlug = matcher.group(1)
+					val projectSlug = matcher.group(2)
 
 					val eventInfo = platform.getEvent(curEvent)
 					val submission = platform.withAuth(this.user).submitModrinth(curEvent, projectSlug)
@@ -317,7 +317,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 					if (submission == null) {
 						ackEphemeral {
-							content = Translations.Commands.Submission.Edit.Response.notfound
+							content = Translations.Commands.Submission.Delete.Response.notfound
 								.withContext(this@action)
 								.translateNamed(
 									"subId" to subId
@@ -329,7 +329,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					platform.withAuth(this.user).deleteSubmission(curEvent, subId)
 
 					ackEphemeral {
-						content = Translations.Commands.Submission.Edit.Response.success
+						content = Translations.Commands.Submission.Delete.Response.success
 							.withContext(this@action)
 							.translateNamed(
 								"subId" to subId
