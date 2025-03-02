@@ -2,6 +2,7 @@ package net.modfest.botfest.extensions
 
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
+import dev.kordex.core.commands.application.slash.group
 import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.commands.converters.impl.string
 import dev.kordex.core.extensions.Extension
@@ -49,34 +50,38 @@ class UserCommands : Extension(), KordExKoinComponent {
 				}
 			}
 
-			// Allows the user to add a minecraft username
-			ephemeralSubCommand(::MinecraftUsernameArgs) {
-				name = Translations.Commands.User.Minecraft.Add.name
-				description = Translations.Commands.User.Minecraft.Add.description
+			group(Translations.Commands.Group.User.Minecraft.name) {
+				description = Translations.Commands.Group.User.Minecraft.description
 
-				action {
-					platform.withAuth(this.user).addMinecraft(this.arguments.username)
+				// Allows the user to add a minecraft username
+				ephemeralSubCommand(::MinecraftUsernameArgs) {
+					name = Translations.Commands.User.Minecraft.Add.name
+					description = Translations.Commands.User.Minecraft.Add.description
 
-					respond {
-						content = Translations.Commands.User.Minecraft.Add.response
-							.withContext(this@action)
-							.translateNamed()
+					action {
+						platform.withAuth(this.user).addMinecraft(this.arguments.username)
+
+						respond {
+							content = Translations.Commands.User.Minecraft.Add.response
+								.withContext(this@action)
+								.translateNamed()
+						}
 					}
 				}
-			}
 
-			// Allows the user to remove a minecraft username
-			ephemeralSubCommand(::MinecraftUsernameArgs) {
-				name = Translations.Commands.User.Minecraft.Remove.name
-				description = Translations.Commands.User.Minecraft.Remove.description
+				// Allows the user to remove a minecraft username
+				ephemeralSubCommand(::MinecraftUsernameArgs) {
+					name = Translations.Commands.User.Minecraft.Remove.name
+					description = Translations.Commands.User.Minecraft.Remove.description
 
-				action {
-					platform.withAuth(this.user).removeMinecraft(this.arguments.username)
+					action {
+						platform.withAuth(this.user).removeMinecraft(this.arguments.username)
 
-					respond {
-						content = Translations.Commands.User.Minecraft.Remove.response
-							.withContext(this@action)
-							.translateNamed()
+						respond {
+							content = Translations.Commands.User.Minecraft.Remove.response
+								.withContext(this@action)
+								.translateNamed()
+						}
 					}
 				}
 			}
