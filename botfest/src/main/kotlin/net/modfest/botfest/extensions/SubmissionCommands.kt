@@ -459,7 +459,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 							content = Translations.Commands.Submission.Invite.Response.usernotfound
 								.withContext(this@action)
 								.translateNamed(
-									"userId" to userId
+									"userId" to userId.id.value
 								)
 						}
 						return@action
@@ -471,7 +471,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 								.withContext(this@action)
 								.translateNamed(
 									"subId" to subId,
-									"userId" to userId
+									"userId" to userId.id.value
 								)
 						}
 						return@action
@@ -484,7 +484,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 							.withContext(this@action)
 							.translateNamed(
 								"subId" to subId,
-								"userId" to userId
+								"userId" to userId.id.value
 							)
 					}
 				}
