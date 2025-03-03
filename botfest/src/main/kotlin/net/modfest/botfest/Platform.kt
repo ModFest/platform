@@ -218,7 +218,7 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 	}
 
 	suspend fun inviteSubmissionAuthor(eventId: String, subId: String, user: String) {
-		client.put("/event/$eventId/submission/$subId/authors/dc:$user") {
+		client.put("/event/$eventId/submission/$subId/authors/$user") {
 			addAuth()
 		}.unwrapErrors()
 	}
