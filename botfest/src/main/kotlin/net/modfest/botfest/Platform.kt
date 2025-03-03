@@ -211,6 +211,18 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		}.unwrapErrors()
 	}
 
+	suspend fun leaveSubmission(eventId: String, subId: String) {
+		client.delete("/event/$eventId/submission/$subId/authors/@me") {
+			addAuth()
+		}.unwrapErrors()
+	}
+
+	suspend fun inviteSubmissionAuthor(eventId: String, subId: String, user: String) {
+		client.put("/event/$eventId/submission/$subId/authors/dc:$user") {
+			addAuth()
+		}.unwrapErrors()
+	}
+
 	suspend fun editSubmissionImage(eventId: String, subId: String, type: String, url: String) {
 		client.patch("/event/$eventId/submission/$subId/image/$type") {
 			addAuth()

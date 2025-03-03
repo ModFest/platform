@@ -56,6 +56,16 @@ public class SubmissionService {
 		submissionRepository.save(data);
 	}
 
+	public void leaveSubmission(SubmissionData data, UserData author) {
+		data.authors().remove(author.id());
+		submissionRepository.save(data);
+	}
+
+	public void addSubmissionAuthor(SubmissionData data, UserData author) {
+		data.authors().add(author.id());
+		submissionRepository.save(data);
+	}
+
 	public void deleteSubmission(String eventId, String subId) {
 		submissionRepository.delete(new SubmissionRepository.SubmissionId(eventId, subId));
 	}

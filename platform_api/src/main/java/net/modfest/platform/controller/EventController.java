@@ -161,6 +161,60 @@ public class EventController {
 		service.editSubmission(submission, editData);
 	}
 
+	@DeleteMapping("/event/{eventId}/submission/{subId}/{userId}")
+	public void deleteSubmissionAuthor(@PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) {
+		getEvent(eventId);
+		var submission = service.getSubmission(eventId, subId);
+		if (submission == null) {
+			throw new IllegalArgumentException();// TODO
+		}
+
+		if (!canEdit(submission)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+				"You do not have permissions to edit this data");
+		}
+
+		if (submission.authors().size() < 2) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+				"You cannot remove a user from a solo submission");
+		}
+
+		UserData user = userController.getSingleUser(userId);
+
+		var subject = SecurityUtils.getSubject();
+		var edit_others = subject.isPermitted(Permissions.Users.EDIT_OTHERS);
+		var owns = PermissionUtils.owns(subject, user);
+
+		if (!owns && !edit_others) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not edit this user");
+		}
+
+		service.leaveSubmission(submission, user);
+	}
+
+	@PutMapping("/event/{eventId}/submission/{subId}/{userId}")
+	public void addSubmissionAuthor(@PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) {
+		getEvent(eventId);
+		var submission = service.getSubmission(eventId, subId);
+		if (submission == null) {
+			throw new IllegalArgumentException();// TODO
+		}
+
+		if (!canEdit(submission)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+				"You do not have permissions to edit this data");
+		}
+
+		UserData user = userController.getSingleUser(userId);
+
+		if (submission.authors().contains(user.id())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+				"You cannot add a user that's already in a submission");
+		}
+
+		service.addSubmissionAuthor(submission, user);
+	}
+
 	@PatchMapping("/event/{eventId}/submission/{subId}/image/{type}")
 	public void editSubmissionImage(@PathVariable String eventId, @PathVariable String subId, @PathVariable String type, @RequestBody String url) {
 		getEvent(eventId);
