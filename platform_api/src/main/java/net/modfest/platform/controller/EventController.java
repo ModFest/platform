@@ -161,6 +161,38 @@ public class EventController {
 		service.editSubmission(submission, editData);
 	}
 
+	@PutMapping("/event/{eventId}/submission/{subId}/updateVersion")
+	public void updateSubmissionVersion(@PathVariable String eventId, @PathVariable String subId) {
+		getEvent(eventId);
+		var submission = service.getSubmission(eventId, subId);
+		if (submission == null) {
+			throw new IllegalArgumentException();// TODO
+		}
+
+		if (!canEdit(submission)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+				"You do not have permissions to edit this data");
+		}
+
+		service.updateSubmissionVersion(submission);
+	}
+
+	@PutMapping("/event/{eventId}/submission/{subId}/updateMeta")
+	public void updateSubmissionMeta(@PathVariable String eventId, @PathVariable String subId) {
+		getEvent(eventId);
+		var submission = service.getSubmission(eventId, subId);
+		if (submission == null) {
+			throw new IllegalArgumentException();// TODO
+		}
+
+		if (!canEdit(submission)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+				"You do not have permissions to edit this data");
+		}
+
+		service.updateSubmissionMeta(submission);
+	}
+
 	@DeleteMapping("/event/{eventId}/submission/{subId}/authors/{userId}")
 	public void deleteSubmissionAuthor(@PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) {
 		getEvent(eventId);

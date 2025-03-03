@@ -31,6 +31,7 @@ import kotlinx.serialization.json.putJsonArray
 import net.modfest.botfest.MAIN_GUILD_ID
 import net.modfest.botfest.Platform
 import net.modfest.botfest.i18n.Translations
+import net.modfest.platform.pojo.SubmissionData.AssociatedData.Modrinth
 import net.modfest.platform.pojo.SubmissionData.AssociatedData.Other
 import net.modfest.platform.pojo.SubmissionPatchData
 import net.modfest.platform.pojo.SubmitRequestOther
@@ -335,6 +336,125 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 							.translateNamed(
 								"subId" to subId
 							)
+					}
+				}
+			}
+
+			group(Translations.Commands.Group.Submission.Update.name) {
+				description = Translations.Commands.Group.Submission.Update.description
+
+				// Update submission version
+				unsafeSubCommand(::SubmissionArg) {
+					name = Translations.Commands.Submission.Update.Version.name
+					description = Translations.Commands.Submission.Update.Version.description
+
+					initialResponse = InitialSlashCommandResponse.None
+
+					action {
+						val subId = this.arguments.submission
+						val curEvent = platform.getCurrentEvent().event
+						if (curEvent == null) {
+							ackEphemeral {
+								content = Translations.Commands.Event.Submit.Response.unavailable
+									.withContext(this@action)
+									.translateNamed()
+							}
+							return@action
+						}
+
+						val submission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+
+						if (submission == null) {
+							ackEphemeral {
+								content = Translations.Commands.Submission.Update.Version.Response.notfound
+									.withContext(this@action)
+									.translateNamed(
+										"subId" to subId
+									)
+							}
+							return@action
+						}
+
+						if (submission.platform.inner !is Modrinth) {
+							ackEphemeral {
+								content = Translations.Commands.Submission.Update.Version.Response.notmodrinth
+									.withContext(this@action)
+									.translateNamed(
+										"subId" to subId
+									)
+							}
+							return@action
+						}
+
+						platform.withAuth(this.user).updateSubmissionVersion(curEvent, subId)
+
+						val updatedSubmission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+
+						ackEphemeral {
+							content = Translations.Commands.Submission.Update.Version.Response.success
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId,
+									"versionId" to (updatedSubmission?.platform?.inner as Modrinth).versionId
+								)
+						}
+					}
+				}
+				// Update submission meta
+				unsafeSubCommand(::SubmissionArg) {
+					name = Translations.Commands.Submission.Update.Meta.name
+					description = Translations.Commands.Submission.Update.Meta.description
+
+					initialResponse = InitialSlashCommandResponse.None
+
+					action {
+						val subId = this.arguments.submission
+						val curEvent = platform.getCurrentEvent().event
+						if (curEvent == null) {
+							ackEphemeral {
+								content = Translations.Commands.Event.Submit.Response.unavailable
+									.withContext(this@action)
+									.translateNamed()
+							}
+							return@action
+						}
+
+						val submission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+
+						if (submission == null) {
+							ackEphemeral {
+								content = Translations.Commands.Submission.Update.Meta.Response.notfound
+									.withContext(this@action)
+									.translateNamed(
+										"subId" to subId
+									)
+							}
+							return@action
+						}
+
+						if (submission.platform.inner !is Modrinth) {
+							ackEphemeral {
+								content = Translations.Commands.Submission.Update.Meta.Response.notmodrinth
+									.withContext(this@action)
+									.translateNamed(
+										"subId" to subId
+									)
+							}
+							return@action
+						}
+
+						platform.withAuth(this.user).updateSubmissionMeta(curEvent, subId)
+
+						val updatedSubmission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+
+						ackEphemeral {
+							content = Translations.Commands.Submission.Update.Meta.Response.success
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId,
+									"versionId" to (updatedSubmission?.platform?.inner as Modrinth).versionId
+								)
+						}
 					}
 				}
 			}

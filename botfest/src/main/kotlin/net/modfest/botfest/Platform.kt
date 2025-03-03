@@ -41,7 +41,7 @@ class Platform(baseUrl: String) {
 	init {
 		var tmpUrl = baseUrl
 		if (!tmpUrl.startsWith("http")) {
-			tmpUrl = "http://$baseUrl";
+			tmpUrl = "http://$baseUrl"
 		}
 		tmpUrl = tmpUrl.removeSuffix("/")
 		this.baseUrl = tmpUrl
@@ -169,19 +169,19 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		client.patch("/user/@me") {
 			addAuth()
 			setBody(patch)
-		}.unwrapErrors();
+		}.unwrapErrors()
 	}
 
 	suspend fun addMinecraft(username: String) {
 		client.put("/user/@me/minecraft/$username") {
 			addAuth()
-		}.unwrapErrors();
+		}.unwrapErrors()
 	}
 
 	suspend fun removeMinecraft(username: String) {
 		client.delete("/user/@me/minecraft/$username") {
 			addAuth()
-		}.unwrapErrors();
+		}.unwrapErrors()
 	}
 
 	suspend fun submitModrinth(eventId: String, mrId: String): SubmissionResponseData {
@@ -202,6 +202,18 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		client.patch("/event/$eventId/submission/$subId") {
 			addAuth()
 			setBody(edit)
+		}.unwrapErrors()
+	}
+
+	suspend fun updateSubmissionVersion(eventId: String, subId: String) {
+		client.put("/event/$eventId/submission/$subId/updateVersion") {
+			addAuth()
+		}.unwrapErrors()
+	}
+
+	suspend fun updateSubmissionMeta(eventId: String, subId: String) {
+		client.put("/event/$eventId/submission/$subId/updateMeta") {
+			addAuth()
 		}.unwrapErrors()
 	}
 

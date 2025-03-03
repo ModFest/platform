@@ -56,6 +56,53 @@ public class SubmissionService {
 		submissionRepository.save(data);
 	}
 
+	public void updateSubmissionVersion(SubmissionData data) {
+		if (!(data.platform().inner() instanceof SubmissionData.AssociatedData.Modrinth mr)) {
+			throw new IllegalArgumentException("Update only works for modrinth submissions!");
+		}
+
+		var project = modrinth.projects().getProject(mr.projectId());
+
+		if (project == null) {
+			throw new IllegalArgumentException("Modrinth project not found!");
+		}
+
+		var latest = getLatestModrinth(mr.projectId(), eventService.getEventById(data.event()), project.projectType);
+
+		var newData = data.withPlatform(new SubmissionData.AssociatedData(
+			new SubmissionData.AssociatedData.Modrinth(
+				project.id,
+				latest == null ? null : latest.id
+			)
+		));
+
+		submissionRepository.save(newData);
+	}
+
+	public void updateSubmissionMeta(SubmissionData data) {
+		if (!(data.platform().inner() instanceof SubmissionData.AssociatedData.Modrinth mr)) {
+			throw new IllegalArgumentException("Update only works for modrinth submissions!");
+		}
+
+		var project = modrinth.projects().getProject(mr.projectId());
+
+		if (project == null) {
+			throw new IllegalArgumentException("Modrinth project not found!");
+		}
+
+		var subKey = new SubmissionRepository.SubmissionId(data.event(), data.id());
+
+		imageService.downloadSubmissionImage(project.iconUrl, subKey, ImageService.SubmissionImageType.ICON);
+		var galleryUrl = getGalleryUrl(project);
+		if (galleryUrl != null) {
+			imageService.downloadSubmissionImage(galleryUrl, subKey, ImageService.SubmissionImageType.SCREENSHOT);
+		}
+
+		var newData = data.withName(project.title).withDescription(project.description);
+
+		submissionRepository.save(newData);
+	}
+
 	public void leaveSubmission(SubmissionData data, UserData author) {
 		data.authors().remove(author.id());
 		submissionRepository.save(data);
