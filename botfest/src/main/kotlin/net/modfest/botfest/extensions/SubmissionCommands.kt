@@ -471,7 +471,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 								.withContext(this@action)
 								.translateNamed(
 									"subId" to subId,
-									"userId" to userId.id.value
+									"userId" to author.name
 								)
 						}
 						return@action
@@ -484,7 +484,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 							.withContext(this@action)
 							.translateNamed(
 								"subId" to subId,
-								"userId" to userId.id.value
+								"userId" to author.name
 							)
 					}
 				}
