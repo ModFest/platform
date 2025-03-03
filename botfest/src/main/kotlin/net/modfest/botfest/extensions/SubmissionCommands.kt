@@ -445,14 +445,11 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 						platform.withAuth(this.user).updateSubmissionMeta(curEvent, subId)
 
-						val updatedSubmission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
-
 						ackEphemeral {
 							content = Translations.Commands.Submission.Update.Meta.Response.success
 								.withContext(this@action)
 								.translateNamed(
-									"subId" to subId,
-									"versionId" to (updatedSubmission?.platform?.inner as Modrinth).versionId
+									"subId" to subId
 								)
 						}
 					}
