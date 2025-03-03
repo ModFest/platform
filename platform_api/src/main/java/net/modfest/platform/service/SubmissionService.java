@@ -92,7 +92,9 @@ public class SubmissionService {
 
 		var subKey = new SubmissionRepository.SubmissionId(data.event(), data.id());
 
-		imageService.downloadSubmissionImage(project.iconUrl, subKey, ImageService.SubmissionImageType.ICON);
+		if (project.iconUrl != null) {
+			imageService.downloadSubmissionImage(project.iconUrl, subKey, ImageService.SubmissionImageType.ICON);
+		}
 		var galleryUrl = getGalleryUrl(project);
 		if (galleryUrl != null) {
 			imageService.downloadSubmissionImage(galleryUrl, subKey, ImageService.SubmissionImageType.SCREENSHOT);
@@ -199,7 +201,9 @@ public class SubmissionService {
 		var authors = getUsersForRinthProject(subId);
 		var latest = getLatestModrinth(subId, eventService.getEventById(eventId), project.projectType);
 
-		imageService.downloadSubmissionImage(project.iconUrl, subKey, ImageService.SubmissionImageType.ICON);
+		if (project.iconUrl != null) {
+			imageService.downloadSubmissionImage(project.iconUrl, subKey, ImageService.SubmissionImageType.ICON);
+		}
 		var galleryUrl = getGalleryUrl(project);
 		if (galleryUrl != null) {
 			imageService.downloadSubmissionImage(galleryUrl, subKey, ImageService.SubmissionImageType.SCREENSHOT);
