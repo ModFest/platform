@@ -347,6 +347,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 				initialResponse = InitialSlashCommandResponse.None
 
 				action {
+					val userId = this.user
 					val subId = this.arguments.submission
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
@@ -358,7 +359,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						return@action
 					}
 
-					val submission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+					val submission = platform.getUserSubmissions(userId.id).find { it.id == subId }
 
 					if (submission == null) {
 						ackEphemeral {
@@ -371,7 +372,20 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						return@action
 					}
 
-					if (!submission.authors.contains(this.user.id.value.toString())) {
+					val author = platform.getUser(userId)
+
+					if (author == null) {
+						ackEphemeral {
+							content = Translations.Commands.Submission.Invite.Response.usernotfound
+								.withContext(this@action)
+								.translateNamed(
+									"userId" to userId.id.value
+								)
+						}
+						return@action
+					}
+
+					if (!submission.authors.contains(author.id)) {
 						ackEphemeral {
 							content = Translations.Commands.Submission.Leave.Response.notfound
 								.withContext(this@action)

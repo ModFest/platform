@@ -161,7 +161,7 @@ public class EventController {
 		service.editSubmission(submission, editData);
 	}
 
-	@DeleteMapping("/event/{eventId}/submission/{subId}/{userId}")
+	@DeleteMapping("/event/{eventId}/submission/{subId}/authors/{userId}")
 	public void deleteSubmissionAuthor(@PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) {
 		getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
@@ -192,7 +192,7 @@ public class EventController {
 		service.leaveSubmission(submission, user);
 	}
 
-	@PutMapping("/event/{eventId}/submission/{subId}/{userId}")
+	@PutMapping("/event/{eventId}/submission/{subId}/authors/{userId}")
 	public void addSubmissionAuthor(@PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) {
 		getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
