@@ -407,14 +407,14 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 			// Invite user to submission
 			unsafeSubCommand(::InviteSubmissionArgs) {
-				name = Translations.Commands.Submission.Leave.name
-				description = Translations.Commands.Submission.Leave.description
+				name = Translations.Commands.Submission.Invite.name
+				description = Translations.Commands.Submission.Invite.description
 
 				initialResponse = InitialSlashCommandResponse.None
 
 				action {
 					val subId = this.arguments.submission
-					val userId = this.arguments.user;
+					val userId = this.arguments.user
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
 						ackEphemeral {
