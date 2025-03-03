@@ -250,7 +250,7 @@ class RoleManager : Extension(), KordExKoinComponent {
 
 		// Compile a list of all people who are known to have roles, but aren't
 		// currently in platform's data
-		val platformDiscordIds = users.map { u -> u.id }.toSet()
+		val platformDiscordIds = users.map { u -> u.discordId }.filterNotNull().toSet()
 		val nonPlatformDiscordIds = HashSet<Snowflake>()
 		database.createStatement().use {
 			val res = it.executeQuery("SELECT member FROM $TABLE_NAME")
