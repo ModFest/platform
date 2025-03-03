@@ -277,23 +277,23 @@ class RoleManager : Extension(), KordExKoinComponent {
 	}
 
 	suspend fun fixUser(user: Snowflake, platformData: UserData?) {
-		var cache = getCachedRoles(user)
-		var expected = expectedRoles(platformData)
-		var managed = managedRoles()
-		var roleDiff = diff(cache, expected)
+		val cache = getCachedRoles(user)
+		val expected = expectedRoles(platformData)
+		val managed = managedRoles()
+		val roleDiff = diff(cache, expected)
 
 		roleDiff.removeIf { !managed.contains(it) } // Only work on managed roles
 		roleDiff.removeIf { !roles!!.contains(it) } // Only work on roles that we know actually exist
 
 		try {
-		roleDiff.toAdd.forEach { role ->
-			logger.info { "Adding `$role` to $user (in $MAIN_GUILD_ID)" }
-			kord.rest.guild.addRoleToGuildMember(MAIN_GUILD_ID, user, role)
-		}
-		roleDiff.toRemove.forEach { role ->
-			logger.info { "Removing `$role` from $user (in $MAIN_GUILD_ID)" }
-			kord.rest.guild.deleteRoleFromGuildMember(MAIN_GUILD_ID, user, role)
-		}
+			roleDiff.toAdd.forEach { role ->
+				logger.info { "Adding `$role` to $user (in $MAIN_GUILD_ID)" }
+				kord.rest.guild.addRoleToGuildMember(MAIN_GUILD_ID, user, role)
+			}
+			roleDiff.toRemove.forEach { role ->
+				logger.info { "Removing `$role` from $user (in $MAIN_GUILD_ID)" }
+				kord.rest.guild.deleteRoleFromGuildMember(MAIN_GUILD_ID, user, role)
+			}
 		} catch (e: KtorRequestException) {
 			if (e.message?.contains("Unknown Member null") == true) {
 				// This just means the user is not in the guild. That's fine
