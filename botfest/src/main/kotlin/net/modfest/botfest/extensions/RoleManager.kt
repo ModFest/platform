@@ -285,6 +285,10 @@ class RoleManager : Extension(), KordExKoinComponent {
 		roleDiff.removeIf { !managed.contains(it) } // Only work on managed roles
 		roleDiff.removeIf { !roles!!.contains(it) } // Only work on roles that we know actually exist
 
+		if (roleDiff.isEmpty()) {
+			return
+		}
+
 		try {
 			roleDiff.toAdd.forEach { role ->
 				logger.info { "Adding `$role` to $user (in $MAIN_GUILD_ID)" }
