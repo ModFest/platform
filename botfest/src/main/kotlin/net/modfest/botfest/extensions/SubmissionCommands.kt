@@ -9,6 +9,7 @@ import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.application.slash.group
 import dev.kordex.core.commands.converters.impl.attachment
 import dev.kordex.core.commands.converters.impl.string
+import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.components
 import dev.kordex.core.components.ephemeralStringSelectMenu
 import dev.kordex.core.components.forms.ModalForm
@@ -338,6 +339,143 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 				}
 			}
 
+			// Leave submission
+			unsafeSubCommand(::SubmissionArg) {
+				name = Translations.Commands.Submission.Leave.name
+				description = Translations.Commands.Submission.Leave.description
+
+				initialResponse = InitialSlashCommandResponse.None
+
+				action {
+					val subId = this.arguments.submission
+					val curEvent = platform.getCurrentEvent().event
+					if (curEvent == null) {
+						ackEphemeral {
+							content = Translations.Commands.Event.Submit.Response.unavailable
+								.withContext(this@action)
+								.translateNamed()
+						}
+						return@action
+					}
+
+					val submission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+
+					if (submission == null) {
+						ackEphemeral {
+							content = Translations.Commands.Submission.Leave.Response.notfound
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+						return@action
+					}
+
+					if (!submission.authors.contains(this.user.id.value.toString())) {
+						ackEphemeral {
+							content = Translations.Commands.Submission.Leave.Response.notfound
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+						return@action
+					}
+
+					if (submission.authors.size < 2) {
+						ackEphemeral {
+							content = Translations.Commands.Submission.Leave.Response.last
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+						return@action
+					}
+
+					platform.withAuth(this.user).leaveSubmission(curEvent, subId)
+
+					ackEphemeral {
+						content = Translations.Commands.Submission.Leave.Response.success
+							.withContext(this@action)
+							.translateNamed(
+								"subId" to subId
+							)
+					}
+				}
+			}
+
+			// Invite user to submission
+			unsafeSubCommand(::InviteSubmissionArgs) {
+				name = Translations.Commands.Submission.Leave.name
+				description = Translations.Commands.Submission.Leave.description
+
+				initialResponse = InitialSlashCommandResponse.None
+
+				action {
+					val subId = this.arguments.submission
+					val userId = this.arguments.user;
+					val curEvent = platform.getCurrentEvent().event
+					if (curEvent == null) {
+						ackEphemeral {
+							content = Translations.Commands.Event.Submit.Response.unavailable
+								.withContext(this@action)
+								.translateNamed()
+						}
+						return@action
+					}
+
+					val submission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+
+					if (submission == null) {
+						ackEphemeral {
+							content = Translations.Commands.Submission.Invite.Response.notfound
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+						return@action
+					}
+
+					val author = platform.getUser(this.arguments.user)
+
+					if (author == null) {
+						ackEphemeral {
+							content = Translations.Commands.Submission.Invite.Response.usernotfound
+								.withContext(this@action)
+								.translateNamed(
+									"userId" to userId
+								)
+						}
+						return@action
+					}
+
+					if (submission.authors.contains(author.id)) {
+						ackEphemeral {
+							content = Translations.Commands.Submission.Invite.Response.already
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId,
+									"userId" to userId
+								)
+						}
+						return@action
+					}
+
+					platform.withAuth(this.user).inviteSubmissionAuthor(curEvent, subId, author.id)
+
+					ackEphemeral {
+						content = Translations.Commands.Submission.Invite.Response.success
+							.withContext(this@action)
+							.translateNamed(
+								"subId" to subId,
+								"userId" to userId
+							)
+					}
+				}
+			}
+
 			// Edit submissions images
 			group(Translations.Commands.Submission.EditImage.label) {
 				description = Translations.Commands.Submission.EditImage.description
@@ -394,6 +532,26 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			content = Translations.Commands.Submission.EditImage.Response.success
 				.withContext(this@imageCommandAction)
 				.translateNamed()
+		}
+	}
+
+	open inner class InviteSubmissionArgs : Arguments() {
+		val submission by string {
+			name = Translations.Arguments.Submission.Edit.name
+			description = Translations.Arguments.Submission.Edit.description
+
+			autoComplete {
+				val curEvent = platform.getCurrentEvent().event ?: return@autoComplete
+				suggestStringCollection(
+					platform.getUserSubmissions(this.user.id)
+						.filter { it.event == curEvent }
+						.map { it.id }
+				)
+			}
+		}
+		val user by user {
+			name = Translations.Arguments.Submission.Invite.User.name
+			description = Translations.Arguments.Submission.Invite.User.description
 		}
 	}
 
