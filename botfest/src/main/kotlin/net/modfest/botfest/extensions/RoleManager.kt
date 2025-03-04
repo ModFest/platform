@@ -262,12 +262,12 @@ class RoleManager : Extension(), KordExKoinComponent {
 		}
 
 		for (user in users) {
-			if (user.discordId == null) return
+			if (user.discordId == null) continue
 			fixUser(Snowflake(user.discordId!!), user)
 		}
 		for (npu in nonPlatformDiscordIds) {
 			// We can confidently pass null as the platform data,
-			// because we just listed all the users, and they weren't in there
+			// because we just listed all the users and they weren't in there
 			fixUser(npu, null)
 		}
 	}
