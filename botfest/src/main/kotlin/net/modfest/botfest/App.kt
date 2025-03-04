@@ -2,7 +2,9 @@ package net.modfest.botfest
 
 import com.google.gson.Gson
 import dev.kord.common.entity.Snowflake
+import dev.kord.rest.builder.message.embed
 import dev.kordex.core.ExtensibleBot
+import dev.kordex.core.i18n.withContext
 import dev.kordex.core.utils.env
 import dev.kordex.core.utils.envOrNull
 import dev.kordex.core.utils.loadModule
@@ -66,6 +68,19 @@ suspend fun main() {
 						)
 					PlatformErrorResponse.ErrorType.INTERNAL -> Translations.Apierror.internal
 						.translateNamed("error" to data.data.asString)
+				}
+			}
+		}
+
+		about {
+			general {
+				message {
+					embed {
+						title = Translations.Commands.About.Embed.title
+							.translateNamed()
+						description = Translations.Commands.About.Embed.description
+							.translateNamed()
+					}
 				}
 			}
 		}
