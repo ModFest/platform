@@ -5,6 +5,7 @@ import dev.kord.core.behavior.GuildBehavior
 import dev.kord.core.event.role.RoleCreateEvent
 import dev.kord.core.event.role.RoleDeleteEvent
 import dev.kord.core.event.role.RoleUpdateEvent
+import dev.kord.core.exception.EntityNotFoundException
 import dev.kord.rest.request.KtorRequestException
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
@@ -25,7 +26,6 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
 import java.util.function.Predicate
-import kotlin.collections.HashSet
 
 const val TABLE_NAME = "members"
 
@@ -46,11 +46,13 @@ class RoleManager : Extension(), KordExKoinComponent {
 
 		// Ensure the table exists
 		conn.createStatement().use {
-			it.executeUpdate("""
+			it.executeUpdate(
+				"""
 				CREATE TABLE IF NOT EXISTS $TABLE_NAME (
 					member INTEGER PRIMARY KEY
 				) STRICT;
-			""".trimIndent())
+			""".trimIndent()
+			)
 		}
 
 		return@lazy conn;
@@ -202,10 +204,15 @@ class RoleManager : Extension(), KordExKoinComponent {
 		val guild = kord.getGuild(MAIN_GUILD_ID)
 		// Iterate asynchronously
 		members.asFlow().flowOn(Dispatchers.IO).collect { member ->
-			val currentRoles = if (force) {
-				kord.rest.guild.getGuildMember(MAIN_GUILD_ID, member).roles.toSet()
-			} else {
-				guild.getMember(member).roleIds
+			val currentRoles = try {
+				if (force) {
+					kord.rest.guild.getGuildMember(MAIN_GUILD_ID, member).roles.toSet()
+				} else {
+					guild.getMember(member).roleIds
+				}
+			} catch (_: EntityNotFoundException) {
+				// Welp, they left the discord. I guess that's equivalent to having no roles.
+				listOf()
 			}
 			database.createStatement().use { stmnt ->
 				if (currentRoles.isEmpty()) {
@@ -228,12 +235,14 @@ class RoleManager : Extension(), KordExKoinComponent {
 	private fun getCachedRoles(user: Snowflake): Set<Snowflake> {
 		database.createStatement().use { stmnt ->
 			val query = roles!!.map { "`$it`" }.joinToString(",")
-			var res = stmnt.executeQuery("""
+			var res = stmnt.executeQuery(
+				"""
 				SELECT $query FROM $TABLE_NAME WHERE member = ${user.value.toLong()}
-			""".trimIndent())
+			""".trimIndent()
+			)
 			val set = HashSet<Snowflake>()
 			for (i in 0..<roles!!.size) {
-				if (res.getInt(i+1) >= 1) {
+				if (res.getInt(i + 1) >= 1) {
 					set.add(roles!![i])
 				}
 			}
