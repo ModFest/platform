@@ -277,16 +277,30 @@ class RoleManager : Extension(), KordExKoinComponent {
 	}
 
 	suspend fun fixUser(user: Snowflake, platformData: UserData?) {
-		val cache = getCachedRoles(user)
+		var cache = getCachedRoles(user)
 		val expected = expectedRoles(platformData)
 		val managed = managedRoles()
-		val roleDiff = diff(cache, expected)
+		var roleDiff = diff(cache, expected)
 
 		roleDiff.removeIf { !managed.contains(it) } // Only work on managed roles
 		roleDiff.removeIf { !roles!!.contains(it) } // Only work on roles that we know actually exist
 
 		if (roleDiff.isEmpty()) {
 			return
+		}
+
+		if (cache.isEmpty()) {
+			// Cache was empty, check in with discord to ensure we have the right roles
+			fetchMembers(setOf(user))
+			cache = getCachedRoles(user)
+			roleDiff = diff(cache, expected)
+			roleDiff.removeIf { !managed.contains(it) }
+			roleDiff.removeIf { !roles!!.contains(it) }
+		}
+
+		logger.debug {
+			val relevantRoles = cache.filter { managed.contains(it) }
+			"Fixing roles for $user. We think they have: $relevantRoles, and that needs to be $expected"
 		}
 
 		try {
