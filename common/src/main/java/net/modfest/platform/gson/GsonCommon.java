@@ -2,7 +2,6 @@ package net.modfest.platform.gson;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
-import net.modfest.platform.pojo.EventData;
 import net.modfest.platform.pojo.SubmissionData;
 
 import java.time.Instant;
@@ -16,7 +15,6 @@ public class GsonCommon {
 			.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
 			.registerTypeHierarchyAdapter(Enum.class, new EnumToLowerCaseJsonConverter())
 			.registerTypeAdapter(Instant.class, new InstantSerializer())
-			.registerTypeAdapter(EventData.DescriptionItem.class, new EventData.DescriptionItem.TypeAdapter())
 			.registerTypeAdapter(SubmissionData.AssociatedData.class, new SubmissionData.AssociatedData.TypeAdapter())
 			.setPrettyPrinting()
 			.serializeNulls()
