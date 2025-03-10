@@ -25,7 +25,7 @@ export default function Home() {
 		}
 	</>
 	const modal = <Modal
-		isOpen={edit !== undefined}
+		isOpen={edit !== null}
 		onRequestClose={() => {
 			router.back()
 		}}
