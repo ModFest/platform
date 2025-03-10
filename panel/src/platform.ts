@@ -95,6 +95,17 @@ export class Platform {
 		return fetch(`${PLATFORM}/currentevent/`).then(throwIfNotOk).then(r => r.json())
 	}
 
+	public useUser(userId: string): UserData | undefined {
+		const [user, setUser] = useState<UserData | undefined>()
+		useEffect(() => {
+			fetch(`${PLATFORM}/user/${userId}`)
+				.then(throwIfNotOk)
+				.then(r => r.json())
+				.then(d => setUser(d))
+		}, [this, userId])
+		return user;
+	}
+
 	public useEvent(eventid: string): EventData | undefined {
 		const [event, setEvent] = useState<EventData | undefined>(undefined)
 		useEffect(() => {
