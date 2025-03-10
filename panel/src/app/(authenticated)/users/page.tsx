@@ -2,26 +2,21 @@
 
 import { usePlatform } from "@/platform";
 import { UserData } from "@/platform_types";
-import { use, useState } from "react";
+import { useState } from "react";
 import styles from "./page.module.css"
 import Modal from 'react-modal';
-import Form from 'next/form'
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Editor } from "@monaco-editor/react";
 
-type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
-type SearchParamProps = {
-	searchParams: SearchParams;
-};
-
-export default function Home({ searchParams }: SearchParamProps) {
+export default function Home() {
 	const router = useRouter()
 	const platform = usePlatform()
 	const users = platform.useAllUsers()
 	const [forceExpand, setForceExpand] = useState(false)
 
-	const edit = use(searchParams)["edit"]
+	const searchParams = useSearchParams();
+	const edit = searchParams.get("edit");
 
 	const page = <>
 		<button onClick={() => setForceExpand(!forceExpand)}>Expand all</button>
