@@ -91,6 +91,12 @@ export class Platform {
 		}).then(throwIfNotOk)
 	}
 
+	public async removeAuthorFromSubmission(eventId: string, submissionId: string, authorId: string) {
+		fetch(`${PLATFORM}/event/${eventId}/submission/${submissionId}/authors/${authorId}`, {
+			method: "DELETE"
+		}).then(throwIfNotOk);
+	}
+
 	public async getCurrentEvent(): Promise<CurrentEventData> {
 		return fetch(`${PLATFORM}/currentevent/`).then(throwIfNotOk).then(r => r.json())
 	}

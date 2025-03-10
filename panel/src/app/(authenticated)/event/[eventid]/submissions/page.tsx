@@ -18,7 +18,7 @@ export default function Home(props: EventPageProps) {
 		<h1>Submissions for {event?.name}</h1>
 		<ul>
 		{schedule.map(e =>
-			<Submission key={e.id} data={e}></Submission>
+			<Submission key={e.id} eventId={eventid} data={e}></Submission>
 		)}
 		</ul>
 	</main>

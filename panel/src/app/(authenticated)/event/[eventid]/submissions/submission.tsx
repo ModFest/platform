@@ -2,7 +2,8 @@ import { usePlatform } from "@/platform";
 import { SubmissionData } from "@/platform_types"
 
 export type SubmissionProps = {
-	data: SubmissionData
+	data: SubmissionData,
+	eventId: string,
 }
 
 export default function Submission(props: SubmissionProps) {
@@ -10,14 +11,20 @@ export default function Submission(props: SubmissionProps) {
 	return <>
 		<h2>{submission.name}</h2>
 		<ul>
-			{submission.authors.map(a => <li><Author key={a} id={a}></Author></li>)}
+			{submission.authors.map(a => <li>
+				<Author key={a} id={a} eventId={props.eventId} submissionId={submission.id}></Author>
+				</li>)}
 		</ul>
 	</>
 }
 
-function Author(props: { id: string }) {
+function Author(props: { id: string, eventId: string, submissionId: string }) {
 	const platform = usePlatform();
 	const user = platform.useUser(props.id);
 	if (!user) return <>Loading...</>
-	return <>{user.name}</>
+
+	const doDelete = () => {
+		platform.removeAuthorFromSubmission(props.eventId, props.submissionId, props.id);
+	};
+	return <>{user.name} <button onClick={doDelete}>X</button></>
 }
