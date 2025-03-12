@@ -11,8 +11,8 @@ export default function Submission(props: SubmissionProps) {
 	return <>
 		<h2>{submission.name}</h2>
 		<ul>
-			{submission.authors.map(a => <li>
-				<Author key={a} id={a} eventId={props.eventId} submissionId={submission.id}></Author>
+			{submission.authors.map(a => <li key={a}>
+				<Author id={a} eventId={props.eventId} submissionId={submission.id}></Author>
 				</li>)}
 		</ul>
 	</>
