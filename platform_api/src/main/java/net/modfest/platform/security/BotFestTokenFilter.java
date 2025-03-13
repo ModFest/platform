@@ -7,7 +7,9 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.web.servlet.AdviceFilter;
 import org.apache.shiro.web.util.WebUtils;
+import org.springframework.core.annotation.Order;
 
+@Order(10)
 public class BotFestTokenFilter extends AdviceFilter {
 	protected boolean preHandle(ServletRequest request, ServletResponse response) throws Exception {
  		var token = createToken(request, response);

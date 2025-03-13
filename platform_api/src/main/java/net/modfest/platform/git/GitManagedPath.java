@@ -43,7 +43,6 @@ public class GitManagedPath implements ManagedPath {
 		if (!editedPaths.isEmpty()) {
 			this.gitScope.runWithScopedGit(git -> {
 				for (var p : editedPaths) {
-					System.out.println("EE "+this.subPath+"/"+this.path.relativize(p));
 					git.add().addFilepattern(this.subPath+"/"+this.path.relativize(p)).call();
 				}
 			});
