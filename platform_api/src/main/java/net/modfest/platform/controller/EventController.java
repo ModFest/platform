@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -142,7 +143,12 @@ public class EventController {
 				"You don't have permissions to submit for people other than yourself");
 		}
 
-		return service.addResponseInfo(request, service.makeSubmissionModrinth(eventId, submission.modrinthProject()));
+		return service.addResponseInfo(
+			request,
+			service.makeSubmissionModrinth(
+				eventId,
+				(subject.getPrincipal() instanceof UserData d) ? Set.of(d) : Set.of(),
+				submission.modrinthProject()));
 	}
 
 	@PatchMapping("/event/{eventId}/submission/{subId}")
