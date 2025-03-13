@@ -132,6 +132,7 @@ public class UserService {
 			if (uuid == null) {
 				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "A minecraft profile with that username does not exist");
 			}
+			return uuid;
 		} catch (IOException | InterruptedException e) {
 			throw new PlatformStandardException(PlatformErrorResponse.ErrorType.INTERNAL, "Mojang api unavailable");
 		}
