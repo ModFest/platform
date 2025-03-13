@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import net.modfest.platform.pojo.EventData;
 import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.security.BotFestIdentity;
 import org.apache.shiro.SecurityUtils;
@@ -44,6 +45,7 @@ public class GitRequestInterceptor extends OncePerRequestFilter {
 		var userString = switch (principal) {
 			case UserData user -> "ModFest user "+user.id()+" ("+user.name()+")";
 			case BotFestIdentity i -> "BotFest user";
+			case EventData eventData -> "Event token "+eventData.id();
 			case null -> "Unauthenticated";
 			default -> throw new IllegalStateException("Unexpected value: " + principal);
 		};

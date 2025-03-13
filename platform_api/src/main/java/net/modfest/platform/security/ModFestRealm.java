@@ -1,9 +1,12 @@
 package net.modfest.platform.security;
 
 import net.modfest.platform.configuration.PlatformConfig;
+import net.modfest.platform.pojo.EventData;
 import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.security.token.BotFestToken;
+import net.modfest.platform.security.token.EventToken;
 import net.modfest.platform.security.token.ModrinthToken;
+import net.modfest.platform.service.EventTokenService;
 import net.modfest.platform.service.UserService;
 import nl.theepicblock.dukerinth.ModrinthApi;
 import nl.theepicblock.dukerinth.ModrinthApiException;
@@ -23,6 +26,8 @@ import java.util.Objects;
 public class ModFestRealm extends AuthorizingRealm {
 	@Autowired
 	private UserService userService;
+	@Autowired
+	private EventTokenService eventTokenService;
 	@Autowired
 	private PlatformConfig platformConfig;
 	@Autowired
@@ -71,6 +76,17 @@ public class ModFestRealm extends AuthorizingRealm {
 					throw new AuthenticationException(e);
 				}
 			}
+			case EventToken eventToken -> {
+				if (eventTokenService.isTokenValid(eventToken.token())) {
+					return new SimpleAuthenticationInfo(
+						eventTokenService.getEventFromToken(eventToken.token()),
+						eventToken,
+						"platform"
+					);
+				} else {
+					throw new AuthenticationException("Invalid event token");
+				}
+			}
 			default -> {
 				return null;
 			}
@@ -93,6 +109,9 @@ public class ModFestRealm extends AuthorizingRealm {
 		}
 		if (principalCollection.oneByType(BotFestIdentity.class) != null) {
 			return new GroupBasedAuthorizationInfo(PermissionGroup.BOTFEST);
+		}
+		if (principalCollection.oneByType(EventData.class) != null) {
+			return new GroupBasedAuthorizationInfo(PermissionGroup.EVENT_MC_SERVER);
 		}
 		return null;
 	}

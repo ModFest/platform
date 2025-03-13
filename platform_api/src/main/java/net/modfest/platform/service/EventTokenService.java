@@ -1,6 +1,7 @@
 package net.modfest.platform.service;
 
 import net.modfest.platform.misc.PlatformStandardException;
+import net.modfest.platform.pojo.EventData;
 import net.modfest.platform.pojo.PlatformErrorResponse;
 import net.modfest.platform.repository.EventTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +22,16 @@ public class EventTokenService {
 	private EventService eventService;
 
 	public boolean isTokenValid(String token) {
+		var event = getEventFromToken(token);
+		if (event == null) return false;
+		return Objects.equals(tokenRepository.getToken(event.id()), token);
+	}
+
+	public EventData getEventFromToken(String token) {
 		var split = token.split("_");
-		if (split.length < 2) return false;
+		if (split.length < 2) return null;
 		var eventPart = String.join("_", Arrays.copyOfRange(split, 0, split.length - 1));
-		return Objects.equals(tokenRepository.getToken(eventPart), token);
+		return eventService.getEventById(eventPart);
 	}
 
 	public void generateNewToken(String eventId) throws PlatformStandardException {
