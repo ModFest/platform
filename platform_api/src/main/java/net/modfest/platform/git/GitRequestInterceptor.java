@@ -26,7 +26,6 @@ public class GitRequestInterceptor extends OncePerRequestFilter {
 
 	@Override
 	protected void doFilterInternal(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws ServletException, IOException {
-		System.out.println("FILTER AAA "+ SecurityUtils.getSubject());
 		try {
 			if (servletRequest instanceof HttpServletRequest httpRequest) {
 				preHandle(httpRequest);
@@ -48,7 +47,6 @@ public class GitRequestInterceptor extends OncePerRequestFilter {
 			case null -> "Unauthenticated";
 			default -> throw new IllegalStateException("Unexpected value: " + principal);
 		};
-		System.out.println("EYUHWUA" +userString);
 
 		var gitScope = new GitScope("""
 			%s %s
@@ -56,7 +54,6 @@ public class GitRequestInterceptor extends OncePerRequestFilter {
 			Auth: %s
 			""".formatted(request.getMethod(), request.getRequestURI(), userString));
 		git.setScope(gitScope);
-		System.out.println("REQ PREHANDLE");
 	}
 
 	private void postHandle() {
