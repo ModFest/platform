@@ -16,6 +16,7 @@ import net.modfest.platform.gson.GsonCommon
 import net.modfest.platform.pojo.CurrentEventData
 import net.modfest.platform.pojo.EventData
 import net.modfest.platform.pojo.HealthData
+import net.modfest.platform.pojo.MinecraftEditResponse
 import net.modfest.platform.pojo.PlatformErrorResponse
 import net.modfest.platform.pojo.SubmissionPatchData
 import net.modfest.platform.pojo.SubmissionResponseData
@@ -171,16 +172,16 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		}.unwrapErrors()
 	}
 
-	suspend fun addMinecraft(username: String) {
-		client.put("/user/@me/minecraft/$username") {
+	suspend fun addMinecraft(username: String): MinecraftEditResponse {
+		return client.put("/user/@me/minecraft/$username") {
 			addAuth()
-		}.unwrapErrors()
+		}.unwrapErrors().body()
 	}
 
-	suspend fun removeMinecraft(username: String) {
-		client.delete("/user/@me/minecraft/$username") {
+	suspend fun removeMinecraft(username: String): MinecraftEditResponse {
+		return client.delete("/user/@me/minecraft/$username") {
 			addAuth()
-		}.unwrapErrors()
+		}.unwrapErrors().body()
 	}
 
 	suspend fun submitModrinth(eventId: String, mrId: String): SubmissionResponseData {

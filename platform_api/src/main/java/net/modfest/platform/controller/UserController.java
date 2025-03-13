@@ -23,7 +23,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -172,7 +171,7 @@ public class UserController {
 	}
 
 	@PutMapping("/user/{id}/minecraft/{username}")
-	public void addUserMinecraft(@PathVariable String id, @PathVariable String username) {
+	public MinecraftEditResponse addUserMinecraft(@PathVariable String id, @PathVariable String username) throws PlatformStandardException {
 		var user = getSingleUser(id);
 
 		// Check permissions
@@ -186,19 +185,11 @@ public class UserController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not edit this user");
 		}
 
-		String uuid = service.getMinecraftId(username);
-		if (uuid == null) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "A minecraft profile with that username does not exist");
-		}
-
-		// Perform operation
-		var accounts = new HashSet<>(user.minecraftAccounts());
-		accounts.add(uuid);
-		service.save(user.withMinecraftAccounts(accounts));
+		return service.addMinecraftAccount(user, username);
 	}
 
 	@DeleteMapping("/user/{id}/minecraft/{username}")
-	public void deleteUserMinecraft(@PathVariable String id, @PathVariable String username) {
+	public MinecraftEditResponse deleteUserMinecraft(@PathVariable String id, @PathVariable String username) throws PlatformStandardException {
 		var user = getSingleUser(id);
 
 		// Check permissions
@@ -212,18 +203,7 @@ public class UserController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not edit this user");
 		}
 
-		String uuid = service.getMinecraftId(username);
-		if (uuid == null) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "A minecraft profile with that username does not exist");
-		}
-
-		// Perform operation
-		var accounts = new HashSet<>(user.minecraftAccounts());
-		if (!accounts.contains(uuid)) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "That minecraft account isn't associated with this user");
-		}
-		accounts.remove(uuid);
-		service.save(user.withMinecraftAccounts(accounts));
+		return service.removeMinecraftAccount(user, username);
 	}
 
 	@PostMapping("/admin/update_user")
