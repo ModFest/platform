@@ -57,5 +57,9 @@ public class Permissions {
 		 * Allows the user to add, edit, or remove things from the event's schedule
 		 */
 		public static final String EDIT_SCHEDULE = "event.schedule.edit";
+		/**
+		 * Allows managing the tokens used by the event's minecraft server
+		 */
+		public static final String MANAGE_TOKENS = "event.tokens";
 	}
 }

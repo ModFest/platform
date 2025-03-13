@@ -1,5 +1,9 @@
 // These definitions are very prone to becoming out-of-date
 
+export interface EventTokenData {
+	mc_server_tokens: Record<string, string>
+}
+
 export interface CurrentEventData {
     event: string;
 }

@@ -27,7 +27,7 @@ public abstract class AbstractSingleJsonStorage<T> implements DiskCachedData {
 	/**
 	 * Lock used both for writing to the filesystem and to manage {@link #cache}.
 	 */
-	private final ReadWriteLock dataLock = new ReentrantReadWriteLock();
+	protected final ReadWriteLock dataLock = new ReentrantReadWriteLock();
 
 	private T cache;
 

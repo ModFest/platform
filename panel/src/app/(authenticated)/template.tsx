@@ -8,8 +8,7 @@ import { createContext, use, useContext, useEffect, useReducer, useState } from 
 export default function Template({ children }: { children: React.ReactNode }) {
 	const [auth, setAuth] = useState<ModfestAuth | undefined>(undefined)
 	const router = useRouter()
-	// Hack to be able to force updates
-	const [, forceUpdate] = useReducer(x => x + 1, 0);
+	const [platformCache, setPlatformCache] = useState({});
 
 	useEffect(() => {
 		if (!auth) {
@@ -34,7 +33,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
 		}
 	}
 
-	const platform = Platform.new(auth)
+	const platform = Platform.new(auth, platformCache, setPlatformCache)
 	return <PlatformContext.Provider value={platform}>
 		<LogoutCtx.Provider value={logoutCtx}>
 			{children}
