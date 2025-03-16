@@ -192,7 +192,7 @@ class EventCommands : Extension(), KordExKoinComponent {
 			label = Translations.Modal.Register.Name.label
 			placeholder = Translations.Modal.Register.Name.placeholder
 			minLength = 2
-			maxLength = 32
+			maxLength = 512
 			required = true
 		}
 
@@ -200,7 +200,7 @@ class EventCommands : Extension(), KordExKoinComponent {
 			label = Translations.Modal.Register.Modrinthslug.label
 			placeholder = Translations.Modal.Register.Modrinthslug.placeholder
 			minLength = 1
-			maxLength = 24
+			maxLength = 512
 			required = true
 		}
 
@@ -208,7 +208,7 @@ class EventCommands : Extension(), KordExKoinComponent {
 			label = Translations.Modal.Register.Pronouns.label
 			placeholder = Translations.Modal.Register.Pronouns.placeholder
 			minLength = 1
-			maxLength = 24
+			maxLength = 512
 			required = true
 		}
 	}

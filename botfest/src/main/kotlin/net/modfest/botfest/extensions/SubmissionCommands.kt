@@ -753,7 +753,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			label = Translations.Modal.Submit.Url.label
 			placeholder = Translations.Modal.Submit.Url.placeholder
 			minLength = 10
-			maxLength = 128
+			maxLength = 1024
 			required = true
 		}
 	}
@@ -765,7 +765,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			label = Translations.Modal.Submission.Name.label
 			placeholder = Translations.Modal.Submission.Name.placeholder
 			minLength = 1
-			maxLength = 128
+			maxLength = 1024
 			required = true
 		}
 
@@ -773,28 +773,28 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			label = Translations.Modal.Submission.Description.label
 			placeholder = Translations.Modal.Submission.Description.placeholder
 			minLength = 1
-			maxLength = 256
+			maxLength = 1024
 			required = true
 		}
 
 		val homepage = lineText {
 			label = Translations.Modal.Submission.Homepage.label
 			placeholder = Translations.Modal.Submission.Homepage.placeholder
-			maxLength = 128
+			maxLength = 1024
 			required = false
 		}
 
 		val sourcecode = lineText {
 			label = Translations.Modal.Submission.Source.extendedlabel
 			placeholder = Translations.Modal.Submission.Source.placeholder
-			maxLength = 128
+			maxLength = 1024
 			required = false
 		}
 
 		val downloadUrl = lineText {
 			label = Translations.Modal.Submission.Downloadurl.label
 			placeholder = Translations.Modal.Submission.Downloadurl.placeholder
-			maxLength = 128
+			maxLength = 1024
 			required = false
 		}
 	}
