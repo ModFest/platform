@@ -69,6 +69,9 @@ public class EventService {
 			// and unregister. But if a user has a submission, they must be registered
 			allEventAuthors(event).forEach(authorId -> {
 				var u = userService.getByMfId(authorId);
+				if (u == null) {
+					throw new RuntimeException(authorId+" is marked as author of "+event+" but doesn't exist");
+				}
 				if (!u.registered().contains(event.id())) {
 					userService.save(u.withRegistration(event, true));
 				}
