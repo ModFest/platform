@@ -1,6 +1,5 @@
 package net.modfest.platform.pojo;
 
-import com.google.gson.*;
 import lombok.With;
 import org.jspecify.annotations.NonNull;
 
@@ -18,8 +17,7 @@ public record EventData(@NonNull String id,
                         @NonNull DiscordRoles discordRoles,
                         @NonNull String mod_loader,
                         @NonNull String minecraft_version,
-                        @NonNull String modpack,
-                        @NonNull List<DescriptionItem<?>> description) implements Data {
+                        @NonNull String modpack) implements Data {
     public enum Type {
         MODFEST,
         BLANKETCON
@@ -62,45 +60,6 @@ public record EventData(@NonNull String id,
     }
 
     public record DiscordRoles(String participant, String award) {
-    }
-
-    public record DescriptionItem<T>(T content) {
-        public static final String CONTENT_KEY = "content";
-
-        public record Markdown(String markdown) {
-            public static final String KEY = "markdown";
-        }
-
-        public static class TypeAdapter implements JsonSerializer<DescriptionItem<?>>, JsonDeserializer<DescriptionItem<?>> {
-            public static final String TYPE_KEY = "type";
-
-            @Override
-            public DescriptionItem<?> deserialize(JsonElement json,
-                                                  java.lang.reflect.Type typeOfT,
-                                                  JsonDeserializationContext context) throws JsonParseException {
-                JsonObject jsonObject = json.getAsJsonObject();
-                String type = jsonObject.get(TYPE_KEY).getAsString();
-                JsonElement content = jsonObject.get(CONTENT_KEY);
-
-                return switch (type) {
-                    case Markdown.KEY -> new DescriptionItem<Markdown>(context.deserialize(content, Markdown.class));
-                    default -> throw new JsonParseException("Invalid DescriptionItem type: " + type);
-                };
-            }
-
-            @Override
-            public JsonElement serialize(DescriptionItem<?> src,
-                                         java.lang.reflect.Type typeOfSrc,
-                                         JsonSerializationContext context) {
-                var json = new JsonObject();
-                json.add(TYPE_KEY, new JsonPrimitive(switch (src.content) {
-                    case Markdown ignored -> Markdown.KEY;
-                    default -> throw new IllegalStateException("Unexpected value: " + src);
-                }));
-                json.add(CONTENT_KEY, context.serialize(src.content));
-                return json;
-            }
-        }
     }
 
     public record DateRange(String name, String description, Phase phase, Instant start, Instant end) {

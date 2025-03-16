@@ -9,6 +9,10 @@ public record SubmissionPatchData(
 	/**
 	 * Should not be included if the submission isn't of type "other"
 	 */
-	@Nullable String homepage
+	@Nullable String homepage,
+	/**
+	 * Should not be included if the submission isn't of type "other"
+	 */
+	@Nullable String downloadUrl
 ) {
 }

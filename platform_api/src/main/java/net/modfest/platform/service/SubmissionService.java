@@ -53,6 +53,14 @@ public class SubmissionService {
 				throw new IllegalStateException();
 			}
 		}
+		if (edit.downloadUrl() != null) {
+			if (data.platform().inner() instanceof SubmissionData.AssociatedData.Other o) {
+				var newInner = o.withDownloadUrl(edit.downloadUrl().isBlank() ? null : edit.downloadUrl());
+				data = data.withPlatform(new SubmissionData.AssociatedData(newInner));
+			} else {
+				throw new IllegalStateException();
+			}
+		}
 		submissionRepository.save(data);
 	}
 

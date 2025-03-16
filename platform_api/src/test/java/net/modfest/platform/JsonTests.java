@@ -63,10 +63,7 @@ public class JsonTests {
 				),
 				"optifine",
 				"1.34",
-				"boop",
-				List.of(
-					new EventData.DescriptionItem<>(new EventData.DescriptionItem.Markdown("# HELLO"))
-				)
+				"boop"
 			),
 			new SubmissionData(
 				"a",
