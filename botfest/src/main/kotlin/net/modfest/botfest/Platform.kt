@@ -165,11 +165,11 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		}.unwrapErrors().body()
 	}
 
-	suspend fun patchUserData(patch: UserPatchData) {
-		client.patch("/user/@me") {
+	suspend fun patchUserData(patch: UserPatchData): UserData {
+		return client.patch("/user/@me") {
 			addAuth()
 			setBody(patch)
-		}.unwrapErrors()
+		}.unwrapErrors().body()
 	}
 
 	suspend fun addMinecraft(username: String): MinecraftEditResponse {
@@ -198,23 +198,23 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		}.unwrapErrors().body()
 	}
 
-	suspend fun editSubmissionData(eventId: String, subId: String, edit: SubmissionPatchData) {
-		client.patch("/event/$eventId/submission/$subId") {
+	suspend fun editSubmissionData(eventId: String, subId: String, edit: SubmissionPatchData): SubmissionResponseData {
+		return client.patch("/event/$eventId/submission/$subId") {
 			addAuth()
 			setBody(edit)
-		}.unwrapErrors()
+		}.unwrapErrors().body()
 	}
 
-	suspend fun updateSubmissionVersion(eventId: String, subId: String) {
-		client.put("/event/$eventId/submission/$subId/updateVersion") {
+	suspend fun updateSubmissionVersion(eventId: String, subId: String): SubmissionResponseData {
+		return client.put("/event/$eventId/submission/$subId/updateVersion") {
 			addAuth()
-		}.unwrapErrors()
+		}.unwrapErrors().body()
 	}
 
-	suspend fun updateSubmissionMeta(eventId: String, subId: String) {
-		client.put("/event/$eventId/submission/$subId/updateMeta") {
+	suspend fun updateSubmissionMeta(eventId: String, subId: String): SubmissionResponseData {
+		return client.put("/event/$eventId/submission/$subId/updateMeta") {
 			addAuth()
-		}.unwrapErrors()
+		}.unwrapErrors().body()
 	}
 
 	suspend fun deleteSubmission(eventId: String, subId: String) {
@@ -223,35 +223,35 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		}.unwrapErrors()
 	}
 
-	suspend fun leaveSubmission(eventId: String, subId: String) {
-		client.delete("/event/$eventId/submission/$subId/authors/@me") {
+	suspend fun leaveSubmission(eventId: String, subId: String): SubmissionResponseData {
+		return client.delete("/event/$eventId/submission/$subId/authors/@me") {
 			addAuth()
-		}.unwrapErrors()
+		}.unwrapErrors().body()
 	}
 
-	suspend fun inviteSubmissionAuthor(eventId: String, subId: String, user: String) {
-		client.put("/event/$eventId/submission/$subId/authors/$user") {
+	suspend fun inviteSubmissionAuthor(eventId: String, subId: String, user: String): SubmissionResponseData {
+		return client.put("/event/$eventId/submission/$subId/authors/$user") {
 			addAuth()
-		}.unwrapErrors()
+		}.unwrapErrors().body()
 	}
 
-	suspend fun editSubmissionImage(eventId: String, subId: String, type: String, url: String) {
-		client.patch("/event/$eventId/submission/$subId/image/$type") {
+	suspend fun editSubmissionImage(eventId: String, subId: String, type: String, url: String): SubmissionResponseData {
+		return client.patch("/event/$eventId/submission/$subId/image/$type") {
 			addAuth()
 			setBody(url)
-		}.unwrapErrors()
+		}.unwrapErrors().body()
 	}
 
-	suspend fun registerMe(event: EventData) {
-		client.put("/event/"+event.id+"/registrations/dc:"+discordUser.value) {
+	suspend fun registerMe(event: EventData): UserData {
+		return client.put("/event/"+event.id+"/registrations/dc:"+discordUser.value) {
 			addAuth()
-		}.unwrapErrors()
+		}.unwrapErrors().body()
 	}
 
-	suspend fun unregisterMe(event: EventData) {
-		client.delete("/event/"+event.id+"/registrations/dc:"+discordUser.value) {
+	suspend fun unregisterMe(event: EventData): UserData {
+		return client.delete("/event/"+event.id+"/registrations/dc:"+discordUser.value) {
 			addAuth()
-		}.unwrapErrors()
+		}.unwrapErrors().body()
 	}
 }
 

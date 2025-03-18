@@ -48,16 +48,16 @@ public class EventController {
 	}
 
 	@PutMapping("/event/{id}/registrations/{userId}")
-	public void register(@PathVariable String id, @PathVariable String userId) {
-		setRegistration(id, userId, true);
+	public UserData register(@PathVariable String id, @PathVariable String userId) {
+		return setRegistration(id, userId, true);
 	}
 
 	@DeleteMapping("/event/{id}/registrations/{userId}")
-	public void unregister(@PathVariable String id, @PathVariable String userId) {
-		setRegistration(id, userId, false);
+	public UserData unregister(@PathVariable String id, @PathVariable String userId) {
+		return setRegistration(id, userId, false);
 	}
 
-	public void setRegistration(@PathVariable String id, @RequestBody String userId, boolean registered) {
+	private UserData setRegistration(@PathVariable String id, @RequestBody String userId, boolean registered) {
 		var event = getEvent(id);
 		// Get the user as if we were requesting them from /user/{id}
 		var user = userController.getSingleUser(userId);
@@ -80,9 +80,16 @@ public class EventController {
 		if (!self && !can_others) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
 				registered ? "You don't have permissions to register people other than yourself"
-							: "You don't have permissions to unregister people other than yourself");
+					: "You don't have permissions to unregister people other than yourself");
 		}
-		eventService.setRegistered(event, user, registered);
+		return eventService.setRegistered(event, user, registered);
+	}
+
+	@GetMapping("/event/{eventId}/submission/{subId}")
+	public SubmissionResponseData getSingleSubmission(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId) {
+		return service.addResponseInfo(
+			request, service.getSubmission(eventId, subId)
+		);
 	}
 
 	@GetMapping("/event/{eventId}/submissions")
@@ -152,7 +159,7 @@ public class EventController {
 	}
 
 	@PatchMapping("/event/{eventId}/submission/{subId}")
-	public void editSubmissionData(@PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionPatchData editData) {
+	public void editSubmissionData(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionPatchData editData) {
 		getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
@@ -168,7 +175,7 @@ public class EventController {
 	}
 
 	@PutMapping("/event/{eventId}/submission/{subId}/updateVersion")
-	public void updateSubmissionVersion(@PathVariable String eventId, @PathVariable String subId) {
+	public SubmissionResponseData updateSubmissionVersion(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId) {
 		getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
@@ -180,11 +187,14 @@ public class EventController {
 				"You do not have permissions to edit this data");
 		}
 
-		service.updateSubmissionVersion(submission);
+		return service.addResponseInfo(
+			request,
+			service.updateSubmissionVersion(submission)
+		);
 	}
 
 	@PutMapping("/event/{eventId}/submission/{subId}/updateMeta")
-	public void updateSubmissionMeta(@PathVariable String eventId, @PathVariable String subId) {
+	public SubmissionResponseData updateSubmissionMeta(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId) {
 		getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
@@ -196,11 +206,14 @@ public class EventController {
 				"You do not have permissions to edit this data");
 		}
 
-		service.updateSubmissionMeta(submission);
+		return service.addResponseInfo(
+			request,
+			service.updateSubmissionMeta(submission)
+		);
 	}
 
 	@DeleteMapping("/event/{eventId}/submission/{subId}/authors/{userId}")
-	public void deleteSubmissionAuthor(@PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) {
+	public SubmissionResponseData deleteSubmissionAuthor(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) {
 		getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
@@ -227,11 +240,13 @@ public class EventController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not edit this user");
 		}
 
-		service.leaveSubmission(submission, user);
+		return service.addResponseInfo(
+			request, service.leaveSubmission(submission, user)
+		);
 	}
 
 	@PutMapping("/event/{eventId}/submission/{subId}/authors/{userId}")
-	public void addSubmissionAuthor(@PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) {
+	public SubmissionResponseData addSubmissionAuthor(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) {
 		getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
@@ -250,11 +265,13 @@ public class EventController {
 				"You cannot add a user that's already in a submission");
 		}
 
-		service.addSubmissionAuthor(submission, user);
+		return service.addResponseInfo(
+			request, service.addSubmissionAuthor(submission, user)
+		);
 	}
 
 	@PatchMapping("/event/{eventId}/submission/{subId}/image/{type}")
-	public void editSubmissionImage(@PathVariable String eventId, @PathVariable String subId, @PathVariable String type, @RequestBody String url) {
+	public SubmissionResponseData editSubmissionImage(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @PathVariable String type, @RequestBody String url) {
 		getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
@@ -269,14 +286,18 @@ public class EventController {
 		var typeEnum = switch (type) {
 			case "icon" -> ImageService.SubmissionImageType.ICON;
 			case "screenshot" -> ImageService.SubmissionImageType.SCREENSHOT;
-			case null, default -> throw new IllegalArgumentException("Invalid type "+type);
+			case null, default -> throw new IllegalArgumentException("Invalid type " + type);
 		};
 
 		imageService.downloadSubmissionImage(url, new SubmissionRepository.SubmissionId(eventId, subId), typeEnum);
+
+		return service.addResponseInfo(
+			request, service.getSubmission(eventId, subId)
+		);
 	}
 
 	@DeleteMapping("/event/{eventId}/submission/{subId}")
-	public void deleteSubmission(@PathVariable String eventId, @PathVariable String subId) {
+	public void deleteSubmission(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId) {
 		getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {

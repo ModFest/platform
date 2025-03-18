@@ -141,7 +141,7 @@ public class UserController {
 	}
 
 	@PatchMapping("/user/{id}")
-	public void editUserData(@PathVariable String id, @RequestBody UserPatchData data) {
+	public UserData editUserData(@PathVariable String id, @RequestBody UserPatchData data) {
 		var user = getSingleUser(id);
 
 		// Check permissions
@@ -168,6 +168,7 @@ public class UserController {
 		}
 
 		service.save(newUser);
+		return newUser;
 	}
 
 	@PutMapping("/user/{id}/minecraft/{username}")
@@ -208,7 +209,7 @@ public class UserController {
 
 	@PostMapping("/admin/update_user")
 	@RequiresPermissions(Permissions.Users.FORCE_EDIT)
-	public void forceUpdateUser(@RequestBody UserData data) {
+	public UserData forceUpdateUser(@RequestBody UserData data) {
 		var subject = SecurityUtils.getSubject();
 		var edit_others = subject.isPermitted(Permissions.Users.EDIT_OTHERS);
 		var owns = PermissionUtils.owns(subject, data);
@@ -218,5 +219,6 @@ public class UserController {
 		}
 
 		service.save(data);
+		return data;
 	}
 }
