@@ -108,7 +108,7 @@ public class SubmissionService {
 			imageService.downloadSubmissionImage(galleryUrl, subKey, ImageService.SubmissionImageType.SCREENSHOT);
 		}
 
-		var newData = data.withName(project.title).withDescription(project.description);
+		var newData = data.withName(project.title).withDescription(project.description).withSource(project.sourceUrl);
 
 		submissionRepository.save(newData);
 	}
