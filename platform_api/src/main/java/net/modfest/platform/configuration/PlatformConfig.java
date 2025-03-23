@@ -1,6 +1,5 @@
 package net.modfest.platform.configuration;
 
-import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.modfest.platform.git.GitRootPath;
@@ -10,6 +9,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.lang.NonNull;
 import org.springframework.validation.annotation.Validated;
 
@@ -46,19 +46,14 @@ public class PlatformConfig {
 	/**
 	 * The data dir is only exposed as a bean in order to prevent misuse
 	 */
+	@Profile("!test")
 	@Bean(name = "datadir")
 	public GitRootPath getDatadir(GitConfig config) throws IOException, URISyntaxException, GitAPIException {
 		var git = new GitRootPath(this.datadir, config);
 		if (gitRemote != null) {
 			git.addRemote(gitRemote);
 		}
+		manager.migrate(git);
 		return git;
-	}
-
-	@PostConstruct
-	private void init() throws IOException, URISyntaxException, GitAPIException {
-		// HACK: by calling this method from this init, it ensures that migrations are ran before anything
-		// can even access the platform config
-		manager.migrate(this.getDatadir(config));
 	}
 }

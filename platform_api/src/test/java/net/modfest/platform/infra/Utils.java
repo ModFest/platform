@@ -1,4 +1,4 @@
-package net.modfest.platform;
+package net.modfest.platform.infra;
 
 import net.modfest.platform.configuration.GitConfig;
 import net.modfest.platform.git.GitRootPath;
