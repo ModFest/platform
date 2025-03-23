@@ -19,7 +19,8 @@ public enum PermissionGroup {
 		Permissions.Event.SUBMIT_BYPASS,
 		Permissions.Event.SUBMIT_OTHER,
 		Permissions.Event.EDIT_SCHEDULE,
-		Permissions.Event.EDIT_OTHER_SUBMISSION
+		Permissions.Event.EDIT_OTHER_SUBMISSION,
+		Permissions.Event.MANAGE_TOKENS
 	)),
 	/**
 	 * Note: BotFest usually performs actions on behalf of a different user.
@@ -31,6 +32,12 @@ public enum PermissionGroup {
 		Permissions.Users.CREATE,
 		// BotFest is able to subscribe to user data changing, to enable
 		// it to give out roles
+		Permissions.Users.LIST_ALL
+	)),
+	/**
+	 * Permissions given when the minecraft server logs in
+	 */
+	EVENT_MC_SERVER(null, Set.of(
 		Permissions.Users.LIST_ALL
 	));
 

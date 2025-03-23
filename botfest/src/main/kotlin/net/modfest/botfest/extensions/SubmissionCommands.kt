@@ -271,19 +271,14 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						modal.source.initialValue = submission.source!!.toKey(Locale.UK)
 					}
 
-					val result = modal.sendAndDeferEphemeral(this)
-
-					// Result will be null if the user didn't enter anything
-					// or if the modal timed out
-					if (result == null) {
-						return@action
-					}
+					val result = modal.sendAndDeferEphemeral(this) ?: return@action
 
 					platform.withAuth(this.user).editSubmissionData(curEvent, subId, SubmissionPatchData(
 						modal.name.value,
 						modal.description.value,
 						modal.source.value,
-						if (modal is SubmissionEditOtherForm) { modal.homepage.value } else { null }
+						if (modal is SubmissionEditOtherForm) { modal.homepage.value } else { null },
+						null
 					))
 
 					result.edit {
@@ -375,28 +370,49 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 							return@action
 						}
 
-						if (submission.platform.inner !is Modrinth) {
-							ackEphemeral {
-								content = Translations.Commands.Submission.Update.Version.Response.notmodrinth
+						val subPlatformData = submission.platform.inner
+						if (subPlatformData is Other) {
+							val modal = SubmissionUpdateOtherForm()
+							modal.downloadUrl.initialValue = subPlatformData.downloadUrl!!.toKey(Locale.UK)
+
+							val result = modal.sendAndDeferEphemeral(this) ?: return@action
+
+							platform.withAuth(this.user).editSubmissionData(curEvent, subId, SubmissionPatchData(
+								null,
+								null,
+								null,
+								null,
+								modal.downloadUrl.value
+							))
+
+							result.edit {
+								content = Translations.Commands.Submission.Edit.Response.success
 									.withContext(this@action)
 									.translateNamed(
 										"subId" to subId
 									)
 							}
-							return@action
-						}
+						} else if (submission.platform.inner !is Modrinth) {
+								ackEphemeral {
+									content = Translations.Commands.Submission.Update.Version.Response.notmodrinth
+										.withContext(this@action)
+										.translateNamed(
+											"subId" to subId
+										)
+								}
+							} else {
+							platform.withAuth(this.user).updateSubmissionVersion(curEvent, subId)
 
-						platform.withAuth(this.user).updateSubmissionVersion(curEvent, subId)
+							val updatedSubmission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
 
-						val updatedSubmission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
-
-						ackEphemeral {
-							content = Translations.Commands.Submission.Update.Version.Response.success
-								.withContext(this@action)
-								.translateNamed(
-									"subId" to subId,
-									"versionId" to (updatedSubmission?.platform?.inner as Modrinth).versionId
-								)
+							ackEphemeral {
+								content = Translations.Commands.Submission.Update.Version.Response.success
+									.withContext(this@action)
+									.translateNamed(
+										"subId" to subId,
+										"versionId" to (updatedSubmission?.platform?.inner as Modrinth).versionId
+									)
+							}
 						}
 					}
 				}
@@ -746,6 +762,17 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		}
 	}
 
+	class SubmissionUpdateOtherForm : ModalForm() {
+		override var title: Key = Translations.Modal.Update.title
+
+		val downloadUrl = lineText {
+			label = Translations.Modal.Submission.Downloadurl.label
+			placeholder = Translations.Modal.Submission.Downloadurl.placeholder
+			maxLength = 128
+			required = false
+		}
+	}
+
 	class SubmitModalModrinth : ModalForm() {
 		override var title: Key = Translations.Modal.Submit.title
 
@@ -753,7 +780,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			label = Translations.Modal.Submit.Url.label
 			placeholder = Translations.Modal.Submit.Url.placeholder
 			minLength = 10
-			maxLength = 128
+			maxLength = 1024
 			required = true
 		}
 	}
@@ -765,7 +792,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			label = Translations.Modal.Submission.Name.label
 			placeholder = Translations.Modal.Submission.Name.placeholder
 			minLength = 1
-			maxLength = 128
+			maxLength = 1024
 			required = true
 		}
 
@@ -773,28 +800,28 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			label = Translations.Modal.Submission.Description.label
 			placeholder = Translations.Modal.Submission.Description.placeholder
 			minLength = 1
-			maxLength = 256
+			maxLength = 1024
 			required = true
 		}
 
 		val homepage = lineText {
 			label = Translations.Modal.Submission.Homepage.label
 			placeholder = Translations.Modal.Submission.Homepage.placeholder
-			maxLength = 128
+			maxLength = 1024
 			required = false
 		}
 
 		val sourcecode = lineText {
 			label = Translations.Modal.Submission.Source.extendedlabel
 			placeholder = Translations.Modal.Submission.Source.placeholder
-			maxLength = 128
+			maxLength = 1024
 			required = false
 		}
 
 		val downloadUrl = lineText {
 			label = Translations.Modal.Submission.Downloadurl.label
 			placeholder = Translations.Modal.Submission.Downloadurl.placeholder
-			maxLength = 128
+			maxLength = 1024
 			required = false
 		}
 	}

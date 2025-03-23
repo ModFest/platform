@@ -2,6 +2,7 @@ package net.modfest.platform.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.PostConstruct;
+import net.modfest.platform.pojo.EventData;
 import net.modfest.platform.pojo.HealthData;
 import net.modfest.platform.pojo.UserData;
 import net.modfest.platform.pojo.Whoami;
@@ -69,6 +70,10 @@ public class MetaController {
 			case UserData user -> {
 				userId = user.id();
 				name = user.name();
+			}
+			case EventData event -> {
+				userId = event.id();
+				name = event.name();
 			}
 			case null, default -> {}
 		}

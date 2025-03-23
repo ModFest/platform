@@ -24,7 +24,7 @@ public record PlatformErrorResponse(
 		 */
 		ALREADY_USED(400),
 		/**
-		 * For any *abnormal* and unexpected error
+		 * For any *abnormal* and unexpected error. {@code data} will be a string with details about the error.
 		 */
 		INTERNAL(500);
 

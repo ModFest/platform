@@ -53,6 +53,14 @@ public class SubmissionService {
 				throw new IllegalStateException();
 			}
 		}
+		if (edit.downloadUrl() != null) {
+			if (data.platform().inner() instanceof SubmissionData.AssociatedData.Other o) {
+				var newInner = o.withDownloadUrl(edit.downloadUrl().isBlank() ? null : edit.downloadUrl());
+				data = data.withPlatform(new SubmissionData.AssociatedData(newInner));
+			} else {
+				throw new IllegalStateException();
+			}
+		}
 		submissionRepository.save(data);
 	}
 
@@ -188,7 +196,7 @@ public class SubmissionService {
 		return submission;
 	}
 
-	public SubmissionData makeSubmissionModrinth(String eventId, String mrProjectId) {
+	public SubmissionData makeSubmissionModrinth(String eventId, Set<UserData> authors, String mrProjectId) {
 		var project = modrinth.projects().getProject(mrProjectId);
 		var subId = project.slug; // Normalize id by using slug. Just in case the user entered an actual id
 		if (subId == null) subId = project.id;
@@ -198,7 +206,6 @@ public class SubmissionService {
 			throw new RuntimeException("submission already exists");
 		}
 
-		var authors = getUsersForRinthProject(subId);
 		var latest = getLatestModrinth(subId, eventService.getEventById(eventId), project.projectType);
 
 		if (project.iconUrl != null) {
@@ -214,7 +221,7 @@ public class SubmissionService {
 				eventId,
 				project.title,
 				project.description,
-				authors.map(UserData::id).collect(Collectors.toSet()),
+				authors.stream().map(UserData::id).collect(Collectors.toSet()),
 				new SubmissionData.AssociatedData(
 					new SubmissionData.AssociatedData.Modrinth(
 						project.id,

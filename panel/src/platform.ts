@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { ModfestAuth } from "./auth_context";
 import { createEventSource } from "eventsource-client";
-import { CurrentEventData, EventData, ScheduleEntryData, SubmissionData, UserData } from "./platform_types";
+import { CurrentEventData, EventData, EventTokenData, ScheduleEntryData, SubmissionData, UserData } from "./platform_types";
 
 const PLATFORM = getPlatformUrl()!
 
@@ -24,13 +24,17 @@ export function usePlatform(): Platform {
 
 export class Platform {
 	private readonly auth: ModfestAuth
+	private readonly cachedState: Record<string, any>
+	private readonly setCachedState: ((f: (o: Record<string, any>) => Record<string, any>) => void)
 
-	private constructor(auth: ModfestAuth) {
+	private constructor(auth: ModfestAuth, cachedState: Record<string, any>, setCachedState: (f: (o: Record<string, any>) => Record<string, any>) => void) {
 		this.auth = auth
+		this.cachedState = cachedState;
+		this.setCachedState = setCachedState;
 	}
 
-	static new(auth: ModfestAuth): Platform {
-		return new Platform(auth)
+	static new(auth: ModfestAuth, cachedState: Record<string, any>, setCachedState: (f: (o: Record<string, any>) => Record<string, any>) => void): Platform {
+		return new Platform(auth, cachedState, setCachedState)
 	}
 
 	public useAllUsers(): UserData[] {
@@ -76,7 +80,7 @@ export class Platform {
 			})
 
 			return () => sse.close()
-		}, [this])
+		}, [this.auth])
 		return users
 	}
 
@@ -108,8 +112,19 @@ export class Platform {
 				.then(throwIfNotOk)
 				.then(r => r.json())
 				.then(d => setUser(d))
-		}, [this, userId])
+		}, [this.auth, userId])
 		return user;
+	}
+
+	public useAllEvents(): EventData[] | undefined {
+		const [events, setEvents] = useState<EventData[] | undefined>(undefined)
+		useEffect(() => {
+			fetch(`${PLATFORM}/events`)
+				.then(throwIfNotOk)
+				.then(r => r.json())
+				.then(d => setEvents(d))
+		}, [this.auth])
+		return events
 	}
 
 	public useEvent(eventid: string): EventData | undefined {
@@ -119,8 +134,40 @@ export class Platform {
 				.then(throwIfNotOk)
 				.then(r => r.json())
 				.then(d => setEvent(d))
-		}, [this, eventid])
+		}, [this.auth, eventid])
 		return event
+	}
+
+	public useEventTokens(): EventTokenData | undefined {
+		useEffect(() => {
+			this.refetchEventTokens()
+		}, [this.auth])
+		return this.cachedState["event_tokens"]
+	}
+
+	private refetchEventTokens() {
+		fetch(`${PLATFORM}/event_tokens/`, this.auth.configureFetch())
+			.then(throwIfNotOk)
+			.then(r => r.json())
+			.then(d => this.setCachedState((state) => ({...state, "event_tokens": d})))
+	}
+
+	public regenerateToken(eventid: string) {
+		fetch(`${PLATFORM}/event_tokens/${eventid}/regenerate`, {
+			method: "POST",
+			...this.auth.configureFetch()
+		})
+		.then(throwIfNotOk)
+		.then(() => this.refetchEventTokens())
+	}
+
+	public deprecateToken(eventid: string) {
+		fetch(`${PLATFORM}/event_tokens/${eventid}`, {
+			method: "DELETE",
+			...this.auth.configureFetch()
+		})
+		.then(throwIfNotOk)
+		.then(() => this.refetchEventTokens())
 	}
 
 	public useEventSchedule(eventid: string): ScheduleEntryData[] | undefined {
@@ -130,7 +177,7 @@ export class Platform {
 				.then(throwIfNotOk)
 				.then(r => r.json())
 				.then(d => setSchedule(d))
-		}, [this, eventid])
+		}, [eventid])
 		return schedule
 	}
 
@@ -141,7 +188,7 @@ export class Platform {
 				.then(throwIfNotOk)
 				.then(r => r.json())
 				.then(d => setSubmissions(d))
-		}, [this, eventid])
+		}, [eventid])
 		return submissions
 	}
 }

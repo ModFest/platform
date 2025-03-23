@@ -34,4 +34,9 @@ public class SecurityConfig {
 	public ModrinthTokenFilter customFilter2() {
 		return new ModrinthTokenFilter();
 	}
+
+	@Bean(name = "event")
+	public EventTokenFilter customFilter3() {
+		return new EventTokenFilter();
+	}
 }
