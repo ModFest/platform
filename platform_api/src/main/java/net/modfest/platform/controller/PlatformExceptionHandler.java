@@ -6,9 +6,9 @@ import net.modfest.platform.pojo.PlatformErrorResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
@@ -31,21 +31,12 @@ public class PlatformExceptionHandler {
 		));
 	}
 
-	@ExceptionHandler(NoResourceFoundException.class)
-	private ResponseEntity<PlatformErrorResponse> onNotFound(NoResourceFoundException notFound) {
-		// This defines how 404's are handled. We'll give them the internal/other type but with a 404 code instead of 500
-		return new ResponseEntity(new PlatformErrorResponse(
-			PlatformErrorResponse.ErrorType.INTERNAL,
-			gson.toJsonTree(notFound.getMessage())
-		), HttpStatusCode.valueOf(404));
-	}
-
 	/**
 	 * Catch-all for any exception not caught by anything more specific
 	 */
 	@ExceptionHandler(Throwable.class)
 	private ResponseEntity<PlatformErrorResponse> anyError(Throwable t) {
-		if (t instanceof ResponseStatusException e) {
+		if (t instanceof ErrorResponse e) {
 			return new ResponseEntity<>(
 				new PlatformErrorResponse(
 					PlatformErrorResponse.ErrorType.INTERNAL,

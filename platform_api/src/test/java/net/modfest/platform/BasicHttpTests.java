@@ -10,6 +10,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -41,6 +42,14 @@ public class BasicHttpTests {
 		// ensure it still responds in our standard error json format
 		this.mockMvc.perform(get("/dauhdawhduiwhodhwqojdwo"))
 			.andExpect(status().isNotFound())
+			.andExpectAll(isProperPlatformError());
+	}
+
+	@Test
+	public void wrongMethod() throws Exception {
+		// You can certainly not post to /health, this should be a 405 error
+		this.mockMvc.perform(post("/health"))
+			.andExpect(status().isMethodNotAllowed())
 			.andExpectAll(isProperPlatformError());
 	}
 
