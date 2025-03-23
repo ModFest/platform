@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * This class is responsible for mapping internal java exceptions to
@@ -28,6 +29,15 @@ public class PlatformExceptionHandler {
 			t.getType(),
 			gson.toJsonTree(t.getData())
 		));
+	}
+
+	@ExceptionHandler(NoResourceFoundException.class)
+	private ResponseEntity<PlatformErrorResponse> onNotFound(NoResourceFoundException notFound) {
+		// This defines how 404's are handled. We'll give them the internal/other type but with a 404 code instead of 500
+		return new ResponseEntity(new PlatformErrorResponse(
+			PlatformErrorResponse.ErrorType.INTERNAL,
+			gson.toJsonTree(notFound.getMessage())
+		), HttpStatusCode.valueOf(404));
 	}
 
 	/**
