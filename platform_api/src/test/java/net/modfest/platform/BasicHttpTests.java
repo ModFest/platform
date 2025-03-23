@@ -36,6 +36,9 @@ public class BasicHttpTests {
 
 	@Test
 	public void notFound() throws Exception {
+		// Test an url that definitely doesn't exist, to
+		// ensure it gives the proper 404 status code and to
+		// ensure it still responds in our standard error json format
 		this.mockMvc.perform(get("/dauhdawhduiwhodhwqojdwo"))
 			.andExpect(status().isNotFound())
 			.andExpectAll(isProperPlatformError());
