@@ -3,13 +3,14 @@ package net.modfest.platform.controller;
 import com.google.gson.Gson;
 import net.modfest.platform.misc.PlatformStandardException;
 import net.modfest.platform.pojo.PlatformErrorResponse;
+import org.apache.shiro.authz.AuthorizationException;
+import org.apache.shiro.authz.UnauthenticatedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * This class is responsible for mapping internal java exceptions to
@@ -28,6 +29,22 @@ public class PlatformExceptionHandler {
 		return toResponse(new PlatformErrorResponse(
 			t.getType(),
 			gson.toJsonTree(t.getData())
+		));
+	}
+
+	@ExceptionHandler(UnauthenticatedException.class)
+	private ResponseEntity<PlatformErrorResponse> unauthenticatedException(UnauthenticatedException e) {
+		return toResponse(new PlatformErrorResponse(
+			PlatformErrorResponse.ErrorType.PERMISSION_ERROR,
+			gson.toJsonTree("user is not logged in")
+		));
+	}
+
+	@ExceptionHandler(AuthorizationException.class)
+	private ResponseEntity<PlatformErrorResponse> authorizationException(AuthorizationException e) {
+		return toResponse(new PlatformErrorResponse(
+			PlatformErrorResponse.ErrorType.PERMISSION_ERROR,
+			gson.toJsonTree(e.getMessage())
 		));
 	}
 

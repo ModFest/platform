@@ -24,6 +24,10 @@ public record PlatformErrorResponse(
 		 */
 		ALREADY_USED(400),
 		/**
+		 * Any error with missing permissions. {@code data} will be a string with further details.
+		 */
+		PERMISSION_ERROR(401),
+		/**
 		 * For any *abnormal* and unexpected error. {@code data} will be a string with details about the error.
 		 */
 		INTERNAL(500);
