@@ -66,6 +66,8 @@ suspend fun main() {
 							"fieldname" to Gson().fromJson(data.data, AlreadyExists::class.java).fieldName,
 							"content" to Gson().fromJson(data.data, AlreadyExists::class.java).content
 						)
+					PlatformErrorResponse.ErrorType.PERMISSION_ERROR -> Translations.Apierror.permissions
+						.translateNamed("err" to data.data.asString)
 					PlatformErrorResponse.ErrorType.INTERNAL -> Translations.Apierror.internal
 						.translateNamed("error" to data.data.asString)
 				}
