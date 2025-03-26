@@ -35,7 +35,7 @@ public class SubmissionService {
 		return submissionRepository.get(new SubmissionRepository.SubmissionId(eventId, subId));
 	}
 
-	public void editSubmission(SubmissionData data, SubmissionPatchData edit) {
+	public SubmissionData editSubmission(SubmissionData data, SubmissionPatchData edit) {
 		if (edit.name() != null) {
 			data = data.withName(edit.name());
 		}
@@ -62,9 +62,10 @@ public class SubmissionService {
 			}
 		}
 		submissionRepository.save(data);
+		return getSubmission(data.event(), data.id());
 	}
 
-	public void updateSubmissionVersion(SubmissionData data) {
+	public SubmissionData updateSubmissionVersion(SubmissionData data) {
 		if (!(data.platform().inner() instanceof SubmissionData.AssociatedData.Modrinth mr)) {
 			throw new IllegalArgumentException("Update only works for modrinth submissions!");
 		}
@@ -85,9 +86,10 @@ public class SubmissionService {
 		));
 
 		submissionRepository.save(newData);
+		return getSubmission(newData.event(), newData.id());
 	}
 
-	public void updateSubmissionMeta(SubmissionData data) {
+	public SubmissionData updateSubmissionMeta(SubmissionData data) {
 		if (!(data.platform().inner() instanceof SubmissionData.AssociatedData.Modrinth mr)) {
 			throw new IllegalArgumentException("Update only works for modrinth submissions!");
 		}
@@ -108,19 +110,22 @@ public class SubmissionService {
 			imageService.downloadSubmissionImage(galleryUrl, subKey, ImageService.SubmissionImageType.SCREENSHOT);
 		}
 
-		var newData = data.withName(project.title).withDescription(project.description);
+		var newData = data.withName(project.title).withDescription(project.description).withSource(project.sourceUrl);
 
 		submissionRepository.save(newData);
+		return getSubmission(newData.event(), newData.id());
 	}
 
-	public void leaveSubmission(SubmissionData data, UserData author) {
+	public SubmissionData leaveSubmission(SubmissionData data, UserData author) {
 		data.authors().remove(author.id());
 		submissionRepository.save(data);
+		return data;
 	}
 
-	public void addSubmissionAuthor(SubmissionData data, UserData author) {
+	public SubmissionData addSubmissionAuthor(SubmissionData data, UserData author) {
 		data.authors().add(author.id());
 		submissionRepository.save(data);
+		return data;
 	}
 
 	public void deleteSubmission(String eventId, String subId) {

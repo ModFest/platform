@@ -59,8 +59,10 @@ public class EventService {
 	 * Forcibly sets a user to be registered/unregistered.
 	 * WARNING: Does not take into account the phase!
 	 */
-	public void setRegistered(EventData event, UserData user, boolean registered) {
-		userService.save(user.withRegistration(event, registered));
+	public UserData setRegistered(EventData event, UserData user, boolean registered) {
+		UserData newUser = user.withRegistration(event, registered);
+		userService.save(newUser);
+		return newUser;
 	}
 
 	public void fixRegistrationData(EventData event) {

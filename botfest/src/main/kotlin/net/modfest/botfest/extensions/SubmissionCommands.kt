@@ -401,16 +401,14 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 										)
 								}
 							} else {
-							platform.withAuth(this.user).updateSubmissionVersion(curEvent, subId)
-
-							val updatedSubmission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+							val updatedSubmission = platform.withAuth(this.user).updateSubmissionVersion(curEvent, subId)
 
 							ackEphemeral {
 								content = Translations.Commands.Submission.Update.Version.Response.success
 									.withContext(this@action)
 									.translateNamed(
 										"subId" to subId,
-										"versionId" to (updatedSubmission?.platform?.inner as Modrinth).versionId
+										"versionId" to (updatedSubmission.platform.inner as Modrinth).versionId
 									)
 							}
 						}
