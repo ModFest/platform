@@ -242,7 +242,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						return@action
 					}
 
-					val submission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 					if (submission == null) {
 						ackEphemeral {
@@ -310,7 +310,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						return@action
 					}
 
-					val submission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 					if (submission == null) {
 						ackEphemeral {
@@ -357,7 +357,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 							return@action
 						}
 
-						val submission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 						if (submission == null) {
 							ackEphemeral {
@@ -433,7 +433,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 							return@action
 						}
 
-						val submission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 						if (submission == null) {
 							ackEphemeral {
@@ -490,7 +490,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						return@action
 					}
 
-					val submission = platform.getUserSubmissions(userId.id).find { it.id == subId }
+					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 					if (submission == null) {
 						ackEphemeral {
@@ -570,7 +570,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						return@action
 					}
 
-					val submission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 					if (submission == null) {
 						ackEphemeral {
@@ -658,7 +658,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			return
 		}
 
-		val submission = platform.getUserSubmissions(this.user.id).find { it.id == subId }
+		val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 		if (submission == null) {
 			respond {

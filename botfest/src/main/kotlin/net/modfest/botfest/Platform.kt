@@ -108,6 +108,10 @@ class Platform(baseUrl: String) {
 		return getEvents().map { e -> e.id }
 	}
 
+	suspend fun getEventSubmissions(eventId: String): List<SubmissionResponseData> {
+		return client.get("/event/${eventId}/submissions").unwrapErrors().body()
+	}
+
 	suspend fun getUserSubmissions(user: Snowflake): List<SubmissionResponseData> {
 		return client.get("/user/dc:${user.value}/submissions").unwrapErrors().body()
 	}
