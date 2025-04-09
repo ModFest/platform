@@ -66,12 +66,20 @@ public class ModFestRealm extends AuthorizingRealm {
 			}
 			case ModrinthToken modrinthToken -> {
 				try {
-					var user = modrinthApi.withAuth(modrinthToken.token()).self();
-					var festUser = userService.getByModrinthId(user.id);
-					if (festUser == null) {
-						throw new AuthenticationException("Modrinth user "+user.id+" is not registered in ModFest");
+					try {
+						var user = modrinthApi.withAuth(modrinthToken.token()).self();
+						var festUser = userService.getByModrinthId(user.id);
+						if (festUser == null) {
+							throw new AuthenticationException("Modrinth user "+user.id+" is not registered in ModFest");
+						}
+						return new SimpleAuthenticationInfo(festUser, modrinthToken, "platform");
+					} catch (ModrinthApiException e) {
+						if (e.httpResponse.statusCode() == 401) {
+							throw new AuthenticationException("Token is invalid");
+						} else {
+							throw e;
+						}
 					}
-					return new SimpleAuthenticationInfo(festUser, modrinthToken, "platform");
 				} catch (ModrinthApiException e) {
 					throw new AuthenticationException(e);
 				}

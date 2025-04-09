@@ -3,8 +3,10 @@ package net.modfest.platform.controller;
 import com.google.gson.Gson;
 import net.modfest.platform.misc.PlatformStandardException;
 import net.modfest.platform.pojo.PlatformErrorResponse;
+import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.UnauthenticatedException;
+import org.apache.shiro.lang.ShiroException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -40,8 +42,8 @@ public class PlatformExceptionHandler {
 		));
 	}
 
-	@ExceptionHandler(AuthorizationException.class)
-	private ResponseEntity<PlatformErrorResponse> authorizationException(AuthorizationException e) {
+	@ExceptionHandler({AuthorizationException.class, AuthenticationException.class})
+	private ResponseEntity<PlatformErrorResponse> authorizationException(ShiroException e) {
 		return toResponse(new PlatformErrorResponse(
 			PlatformErrorResponse.ErrorType.PERMISSION_ERROR,
 			gson.toJsonTree(e.getMessage())
