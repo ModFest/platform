@@ -1,6 +1,8 @@
 package net.modfest.botfest
 
 import com.google.gson.Gson
+import com.google.gson.JsonElement
+import com.google.gson.JsonPrimitive
 import dev.kord.common.entity.Snowflake
 import dev.kord.rest.builder.message.embed
 import dev.kordex.core.ExtensibleBot
@@ -58,18 +60,18 @@ suspend fun main() {
 				var data = (type.error as PlatformException).data
 				content = when (data.type) {
 					PlatformErrorResponse.ErrorType.EVENT_NO_EXIST -> Translations.Apierror.eventNoExists
-						.translateNamed("n" to data.data.asString)
+						.translateNamed("n" to data.data.stringified())
 					PlatformErrorResponse.ErrorType.USER_NO_EXIST -> Translations.Apierror.userNoExists
-						.translateNamed("n" to data.data.asString)
+						.translateNamed("n" to data.data.stringified())
 					PlatformErrorResponse.ErrorType.ALREADY_USED -> Translations.Apierror.alreadyUsed
 						.translateNamed(
 							"fieldname" to Gson().fromJson(data.data, AlreadyExists::class.java).fieldName,
 							"content" to Gson().fromJson(data.data, AlreadyExists::class.java).content
 						)
 					PlatformErrorResponse.ErrorType.PERMISSION_ERROR -> Translations.Apierror.permissions
-						.translateNamed("err" to data.data.asString)
+						.translateNamed("err" to data.data.stringified())
 					PlatformErrorResponse.ErrorType.INTERNAL -> Translations.Apierror.internal
-						.translateNamed("error" to data.data.asString)
+						.translateNamed("error" to data.data.stringified())
 				}
 			}
 		}
@@ -89,4 +91,13 @@ suspend fun main() {
 	}
 
 	bot.start()
+}
+
+fun JsonElement.stringified(): String {
+	if (this is JsonPrimitive) {
+		if (this.isString) {
+			return this.asString
+		}
+	}
+	return this.toString()
 }
