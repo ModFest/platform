@@ -46,7 +46,7 @@ public class PlatformExceptionHandler {
 	private ResponseEntity<PlatformErrorResponse> authorizationException(ShiroException e) {
 		return toResponse(new PlatformErrorResponse(
 			PlatformErrorResponse.ErrorType.PERMISSION_ERROR,
-			gson.toJsonTree(e.getMessage())
+			gson.toJsonTree(e.toString())
 		));
 	}
 
@@ -67,7 +67,7 @@ public class PlatformExceptionHandler {
 		t.printStackTrace();
 		return toResponse(new PlatformErrorResponse(
 			PlatformErrorResponse.ErrorType.INTERNAL,
-			gson.toJsonTree(t.getMessage())
+			gson.toJsonTree(t.toString())
 		));
 	}
 
