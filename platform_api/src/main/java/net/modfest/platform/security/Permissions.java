@@ -54,6 +54,10 @@ public class Permissions {
 		 */
 		public static final String EDIT_OTHER_SUBMISSION = "submission.edit.others";
 		/**
+		 * Allows the user to bypass phase restrictions on editing submissions
+		 */
+		public static final String EDIT_PHASE_BYPASS = "submission.edit.phase.bypass";
+		/**
 		 * Allows the user to add, edit, or remove things from the event's schedule
 		 */
 		public static final String EDIT_SCHEDULE = "event.schedule.edit";

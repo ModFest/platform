@@ -1,6 +1,7 @@
 package net.modfest.platform.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import net.modfest.platform.misc.PlatformStandardException;
 import net.modfest.platform.pojo.*;
 import net.modfest.platform.repository.SubmissionRepository;
 import net.modfest.platform.security.PermissionUtils;
@@ -159,33 +160,27 @@ public class EventController {
 	}
 
 	@PatchMapping("/event/{eventId}/submission/{subId}")
-	public void editSubmissionData(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionPatchData editData) {
-		getEvent(eventId);
+	public void editSubmissionData(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionPatchData editData) throws PlatformStandardException {
+		var event = getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
 			throw new IllegalArgumentException();// TODO
 		}
 
-		if (!canEdit(submission)) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-				"You do not have permissions to edit this data");
-		}
+		checkCanEdit(event, submission);
 
 		service.editSubmission(submission, editData);
 	}
 
 	@PutMapping("/event/{eventId}/submission/{subId}/updateVersion")
-	public SubmissionResponseData updateSubmissionVersion(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId) {
-		getEvent(eventId);
+	public SubmissionResponseData updateSubmissionVersion(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId) throws PlatformStandardException {
+		var event = getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
 			throw new IllegalArgumentException();// TODO
 		}
 
-		if (!canEdit(submission)) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-				"You do not have permissions to edit this data");
-		}
+		checkCanEdit(event, submission);
 
 		return service.addResponseInfo(
 			request,
@@ -194,17 +189,14 @@ public class EventController {
 	}
 
 	@PutMapping("/event/{eventId}/submission/{subId}/updateMeta")
-	public SubmissionResponseData updateSubmissionMeta(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId) {
-		getEvent(eventId);
+	public SubmissionResponseData updateSubmissionMeta(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId) throws PlatformStandardException {
+		var event = getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
 			throw new IllegalArgumentException();// TODO
 		}
 
-		if (!canEdit(submission)) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-				"You do not have permissions to edit this data");
-		}
+		checkCanEdit(event, submission);
 
 		return service.addResponseInfo(
 			request,
@@ -213,17 +205,14 @@ public class EventController {
 	}
 
 	@DeleteMapping("/event/{eventId}/submission/{subId}/authors/{userId}")
-	public SubmissionResponseData deleteSubmissionAuthor(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) {
-		getEvent(eventId);
+	public SubmissionResponseData deleteSubmissionAuthor(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) throws PlatformStandardException {
+		var event = getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
 			throw new IllegalArgumentException();// TODO
 		}
 
-		if (!canEdit(submission)) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-				"You do not have permissions to edit this data");
-		}
+		checkCanEdit(event, submission);
 
 		if (submission.authors().size() < 2) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -246,17 +235,14 @@ public class EventController {
 	}
 
 	@PutMapping("/event/{eventId}/submission/{subId}/authors/{userId}")
-	public SubmissionResponseData addSubmissionAuthor(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) {
-		getEvent(eventId);
+	public SubmissionResponseData addSubmissionAuthor(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) throws PlatformStandardException {
+		var event = getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
 			throw new IllegalArgumentException();// TODO
 		}
 
-		if (!canEdit(submission)) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-				"You do not have permissions to edit this data");
-		}
+		checkCanEdit(event, submission);
 
 		UserData user = userController.getSingleUser(userId);
 
@@ -271,17 +257,14 @@ public class EventController {
 	}
 
 	@PatchMapping("/event/{eventId}/submission/{subId}/image/{type}")
-	public SubmissionResponseData editSubmissionImage(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @PathVariable String type, @RequestBody String url) {
-		getEvent(eventId);
+	public SubmissionResponseData editSubmissionImage(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @PathVariable String type, @RequestBody String url) throws PlatformStandardException {
+		var event = getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
 			throw new IllegalArgumentException();// TODO
 		}
 
-		if (!canEdit(submission)) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-				"You do not have permissions to edit this data");
-		}
+		checkCanEdit(event, submission);
 
 		var typeEnum = switch (type) {
 			case "icon" -> ImageService.SubmissionImageType.ICON;
@@ -297,24 +280,31 @@ public class EventController {
 	}
 
 	@DeleteMapping("/event/{eventId}/submission/{subId}")
-	public void deleteSubmission(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId) {
-		getEvent(eventId);
+	public void deleteSubmission(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId) throws PlatformStandardException {
+		var event = getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
 			throw new IllegalArgumentException();// TODO
 		}
 
-		if (!canEdit(submission)) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-				"You do not have permissions to edit this data");
-		}
+		checkCanEdit(event, submission);
 
 		service.deleteSubmission(eventId, subId);
 	}
 
-	private boolean canEdit(SubmissionData submission) {
+	/**
+	 * Checks if a submission is allowed to be edited by the current security subject
+	 * @param event The event the submission belongs to
+	 */
+	private void checkCanEdit(EventData event, SubmissionData submission) throws PlatformStandardException {
 		var subject = SecurityUtils.getSubject();
 		var can_others = subject.isPermitted(Permissions.Event.EDIT_OTHER_SUBMISSION);
-		return PermissionUtils.owns(subject, submission) || can_others;
+		if (!PermissionUtils.owns(subject, submission) && !can_others) {
+			throw new PlatformStandardException(PlatformErrorResponse.ErrorType.PERMISSION_ERROR, "You're not an author of this submission");
+		}
+		var bypass_phase = subject.isPermitted(Permissions.Event.EDIT_PHASE_BYPASS);
+		if (!event.phase().canUpdateSubmission() && !bypass_phase) {
+			throw new PlatformStandardException(PlatformErrorResponse.ErrorType.PERMISSION_ERROR, "Submissions are frozen for this event");
+		}
 	}
 }
