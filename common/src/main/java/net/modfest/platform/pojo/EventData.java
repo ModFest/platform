@@ -49,7 +49,8 @@ public record EventData(@NonNull String id,
         }
 
         public boolean canUpdateSubmission() {
-            return updates;
+			// TODO: hack for bc25, needs removing
+            return false;
         }
     }
 
