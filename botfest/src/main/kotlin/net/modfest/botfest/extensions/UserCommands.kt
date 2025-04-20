@@ -16,7 +16,7 @@ import net.modfest.platform.pojo.UserPatchData
 import org.koin.core.component.inject
 
 /**
- * Provides privileged commands that should be available only to admins
+ * Provides commands to manage your user account
  */
 class UserCommands : Extension(), KordExKoinComponent {
 	override val name = "user"

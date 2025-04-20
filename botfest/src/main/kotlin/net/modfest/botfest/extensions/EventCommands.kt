@@ -27,9 +27,6 @@ import net.modfest.platform.pojo.UserCreateData
 import org.koin.core.component.inject
 import java.util.*
 
-/**
- * Provides various debugging commands
- */
 @OptIn(UnsafeAPI::class)
 class EventCommands : Extension(), KordExKoinComponent {
 	val cmds: CommandReferences by inject()

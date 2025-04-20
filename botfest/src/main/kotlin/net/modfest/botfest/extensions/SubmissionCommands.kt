@@ -41,9 +41,6 @@ import java.util.*
 import java.util.regex.Pattern
 import kotlin.io.path.Path
 
-/**
- * Provides various debugging commands
- */
 class SubmissionCommands : Extension(), KordExKoinComponent {
 	override val name = "submission"
 	val platform: Platform by inject()
