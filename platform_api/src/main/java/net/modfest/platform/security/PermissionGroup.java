@@ -20,6 +20,7 @@ public enum PermissionGroup {
 		Permissions.Event.SUBMIT_OTHER,
 		Permissions.Event.EDIT_SCHEDULE,
 		Permissions.Event.EDIT_OTHER_SUBMISSION,
+		Permissions.Event.EDIT_PHASE_BYPASS,
 		Permissions.Event.MANAGE_TOKENS
 	)),
 	/**
