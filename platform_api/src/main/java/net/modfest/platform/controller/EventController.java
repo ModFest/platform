@@ -160,7 +160,7 @@ public class EventController {
 	}
 
 	@PatchMapping("/event/{eventId}/submission/{subId}")
-	public void editSubmissionData(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionPatchData editData) throws PlatformStandardException {
+	public SubmissionResponseData editSubmissionData(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionPatchData editData) throws PlatformStandardException {
 		var event = getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
@@ -169,7 +169,10 @@ public class EventController {
 
 		checkCanEdit(event, submission);
 
-		service.editSubmission(submission, editData);
+		return service.addResponseInfo(
+			request,
+			service.editSubmission(submission, editData)
+		);
 	}
 
 	@PutMapping("/event/{eventId}/submission/{subId}/updateVersion")
