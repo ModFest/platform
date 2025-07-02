@@ -5,9 +5,16 @@ import dev.kord.core.behavior.interaction.response.edit
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.EphemeralSlashCommand
 import dev.kordex.core.commands.application.slash.EphemeralSlashCommandContext
+import dev.kordex.core.commands.application.slash.converters.ChoiceEnum
+import dev.kordex.core.commands.application.slash.converters.impl.enumChoice
+import dev.kordex.core.commands.application.slash.converters.impl.numberChoice
+import dev.kordex.core.commands.application.slash.converters.impl.optionalEnumChoice
+import dev.kordex.core.commands.application.slash.converters.impl.optionalNumberChoice
+import dev.kordex.core.commands.application.slash.converters.impl.optionalStringChoice
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.application.slash.group
 import dev.kordex.core.commands.converters.impl.attachment
+import dev.kordex.core.commands.converters.impl.defaultingInt
 import dev.kordex.core.commands.converters.impl.string
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.components
@@ -31,8 +38,10 @@ import kotlinx.serialization.json.putJsonArray
 import net.modfest.botfest.MAIN_GUILD_ID
 import net.modfest.botfest.Platform
 import net.modfest.botfest.i18n.Translations
+import net.modfest.platform.pojo.SubmissionData
 import net.modfest.platform.pojo.SubmissionData.AssociatedData.Modrinth
 import net.modfest.platform.pojo.SubmissionData.AssociatedData.Other
+import net.modfest.platform.pojo.SubmissionData.BoothData.BoothStatus
 import net.modfest.platform.pojo.SubmissionPatchData
 import net.modfest.platform.pojo.SubmitRequestOther
 import org.koin.core.component.inject
@@ -465,6 +474,104 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						}
 					}
 				}
+				// Update submission claim data
+				unsafeSubCommand(::ClaimArg) {
+					name = Translations.Commands.Submission.Update.Claim.name
+					description = Translations.Commands.Submission.Update.Claim.description
+
+					initialResponse = InitialSlashCommandResponse.None
+
+					action {
+						val subId = this.arguments.submission
+						val curEvent = platform.getCurrentEvent().event
+						if (curEvent == null) {
+							ackEphemeral {
+								content = Translations.Commands.Event.Submit.Response.unavailable
+									.withContext(this@action)
+									.translateNamed()
+							}
+							return@action
+						}
+
+						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
+
+						if (submission == null) {
+							ackEphemeral {
+								content = Translations.Commands.Submission.Update.Meta.Response.notfound
+									.withContext(this@action)
+									.translateNamed(
+										"subId" to subId
+									)
+							}
+							return@action
+						}
+
+						platform.withAuth(this.user).editSubmissionClaimData(curEvent, subId, SubmissionData.ClaimData(
+							SubmissionData.ClaimData.Warp(
+								this.arguments.warpX?.toInt() ?: submission.claimData?.warp?.x ?: 0,
+								this.arguments.warpY?.toInt() ?: submission.claimData?.warp?.y ?: 0,
+								this.arguments.warpZ?.toInt() ?: submission.claimData?.warp?.z ?: 0,
+								SubmissionData.ClaimData.Direction.valueOf(this.arguments.warpDirection?.name ?: submission.claimData?.warp?.direction?.name ?: "NORTH")
+							),
+							SubmissionData.ClaimData.Marker(
+								this.arguments.markerX?.toInt() ?: submission.claimData?.marker?.x ?: 0,
+								this.arguments.markerZ?.toInt() ?: submission.claimData?.marker?.z ?: 0,
+							),
+							this.arguments.itemIcon ?: "gold_nugget"
+						))
+
+						ackEphemeral {
+							content = Translations.Commands.Submission.Update.Meta.Response.success
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+					}
+				}
+				// Update submission booth data
+				unsafeSubCommand(::BoothArg) {
+					name = Translations.Commands.Submission.Update.Booth.name
+					description = Translations.Commands.Submission.Update.Booth.description
+
+					initialResponse = InitialSlashCommandResponse.None
+
+					action {
+						val subId = this.arguments.submission
+						val curEvent = platform.getCurrentEvent().event
+						if (curEvent == null) {
+							ackEphemeral {
+								content = Translations.Commands.Event.Submit.Response.unavailable
+									.withContext(this@action)
+									.translateNamed()
+							}
+							return@action
+						}
+
+						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
+
+						if (submission == null) {
+							ackEphemeral {
+								content = Translations.Commands.Submission.Update.Meta.Response.notfound
+									.withContext(this@action)
+									.translateNamed(
+										"subId" to subId
+									)
+							}
+							return@action
+						}
+
+						platform.withAuth(this.user).editSubmissionBoothData(curEvent, subId, SubmissionData.BoothData(this.arguments.shards.toInt(), this.arguments.eta, SubmissionData.BoothData.BoothStatus.valueOf(this.arguments.status.name)))
+
+						ackEphemeral {
+							content = Translations.Commands.Submission.Update.Meta.Response.success
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+					}
+				}
 			}
 
 			// Leave submission
@@ -738,6 +845,84 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 				)
 			}
 		}
+	}
+
+	inner class ClaimArg : SubmissionArg() {
+		val markerX by optionalNumberChoice {
+			name = Translations.Arguments.Submission.Claim.MarkerX.name
+			description = Translations.Arguments.Submission.Claim.MarkerX.description
+		}
+		val markerZ by optionalNumberChoice {
+			name = Translations.Arguments.Submission.Claim.MarkerZ.name
+			description = Translations.Arguments.Submission.Claim.MarkerZ.description
+		}
+		val warpX by optionalNumberChoice {
+			name = Translations.Arguments.Submission.Claim.WarpX.name
+			description = Translations.Arguments.Submission.Claim.WarpX.description
+		}
+		val warpY by optionalNumberChoice {
+			name = Translations.Arguments.Submission.Claim.WarpY.name
+			description = Translations.Arguments.Submission.Claim.WarpY.description
+		}
+		val warpZ by optionalNumberChoice {
+			name = Translations.Arguments.Submission.Claim.WarpZ.name
+			description = Translations.Arguments.Submission.Claim.WarpZ.description
+		}
+		val warpDirection by optionalEnumChoice<WarpDirection> {
+			name = Translations.Arguments.Submission.Claim.Direction.name
+			description = Translations.Arguments.Submission.Claim.Direction.description
+		}
+		val itemIcon by optionalStringChoice {
+			name = Translations.Arguments.Submission.Claim.ItemIcon.name
+			description = Translations.Arguments.Submission.Claim.ItemIcon.description
+		}
+	}
+
+	inner class BoothArg : SubmissionArg() {
+		val shards by numberChoice {
+			name = Translations.Arguments.Submission.Booth.Shards.name
+			description = Translations.Arguments.Submission.Booth.Shards.description
+			choices = linkedMapOf(
+				Translations.Arguments.Submission.Booth.Shards.Choice.one to 1,
+				Translations.Arguments.Submission.Booth.Shards.Choice.two to 2,
+				Translations.Arguments.Submission.Booth.Shards.Choice.three to 3,
+				Translations.Arguments.Submission.Booth.Shards.Choice.four to 4
+			)
+		}
+		val eta by defaultingInt {
+			name = Translations.Arguments.Submission.Booth.Eta.name
+			description = Translations.Arguments.Submission.Booth.Eta.description
+			defaultValue = 3
+		}
+		val status by enumChoice<BoothStatus> {
+			name = Translations.Arguments.Submission.Booth.Status.name
+			description = Translations.Arguments.Submission.Booth.Status.description
+		}
+	}
+
+	enum class WarpDirection(override val readableName: Key) : ChoiceEnum {
+			NORTH(Translations.Arguments.Submission.Claim.Direction.Choice.north),
+			NORTH_NORTH_EAST(Translations.Arguments.Submission.Claim.Direction.Choice.northNorthEast),
+			NORTH_EAST(Translations.Arguments.Submission.Claim.Direction.Choice.northEast),
+			EAST_NORTH_EAST(Translations.Arguments.Submission.Claim.Direction.Choice.eastNorthEast),
+			EAST(Translations.Arguments.Submission.Claim.Direction.Choice.east),
+			EAST_SOUTH_EAST(Translations.Arguments.Submission.Claim.Direction.Choice.eastSouthEast),
+			SOUTH_EAST(Translations.Arguments.Submission.Claim.Direction.Choice.southEast),
+			SOUTH_SOUTH_EAST(Translations.Arguments.Submission.Claim.Direction.Choice.southSouthEast),
+			SOUTH(Translations.Arguments.Submission.Claim.Direction.Choice.south),
+			SOUTH_SOUTH_WEST(Translations.Arguments.Submission.Claim.Direction.Choice.southSouthWest),
+			SOUTH_WEST(Translations.Arguments.Submission.Claim.Direction.Choice.southWest),
+			WEST_SOUTH_WEST(Translations.Arguments.Submission.Claim.Direction.Choice.westSouthWest),
+			WEST(Translations.Arguments.Submission.Claim.Direction.Choice.west),
+			WEST_NORTH_WEST(Translations.Arguments.Submission.Claim.Direction.Choice.westNorthWest),
+			NORTH_WEST(Translations.Arguments.Submission.Claim.Direction.Choice.northWest),
+			NORTH_NORTH_WEST(Translations.Arguments.Submission.Claim.Direction.Choice.northNorthWest);
+	}
+
+	enum class BoothStatus(override val readableName: Key) : ChoiceEnum {
+		UNDER_CONSTRUCTION(Translations.Arguments.Submission.Booth.Status.Choice.constructing),
+		PLAYABLE(Translations.Arguments.Submission.Booth.Status.Choice.playable),
+		COMPLETE(Translations.Arguments.Submission.Booth.Status.Choice.complete)
 	}
 
 	inner class ImageArg : SubmissionArg() {
