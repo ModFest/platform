@@ -640,6 +640,33 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					}
 				}
 			}
+
+			ephemeralSubCommand(::ImageArg) {
+				name = Translations.Commands.Submission.EditImage.Claim.label
+				description = Translations.Commands.Submission.EditImage.Claim.description
+
+				action {
+					imageCommandAction("claim")
+				}
+			}
+
+			ephemeralSubCommand(::ImageArg) {
+				name = Translations.Commands.Submission.EditImage.Test.label
+				description = Translations.Commands.Submission.EditImage.Test.description
+
+				action {
+					imageCommandAction("test")
+				}
+			}
+
+			ephemeralSubCommand(::ImageArg) {
+				name = Translations.Commands.Submission.EditImage.Build.label
+				description = Translations.Commands.Submission.EditImage.Build.description
+
+				action {
+					imageCommandAction("build")
+				}
+			}
 		}
 	}
 

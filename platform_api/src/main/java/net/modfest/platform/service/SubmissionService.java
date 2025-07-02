@@ -277,7 +277,10 @@ public class SubmissionService {
 			data,
 			new SubmissionResponseData.Images(
 				imageService.getImageUrl(request, subKey, ImageService.SubmissionImageType.ICON),
-				imageService.getImageUrl(request, subKey, ImageService.SubmissionImageType.SCREENSHOT)
+				imageService.getImageUrl(request, subKey, ImageService.SubmissionImageType.SCREENSHOT),
+				imageService.getImageUrl(request, subKey, ImageService.SubmissionImageType.TEST),
+				imageService.getImageUrl(request, subKey, ImageService.SubmissionImageType.CLAIM),
+				imageService.getImageUrl(request, subKey, ImageService.SubmissionImageType.BUILD)
 			)
 		);
 	}

@@ -121,6 +121,9 @@ export interface SubmissionData$FileData$Modrinth {
 export interface SubmissionData$Images {
     icon: string;
     screenshot: string;
+    test: string;
+    claim: string;
+    build: string;
 }
 
 export interface SubmitRequest {

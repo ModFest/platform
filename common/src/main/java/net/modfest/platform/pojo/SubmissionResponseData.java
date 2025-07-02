@@ -18,7 +18,7 @@ public record SubmissionResponseData(@NonNull String id,
                                      SubmissionData.@NonNull Awards awards
 	) {
 
-	public record Images(@Nullable String icon, @Nullable String screenshot) {
+	public record Images(@Nullable String icon, @Nullable String screenshot, @Nullable String test, @Nullable String claim, @Nullable String build) {
 	}
 
 	public static SubmissionResponseData fromData(SubmissionData data, Images images) {

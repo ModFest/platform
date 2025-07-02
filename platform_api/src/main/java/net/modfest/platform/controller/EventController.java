@@ -272,6 +272,9 @@ public class EventController {
 		var typeEnum = switch (type) {
 			case "icon" -> ImageService.SubmissionImageType.ICON;
 			case "screenshot" -> ImageService.SubmissionImageType.SCREENSHOT;
+			case "test" -> ImageService.SubmissionImageType.TEST;
+			case "claim" -> ImageService.SubmissionImageType.CLAIM;
+			case "build" -> ImageService.SubmissionImageType.BUILD;
 			case null, default -> throw new IllegalArgumentException("Invalid type " + type);
 		};
 
