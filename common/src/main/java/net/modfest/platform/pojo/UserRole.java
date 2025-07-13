@@ -5,5 +5,6 @@ public enum UserRole {
 	 * For users who don't have any specific role
 	 */
 	NONE,
+	VOLUNTEER,
 	TEAM_MEMBER,
 }

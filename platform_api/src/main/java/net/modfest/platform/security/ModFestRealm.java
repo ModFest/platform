@@ -110,7 +110,7 @@ public class ModFestRealm extends AuthorizingRealm {
 			var userRole = user.role();
 			var group = switch (userRole) {
 				case null -> PermissionGroup.UNPRIVILEGED_USERS;
-				case NONE -> PermissionGroup.UNPRIVILEGED_USERS;
+				case NONE, VOLUNTEER -> PermissionGroup.UNPRIVILEGED_USERS;
 				case TEAM_MEMBER -> PermissionGroup.TEAM_MEMBERS;
 			};
 			return new GroupBasedAuthorizationInfo(group);
