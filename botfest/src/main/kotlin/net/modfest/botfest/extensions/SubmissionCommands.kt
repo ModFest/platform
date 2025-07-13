@@ -61,49 +61,35 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		var slashScreenshot: EphemeralSlashCommand<ImageArg, ModalForm>? = null
 		// Commands for submitting
 		ephemeralSlashCommand {
-			name = Translations.Commands.Event.Submit.name
-			description = Translations.Commands.Event.Submit.description
+			name = Translations.Commands.Submit.name
+			description = Translations.Commands.Submit.description
 
 			guild(MAIN_GUILD_ID)
 
 			// Submitting a modrinth project
-			ephemeralSubCommand(::SubmitModalModrinth) {
-				name = Translations.Commands.Event.Submit.Modrinth.name
-				description = Translations.Commands.Event.Submit.Modrinth.description
+			ephemeralSubCommand(::ModrinthArg) {
+				name = Translations.Commands.Submit.Modrinth.name
+				description = Translations.Commands.Submit.Modrinth.description
 
-				action { modal ->
-					if (modal == null) return@action
+				action {
 					val curEvent = platform.getCurrentEvent().event
 
 					if (curEvent == null) {
 						respond {
-							content = Translations.Commands.Event.Submit.Response.unavailable
+							content = Translations.Commands.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
 						}
 						return@action
 					}
 
-					val matcher = MODRINTH_REGEX.matcher(modal.modrinthUrl.value!!)
-
-					if (!matcher.find()) {
-						respond {
-							content = Translations.Commands.Event.Submit.Response.invalid
-								.withContext(this@action)
-								.translateNamed(
-									"url" to modal.modrinthUrl.value
-								)
-						}
-						return@action
-					}
-
-					val projectSlug = matcher.group(2)
+					val projectSlug = MODRINTH_REGEX.matcher(arguments.url).group(2)
 
 					val eventInfo = platform.getEvent(curEvent)
 					val submission = platform.withAuth(this.user).submitModrinth(curEvent, projectSlug)
 
 					respond {
-						content = Translations.Commands.Event.Submit.Response.success
+						content = Translations.Commands.Submit.Response.success
 							.withContext(this@action)
 							.translateNamed(
 								"event" to eventInfo.name,
@@ -115,8 +101,8 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 			// Submitting a non-modrinth project
 			ephemeralSubCommand(::SubmitModalOther) {
-				name = Translations.Commands.Event.Submit.Other.name
-				description = Translations.Commands.Event.Submit.Other.description
+				name = Translations.Commands.Submit.Other.name
+				description = Translations.Commands.Submit.Other.description
 
 				action { modal ->
 					if (modal == null) return@action
@@ -124,7 +110,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 					if (curEvent == null) {
 						respond {
-							content = Translations.Commands.Event.Submit.Response.unavailable
+							content = Translations.Commands.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
 						}
@@ -143,7 +129,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val eventInfo = platform.getEvent(curEvent)
 
 					respond {
-						content = Translations.Commands.Event.Submit.Other.Response.success
+						content = Translations.Commands.Submit.Other.Response.success
 							.withContext(this@action)
 							.translateNamed(
 								"event" to eventInfo.name,
@@ -158,8 +144,8 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 			// Submit an event / panel
 			ephemeralSubCommand {
-				name = Translations.Commands.Event.Submit.Event.name
-				description = Translations.Commands.Event.Submit.Event.description
+				name = Translations.Commands.Submit.Event.name
+				description = Translations.Commands.Submit.Event.description
 
 				action {
 					respond {
@@ -240,7 +226,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
 						ackEphemeral {
-							content = Translations.Commands.Event.Submit.Response.unavailable
+							content = Translations.Commands.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
 						}
@@ -306,7 +292,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
 						respond {
-							content = Translations.Commands.Event.Submit.Response.unavailable
+							content = Translations.Commands.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
 						}
@@ -351,7 +337,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						val curEvent = platform.getCurrentEvent().event
 						if (curEvent == null) {
 							respond {
-								content = Translations.Commands.Event.Submit.Response.unavailable
+								content = Translations.Commands.Submit.Response.unavailable
 									.withContext(this@action)
 									.translateNamed()
 							}
@@ -425,7 +411,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						val curEvent = platform.getCurrentEvent().event
 						if (curEvent == null) {
 							respond {
-								content = Translations.Commands.Event.Submit.Response.unavailable
+								content = Translations.Commands.Submit.Response.unavailable
 									.withContext(this@action)
 									.translateNamed()
 							}
@@ -480,7 +466,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
 						respond {
-							content = Translations.Commands.Event.Submit.Response.unavailable
+							content = Translations.Commands.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
 						}
@@ -558,7 +544,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
 						respond {
-							content = Translations.Commands.Event.Submit.Response.unavailable
+							content = Translations.Commands.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
 						}
@@ -657,7 +643,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
 						respond {
-							content = Translations.Commands.Event.Submit.Response.unavailable
+							content = Translations.Commands.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
 						}
@@ -756,7 +742,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
 						respond {
-							content = Translations.Commands.Event.Submit.Response.unavailable
+							content = Translations.Commands.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
 						}
@@ -841,7 +827,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		val curEvent = platform.getCurrentEvent().event
 		if (curEvent == null) {
 			respond {
-				content = Translations.Commands.Event.Submit.Response.unavailable
+				content = Translations.Commands.Submit.Response.unavailable
 					.withContext(this@imageCommandAction)
 					.translateNamed()
 			}
@@ -882,6 +868,18 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						.filter { it.event == curEvent }
 						.map { it.id }
 				)
+			}
+		}
+	}
+
+	open inner class ModrinthArg : Arguments() {
+		val url by string {
+			name = Translations.Arguments.Submit.Modrinth.Url.name
+			description = Translations.Arguments.Submit.Modrinth.Url.description
+			validate {
+				failIfNot(Translations.Arguments.Submit.Modrinth.Url.Validation.invalid) {
+					MODRINTH_REGEX.matcher(value).find()
+				}
 			}
 		}
 	}
@@ -977,7 +975,9 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			name = Translations.Arguments.Submission.EditImage.name
 			description = Translations.Arguments.Submission.EditImage.description
 			validate {
-				value?.isImage ?: true
+				failIfNot(Translations.Arguments.Submission.EditImage.Validation.invalid) {
+					value?.isImage ?: true
+				}
 			}
 		}
 	}
@@ -987,7 +987,9 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			name = Translations.Arguments.Submission.EditImage.name
 			description = Translations.Arguments.Submission.EditImage.description
 			validate {
-				value.isImage
+				failIfNot(Translations.Arguments.Submission.EditImage.Validation.invalid) {
+					value.isImage
+				}
 			}
 		}
 	}
@@ -1034,18 +1036,6 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			placeholder = Translations.Modal.Submission.Downloadurl.placeholder
 			maxLength = 128
 			required = false
-		}
-	}
-
-	class SubmitModalModrinth : ModalForm() {
-		override var title: Key = Translations.Modal.Submit.title
-
-		val modrinthUrl = lineText {
-			label = Translations.Modal.Submit.Url.label
-			placeholder = Translations.Modal.Submit.Url.placeholder
-			minLength = 10
-			maxLength = 1024
-			required = true
 		}
 	}
 
