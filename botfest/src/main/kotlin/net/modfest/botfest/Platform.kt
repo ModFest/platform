@@ -19,7 +19,8 @@ import net.modfest.platform.pojo.HealthData
 import net.modfest.platform.pojo.MinecraftEditResponse
 import net.modfest.platform.pojo.PlatformErrorResponse
 import net.modfest.platform.pojo.SubmissionData.BoothData
-import net.modfest.platform.pojo.SubmissionData.ClaimData
+import net.modfest.platform.pojo.SubmissionData.MarkerData
+import net.modfest.platform.pojo.SubmissionData.WarpData
 import net.modfest.platform.pojo.SubmissionPatchData
 import net.modfest.platform.pojo.SubmissionResponseData
 import net.modfest.platform.pojo.SubmitRequestModrinth
@@ -211,8 +212,15 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		}.unwrapErrors().body()
 	}
 
-	suspend fun editSubmissionClaimData(eventId: String, subId: String, edit: ClaimData): SubmissionResponseData {
-		return client.patch("/event/$eventId/claim/$subId") {
+	suspend fun editSubmissionMarkerData(eventId: String, subId: String, edit: MarkerData): SubmissionResponseData {
+		return client.patch("/event/$eventId/marker/$subId") {
+			addAuth()
+			setBody(edit)
+		}.unwrapErrors().body()
+	}
+
+	suspend fun editSubmissionWarpData(eventId: String, subId: String, edit: WarpData): SubmissionResponseData {
+		return client.patch("/event/$eventId/warp/$subId") {
 			addAuth()
 			setBody(edit)
 		}.unwrapErrors().body()

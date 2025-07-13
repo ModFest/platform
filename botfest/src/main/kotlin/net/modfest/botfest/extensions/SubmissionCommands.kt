@@ -473,10 +473,10 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						}
 					}
 				}
-				// Update submission claim data
-				unsafeSubCommand(::ClaimArg) {
-					name = Translations.Commands.Submission.Update.Claim.name
-					description = Translations.Commands.Submission.Update.Claim.description
+				// Update submission marker data
+				unsafeSubCommand(::MarkerArg) {
+					name = Translations.Commands.Submission.Update.Marker.name
+					description = Translations.Commands.Submission.Update.Marker.description
 
 					initialResponse = InitialSlashCommandResponse.None
 
@@ -505,18 +505,60 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 							return@action
 						}
 
-						platform.withAuth(this.user).editSubmissionClaimData(curEvent, subId, SubmissionData.ClaimData(
-							SubmissionData.ClaimData.Warp(
-								this.arguments.warpX?.toInt() ?: submission.claimData?.warp?.x ?: 0,
-								this.arguments.warpY?.toInt() ?: submission.claimData?.warp?.y ?: 0,
-								this.arguments.warpZ?.toInt() ?: submission.claimData?.warp?.z ?: 0,
-								SubmissionData.ClaimData.Direction.valueOf(this.arguments.warpDirection?.name ?: submission.claimData?.warp?.direction?.name ?: "NORTH")
-							),
-							SubmissionData.ClaimData.Marker(
-								this.arguments.markerX?.toInt() ?: submission.claimData?.marker?.x ?: 0,
-								this.arguments.markerZ?.toInt() ?: submission.claimData?.marker?.z ?: 0,
-							),
-							this.arguments.itemIcon ?: "gold_nugget"
+						platform.withAuth(this.user).editSubmissionMarkerData(
+							curEvent, subId, SubmissionData.MarkerData(
+								this.arguments.markerX?.toInt() ?: submission.markerData?.x ?: 0,
+								this.arguments.markerZ?.toInt() ?: submission.markerData?.z ?: 0,
+								this.arguments.itemIcon ?: "gold_nugget"
+							)
+						)
+
+						ackEphemeral {
+							content = Translations.Commands.Submission.Update.Meta.Response.success
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+					}
+				}
+				// Update submission warp data
+				unsafeSubCommand(::WarpArg) {
+					name = Translations.Commands.Submission.Update.Warp.name
+					description = Translations.Commands.Submission.Update.Warp.description
+
+					initialResponse = InitialSlashCommandResponse.None
+
+					action {
+						val subId = this.arguments.submission
+						val curEvent = platform.getCurrentEvent().event
+						if (curEvent == null) {
+							ackEphemeral {
+								content = Translations.Commands.Event.Submit.Response.unavailable
+									.withContext(this@action)
+									.translateNamed()
+							}
+							return@action
+						}
+
+						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
+
+						if (submission == null) {
+							ackEphemeral {
+								content = Translations.Commands.Submission.Update.Meta.Response.notfound
+									.withContext(this@action)
+									.translateNamed(
+										"subId" to subId
+									)
+							}
+							return@action
+						}
+
+						platform.withAuth(this.user).editSubmissionWarpData(curEvent, subId, SubmissionData.WarpData(
+								this.arguments.warpX?.toInt() ?: submission.warpData?.x ?: 0,
+								this.arguments.warpY?.toInt() ?: submission.warpData?.y ?: 0,
+								this.arguments.warpZ?.toInt() ?: submission.warpData?.z ?: 0,
+								SubmissionData.WarpData.Direction.valueOf(this.arguments.warpDirection?.name ?: submission.warpData?.direction?.name ?: "NORTH")
 						))
 
 						ackEphemeral {
@@ -846,7 +888,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		}
 	}
 
-	inner class ClaimArg : SubmissionArg() {
+	inner class MarkerArg : SubmissionArg() {
 		val markerX by optionalNumberChoice {
 			name = Translations.Arguments.Submission.Claim.MarkerX.name
 			description = Translations.Arguments.Submission.Claim.MarkerX.description
@@ -855,6 +897,13 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			name = Translations.Arguments.Submission.Claim.MarkerZ.name
 			description = Translations.Arguments.Submission.Claim.MarkerZ.description
 		}
+		val itemIcon by optionalStringChoice {
+			name = Translations.Arguments.Submission.Claim.ItemIcon.name
+			description = Translations.Arguments.Submission.Claim.ItemIcon.description
+		}
+	}
+
+	inner class WarpArg : SubmissionArg() {
 		val warpX by optionalNumberChoice {
 			name = Translations.Arguments.Submission.Claim.WarpX.name
 			description = Translations.Arguments.Submission.Claim.WarpX.description
@@ -871,10 +920,6 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			name = Translations.Arguments.Submission.Claim.Direction.name
 			description = Translations.Arguments.Submission.Claim.Direction.description
 			typeName = Translations.Arguments.Submission.Claim.Direction.type
-		}
-		val itemIcon by optionalStringChoice {
-			name = Translations.Arguments.Submission.Claim.ItemIcon.name
-			description = Translations.Arguments.Submission.Claim.ItemIcon.description
 		}
 	}
 

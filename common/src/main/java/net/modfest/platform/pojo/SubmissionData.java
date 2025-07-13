@@ -17,7 +17,8 @@ public record SubmissionData(@NonNull String id,
 							 @NonNull Set<String> authors,
 							 @NonNull AssociatedData platform,
 							 @Nullable String source,
-							 @Nullable ClaimData claimData,
+							 @Nullable MarkerData markerData,
+							 @Nullable WarpData warpData,
 							 @Nullable BoothData boothData,
 							 @NonNull Awards awards
 	) implements Data {
@@ -79,16 +80,19 @@ public record SubmissionData(@NonNull String id,
 		}
 	}
 
-	public record ClaimData(@NonNull Warp warp,
-	                        @NonNull Marker marker,
-	                        @NonNull String itemIcon
+	public record BoothData(
+	                        int shards,
+	                        int minutesToComplete,
+	                        @NonNull BoothStatus status
 	) {
-		public record Warp(int x, int y, int z, @NonNull Direction direction) {
+		public enum BoothStatus {
+			UNDER_CONSTRUCTION,
+			PLAYABLE,
+			COMPLETE
 		}
+	}
 
-		public record Marker(int x, int z) {
-		}
-
+	public record WarpData(int x, int y, int z, @NonNull Direction direction) {
 		@Getter
 		public enum Direction {
 			NORTH(180),
@@ -116,15 +120,6 @@ public record SubmissionData(@NonNull String id,
 		}
 	}
 
-	public record BoothData(
-	                        int shards,
-	                        int minutesToComplete,
-	                        @NonNull BoothStatus status
-	) {
-		public enum BoothStatus {
-			UNDER_CONSTRUCTION,
-			PLAYABLE,
-			COMPLETE
-		}
+	public record MarkerData(int x, int z, @NonNull String itemIcon) {
 	}
 }

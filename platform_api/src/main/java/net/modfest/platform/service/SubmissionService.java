@@ -65,8 +65,14 @@ public class SubmissionService {
 		return getSubmission(data.event(), data.id());
 	}
 
-	public SubmissionData editSubmissionClaim(SubmissionData data, SubmissionData.ClaimData edit) {
-		data = data.withClaimData(edit);
+	public SubmissionData editSubmissionMarker(SubmissionData data, SubmissionData.MarkerData edit) {
+		data = data.withMarkerData(edit);
+		submissionRepository.save(data);
+		return getSubmission(data.event(), data.id());
+	}
+
+	public SubmissionData editSubmissionWarp(SubmissionData data, SubmissionData.WarpData edit) {
+		data = data.withWarpData(edit);
 		submissionRepository.save(data);
 		return getSubmission(data.event(), data.id());
 	}
@@ -233,6 +239,7 @@ public class SubmissionService {
 			submitData.sourceUrl(),
 			null,
 			null,
+			null,
 			new SubmissionData.Awards(
 				Set.of(),
 				Set.of()
@@ -275,6 +282,7 @@ public class SubmissionService {
 					)
 				),
 				project.sourceUrl,
+				null,
 				null,
 				null,
 				new SubmissionData.Awards(

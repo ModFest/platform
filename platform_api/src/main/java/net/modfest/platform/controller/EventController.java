@@ -175,8 +175,8 @@ public class EventController {
 		);
 	}
 
-	@PatchMapping("/event/{eventId}/claim/{subId}")
-	public SubmissionResponseData editSubmissionClaimData(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionData.ClaimData editData) throws PlatformStandardException {
+	@PatchMapping("/event/{eventId}/marker/{subId}")
+	public SubmissionResponseData editSubmissionMarkerData(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionData.MarkerData editData) throws PlatformStandardException {
 		var event = getEvent(eventId);
 		var submission = service.getSubmission(eventId, subId);
 		if (submission == null) {
@@ -187,7 +187,23 @@ public class EventController {
 
 		return service.addResponseInfo(
 			request,
-			service.editSubmissionClaim(submission, editData)
+			service.editSubmissionMarker(submission, editData)
+		);
+	}
+
+	@PatchMapping("/event/{eventId}/warp/{subId}")
+	public SubmissionResponseData editSubmissionWarpData(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionData.WarpData editData) throws PlatformStandardException {
+		var event = getEvent(eventId);
+		var submission = service.getSubmission(eventId, subId);
+		if (submission == null) {
+			throw new IllegalArgumentException();// TODO
+		}
+
+		checkCanEdit(event, submission);
+
+		return service.addResponseInfo(
+			request,
+			service.editSubmissionWarp(submission, editData)
 		);
 	}
 
