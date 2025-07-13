@@ -297,17 +297,15 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			}
 
 			// Delete submission data
-			unsafeSubCommand(::SubmissionArg) {
+			ephemeralSubCommand(::SubmissionArg) {
 				name = Translations.Commands.Submission.Delete.name
 				description = Translations.Commands.Submission.Delete.description
-
-				initialResponse = InitialSlashCommandResponse.None
 
 				action {
 					val subId = this.arguments.submission
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Event.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
@@ -318,7 +316,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 					if (submission == null) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Delete.Response.notfound
 								.withContext(this@action)
 								.translateNamed(
@@ -330,7 +328,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 					platform.withAuth(this.user).deleteSubmission(curEvent, subId)
 
-					ackEphemeral {
+					respond {
 						content = Translations.Commands.Submission.Delete.Response.success
 							.withContext(this@action)
 							.translateNamed(
@@ -344,17 +342,15 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 				description = Translations.Commands.Group.Submission.Update.description
 
 				// Update submission version
-				unsafeSubCommand(::SubmissionArg) {
+				ephemeralSubCommand(::SubmissionArg) {
 					name = Translations.Commands.Submission.Update.Version.name
 					description = Translations.Commands.Submission.Update.Version.description
-
-					initialResponse = InitialSlashCommandResponse.None
 
 					action {
 						val subId = this.arguments.submission
 						val curEvent = platform.getCurrentEvent().event
 						if (curEvent == null) {
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Event.Submit.Response.unavailable
 									.withContext(this@action)
 									.translateNamed()
@@ -365,7 +361,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 						if (submission == null) {
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Submission.Update.Version.Response.notfound
 									.withContext(this@action)
 									.translateNamed(
@@ -398,17 +394,17 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 									)
 							}
 						} else if (submission.platform.inner !is Modrinth) {
-								ackEphemeral {
-									content = Translations.Commands.Submission.Update.Version.Response.notmodrinth
-										.withContext(this@action)
-										.translateNamed(
-											"subId" to subId
-										)
-								}
-							} else {
+							respond {
+								content = Translations.Commands.Submission.Update.Version.Response.notmodrinth
+									.withContext(this@action)
+									.translateNamed(
+										"subId" to subId
+									)
+							}
+						} else {
 							val updatedSubmission = platform.withAuth(this.user).updateSubmissionVersion(curEvent, subId)
 
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Submission.Update.Version.Response.success
 									.withContext(this@action)
 									.translateNamed(
@@ -420,17 +416,15 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					}
 				}
 				// Update submission meta
-				unsafeSubCommand(::SubmissionArg) {
+				ephemeralSubCommand(::SubmissionArg) {
 					name = Translations.Commands.Submission.Update.Meta.name
 					description = Translations.Commands.Submission.Update.Meta.description
-
-					initialResponse = InitialSlashCommandResponse.None
 
 					action {
 						val subId = this.arguments.submission
 						val curEvent = platform.getCurrentEvent().event
 						if (curEvent == null) {
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Event.Submit.Response.unavailable
 									.withContext(this@action)
 									.translateNamed()
@@ -441,7 +435,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 						if (submission == null) {
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Submission.Update.Meta.Response.notfound
 									.withContext(this@action)
 									.translateNamed(
@@ -452,7 +446,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						}
 
 						if (submission.platform.inner !is Modrinth) {
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Submission.Update.Meta.Response.notmodrinth
 									.withContext(this@action)
 									.translateNamed(
@@ -464,7 +458,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 						platform.withAuth(this.user).updateSubmissionMeta(curEvent, subId)
 
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Update.Meta.Response.success
 								.withContext(this@action)
 								.translateNamed(
@@ -474,17 +468,15 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					}
 				}
 				// Update submission marker data
-				unsafeSubCommand(::MarkerArg) {
+				ephemeralSubCommand(::MarkerArg) {
 					name = Translations.Commands.Submission.Update.Marker.name
 					description = Translations.Commands.Submission.Update.Marker.description
-
-					initialResponse = InitialSlashCommandResponse.None
 
 					action {
 						val subId = this.arguments.submission
 						val curEvent = platform.getCurrentEvent().event
 						if (curEvent == null) {
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Event.Submit.Response.unavailable
 									.withContext(this@action)
 									.translateNamed()
@@ -495,7 +487,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 						if (submission == null) {
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Submission.Update.Meta.Response.notfound
 									.withContext(this@action)
 									.translateNamed(
@@ -513,7 +505,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 							)
 						)
 
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Update.Meta.Response.success
 								.withContext(this@action)
 								.translateNamed(
@@ -523,17 +515,15 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					}
 				}
 				// Update submission warp data
-				unsafeSubCommand(::WarpArg) {
+				ephemeralSubCommand(::WarpArg) {
 					name = Translations.Commands.Submission.Update.Warp.name
 					description = Translations.Commands.Submission.Update.Warp.description
-
-					initialResponse = InitialSlashCommandResponse.None
 
 					action {
 						val subId = this.arguments.submission
 						val curEvent = platform.getCurrentEvent().event
 						if (curEvent == null) {
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Event.Submit.Response.unavailable
 									.withContext(this@action)
 									.translateNamed()
@@ -544,7 +534,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 						if (submission == null) {
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Submission.Update.Meta.Response.notfound
 									.withContext(this@action)
 									.translateNamed(
@@ -561,7 +551,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 								SubmissionData.WarpData.Direction.valueOf(this.arguments.warpDirection?.name ?: submission.warpData?.direction?.name ?: "NORTH")
 						))
 
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Update.Meta.Response.success
 								.withContext(this@action)
 								.translateNamed(
@@ -571,17 +561,15 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					}
 				}
 				// Update submission booth data
-				unsafeSubCommand(::BoothArg) {
+				ephemeralSubCommand(::BoothArg) {
 					name = Translations.Commands.Submission.Update.Booth.name
 					description = Translations.Commands.Submission.Update.Booth.description
-
-					initialResponse = InitialSlashCommandResponse.None
 
 					action {
 						val subId = this.arguments.submission
 						val curEvent = platform.getCurrentEvent().event
 						if (curEvent == null) {
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Event.Submit.Response.unavailable
 									.withContext(this@action)
 									.translateNamed()
@@ -592,7 +580,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 						if (submission == null) {
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Submission.Update.Meta.Response.notfound
 									.withContext(this@action)
 									.translateNamed(
@@ -604,7 +592,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 						platform.withAuth(this.user).editSubmissionBoothData(curEvent, subId, SubmissionData.BoothData(this.arguments.shards.toInt(), this.arguments.eta, SubmissionData.BoothData.BoothStatus.valueOf(this.arguments.status.name)))
 
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Update.Meta.Response.success
 								.withContext(this@action)
 								.translateNamed(
@@ -616,18 +604,16 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			}
 
 			// Leave submission
-			unsafeSubCommand(::SubmissionArg) {
+			ephemeralSubCommand(::SubmissionArg) {
 				name = Translations.Commands.Submission.Leave.name
 				description = Translations.Commands.Submission.Leave.description
-
-				initialResponse = InitialSlashCommandResponse.None
 
 				action {
 					val userId = this.user
 					val subId = this.arguments.submission
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Event.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
@@ -638,7 +624,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 					if (submission == null) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Leave.Response.notfound
 								.withContext(this@action)
 								.translateNamed(
@@ -651,7 +637,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val author = platform.getUser(userId)
 
 					if (author == null) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Invite.Response.usernotfound
 								.withContext(this@action)
 								.translateNamed(
@@ -662,7 +648,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					}
 
 					if (!submission.authors.contains(author.id)) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Leave.Response.notfound
 								.withContext(this@action)
 								.translateNamed(
@@ -673,7 +659,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					}
 
 					if (submission.authors.size < 2) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Leave.Response.last
 								.withContext(this@action)
 								.translateNamed(
@@ -685,7 +671,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 					platform.withAuth(this.user).leaveSubmission(curEvent, subId)
 
-					ackEphemeral {
+					respond {
 						content = Translations.Commands.Submission.Leave.Response.success
 							.withContext(this@action)
 							.translateNamed(
@@ -696,18 +682,16 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			}
 
 			// Invite user to submission
-			unsafeSubCommand(::InviteSubmissionArgs) {
+			ephemeralSubCommand(::InviteSubmissionArgs) {
 				name = Translations.Commands.Submission.Invite.name
 				description = Translations.Commands.Submission.Invite.description
-
-				initialResponse = InitialSlashCommandResponse.None
 
 				action {
 					val subId = this.arguments.submission
 					val userId = this.arguments.user
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Event.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
@@ -718,7 +702,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 					if (submission == null) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Invite.Response.notfound
 								.withContext(this@action)
 								.translateNamed(
@@ -731,7 +715,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val author = platform.getUser(this.arguments.user)
 
 					if (author == null) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Invite.Response.usernotfound
 								.withContext(this@action)
 								.translateNamed(
@@ -742,7 +726,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					}
 
 					if (submission.authors.contains(author.id)) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Invite.Response.already
 								.withContext(this@action)
 								.translateNamed(
@@ -755,7 +739,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 					platform.withAuth(this.user).inviteSubmissionAuthor(curEvent, subId, author.id)
 
-					ackEphemeral {
+					respond {
 						content = Translations.Commands.Submission.Invite.Response.success
 							.withContext(this@action)
 							.translateNamed(
@@ -852,26 +836,6 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		}
 	}
 
-	open inner class InviteSubmissionArgs : Arguments() {
-		val submission by string {
-			name = Translations.Arguments.Submission.Edit.name
-			description = Translations.Arguments.Submission.Edit.description
-
-			autoComplete {
-				val curEvent = platform.getCurrentEvent().event ?: return@autoComplete
-				suggestStringCollection(
-					platform.getUserSubmissions(this.user.id)
-						.filter { it.event == curEvent }
-						.map { it.id }
-				)
-			}
-		}
-		val user by user {
-			name = Translations.Arguments.Submission.Invite.User.name
-			description = Translations.Arguments.Submission.Invite.User.description
-		}
-	}
-
 	open inner class SubmissionArg : Arguments() {
 		val submission by string {
 			name = Translations.Arguments.Submission.Edit.name
@@ -885,6 +849,13 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						.map { it.id }
 				)
 			}
+		}
+	}
+
+	open inner class InviteSubmissionArgs : SubmissionArg() {
+		val user by user {
+			name = Translations.Arguments.Submission.Invite.User.name
+			description = Translations.Arguments.Submission.Invite.User.description
 		}
 	}
 

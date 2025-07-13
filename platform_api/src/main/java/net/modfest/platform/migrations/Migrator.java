@@ -309,7 +309,7 @@ public record Migrator(JsonUtil json, Path root) {
 	}
 
 	/**
-	 * V6
+	 * V8
 	 * The "minecraft_accounts" field inside user data has been added
 	 */
 	public void migrateTo8() {
