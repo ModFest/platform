@@ -175,22 +175,6 @@ public class EventController {
 		);
 	}
 
-	@PatchMapping("/event/{eventId}/claim/{subId}")
-	public SubmissionResponseData editSubmissionClaimData(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionData.ClaimData editData) throws PlatformStandardException {
-		var event = getEvent(eventId);
-		var submission = service.getSubmission(eventId, subId);
-		if (submission == null) {
-			throw new IllegalArgumentException();// TODO
-		}
-
-		checkCanEdit(event, submission);
-
-		return service.addResponseInfo(
-			request,
-			service.editSubmissionClaim(submission, editData)
-		);
-	}
-
 	@PatchMapping("/event/{eventId}/booth/{subId}")
 	public SubmissionResponseData editSubmissionBoothData(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionData.BoothData editData) throws PlatformStandardException {
 		var event = getEvent(eventId);

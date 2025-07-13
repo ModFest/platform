@@ -76,12 +76,10 @@ public class JsonTests {
 					"dwdadw"
 				)),
 				"bb",
-				new SubmissionData.ClaimData(
-					new SubmissionData.ClaimData.Warp(10, -20, 100, SubmissionData.ClaimData.Direction.EAST),
-					new SubmissionData.ClaimData.Marker(500, -525),
-					"minecraft:gold_nugget"
-				),
 				new SubmissionData.BoothData(
+					new SubmissionData.BoothData.Column(500, -525),
+					new SubmissionData.BoothData.WarpCoordinates(10, -20, 100, SubmissionData.BoothData.WarpCoordinates.Direction.EAST),
+					"minecraft:gold_nugget",
 					3,
 					1,
 					SubmissionData.BoothData.BoothStatus.UNDER_CONSTRUCTION

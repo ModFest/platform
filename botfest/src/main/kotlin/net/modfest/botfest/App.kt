@@ -4,9 +4,9 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
 import dev.kord.common.entity.Snowflake
+import dev.kord.rest.builder.message.allowedMentions
 import dev.kord.rest.builder.message.embed
 import dev.kordex.core.ExtensibleBot
-import dev.kordex.core.i18n.withContext
 import dev.kordex.core.utils.env
 import dev.kordex.core.utils.envOrNull
 import dev.kordex.core.utils.loadModule
@@ -29,6 +29,10 @@ private val TOKEN = env("TOKEN")   // Get the bot's token from the env vars or a
 
 suspend fun main() {
 	val bot = ExtensibleBot(TOKEN) {
+		kord {
+			stackTraceRecovery = devMode
+		}
+
 		hooks {
 			beforeKoinSetup {
 				loadModule {
@@ -56,6 +60,8 @@ suspend fun main() {
 		}
 
 		errorResponse { message, type ->
+			allowedMentions { }
+
 			if (type.error is PlatformException) {
 				var data = (type.error as PlatformException).data
 				content = when (data.type) {
@@ -73,6 +79,8 @@ suspend fun main() {
 					PlatformErrorResponse.ErrorType.INTERNAL -> Translations.Apierror.internal
 						.translateNamed("error" to data.data.stringified())
 				}
+			} else {
+				content = message.translate()
 			}
 		}
 

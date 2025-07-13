@@ -6,15 +6,14 @@ import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.EphemeralSlashCommand
 import dev.kordex.core.commands.application.slash.EphemeralSlashCommandContext
 import dev.kordex.core.commands.application.slash.converters.ChoiceEnum
-import dev.kordex.core.commands.application.slash.converters.impl.enumChoice
-import dev.kordex.core.commands.application.slash.converters.impl.numberChoice
 import dev.kordex.core.commands.application.slash.converters.impl.optionalEnumChoice
 import dev.kordex.core.commands.application.slash.converters.impl.optionalNumberChoice
 import dev.kordex.core.commands.application.slash.converters.impl.optionalStringChoice
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.application.slash.group
 import dev.kordex.core.commands.converters.impl.attachment
-import dev.kordex.core.commands.converters.impl.defaultingInt
+import dev.kordex.core.commands.converters.impl.optionalAttachment
+import dev.kordex.core.commands.converters.impl.optionalInt
 import dev.kordex.core.commands.converters.impl.string
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.components
@@ -38,10 +37,10 @@ import kotlinx.serialization.json.putJsonArray
 import net.modfest.botfest.MAIN_GUILD_ID
 import net.modfest.botfest.Platform
 import net.modfest.botfest.i18n.Translations
-import net.modfest.platform.pojo.SubmissionData
 import net.modfest.platform.pojo.SubmissionData.AssociatedData.Modrinth
 import net.modfest.platform.pojo.SubmissionData.AssociatedData.Other
-import net.modfest.platform.pojo.SubmissionData.BoothData.BoothStatus
+import net.modfest.platform.pojo.SubmissionData.BoothData
+import net.modfest.platform.pojo.SubmissionData.BoothData.Column
 import net.modfest.platform.pojo.SubmissionPatchData
 import net.modfest.platform.pojo.SubmitRequestOther
 import org.koin.core.component.inject
@@ -62,49 +61,37 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		var slashScreenshot: EphemeralSlashCommand<ImageArg, ModalForm>? = null
 		// Commands for submitting
 		ephemeralSlashCommand {
-			name = Translations.Commands.Event.Submit.name
-			description = Translations.Commands.Event.Submit.description
+			name = Translations.Commands.Submit.name
+			description = Translations.Commands.Submit.description
 
 			guild(MAIN_GUILD_ID)
 
 			// Submitting a modrinth project
-			ephemeralSubCommand(::SubmitModalModrinth) {
-				name = Translations.Commands.Event.Submit.Modrinth.name
-				description = Translations.Commands.Event.Submit.Modrinth.description
+			ephemeralSubCommand(::ModrinthArg) {
+				name = Translations.Commands.Submit.Modrinth.name
+				description = Translations.Commands.Submit.Modrinth.description
 
-				action { modal ->
-					if (modal == null) return@action
+				action {
 					val curEvent = platform.getCurrentEvent().event
 
 					if (curEvent == null) {
 						respond {
-							content = Translations.Commands.Event.Submit.Response.unavailable
+							content = Translations.Commands.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
 						}
 						return@action
 					}
 
-					val matcher = MODRINTH_REGEX.matcher(modal.modrinthUrl.value!!)
-
-					if (!matcher.find()) {
-						respond {
-							content = Translations.Commands.Event.Submit.Response.invalid
-								.withContext(this@action)
-								.translateNamed(
-									"url" to modal.modrinthUrl.value
-								)
-						}
-						return@action
-					}
-
+					val matcher = MODRINTH_REGEX.matcher(arguments.url)
+					matcher.find()
 					val projectSlug = matcher.group(2)
 
 					val eventInfo = platform.getEvent(curEvent)
 					val submission = platform.withAuth(this.user).submitModrinth(curEvent, projectSlug)
 
 					respond {
-						content = Translations.Commands.Event.Submit.Response.success
+						content = Translations.Commands.Submit.Response.success
 							.withContext(this@action)
 							.translateNamed(
 								"event" to eventInfo.name,
@@ -116,8 +103,8 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 			// Submitting a non-modrinth project
 			ephemeralSubCommand(::SubmitModalOther) {
-				name = Translations.Commands.Event.Submit.Other.name
-				description = Translations.Commands.Event.Submit.Other.description
+				name = Translations.Commands.Submit.Other.name
+				description = Translations.Commands.Submit.Other.description
 
 				action { modal ->
 					if (modal == null) return@action
@@ -125,7 +112,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 					if (curEvent == null) {
 						respond {
-							content = Translations.Commands.Event.Submit.Response.unavailable
+							content = Translations.Commands.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
 						}
@@ -144,7 +131,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val eventInfo = platform.getEvent(curEvent)
 
 					respond {
-						content = Translations.Commands.Event.Submit.Other.Response.success
+						content = Translations.Commands.Submit.Other.Response.success
 							.withContext(this@action)
 							.translateNamed(
 								"event" to eventInfo.name,
@@ -159,8 +146,8 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 			// Submit an event / panel
 			ephemeralSubCommand {
-				name = Translations.Commands.Event.Submit.Event.name
-				description = Translations.Commands.Event.Submit.Event.description
+				name = Translations.Commands.Submit.Event.name
+				description = Translations.Commands.Submit.Event.description
 
 				action {
 					respond {
@@ -241,7 +228,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
 						ackEphemeral {
-							content = Translations.Commands.Event.Submit.Response.unavailable
+							content = Translations.Commands.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
 						}
@@ -298,18 +285,16 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			}
 
 			// Delete submission data
-			unsafeSubCommand(::SubmissionArg) {
+			ephemeralSubCommand(::SubmissionArg) {
 				name = Translations.Commands.Submission.Delete.name
 				description = Translations.Commands.Submission.Delete.description
-
-				initialResponse = InitialSlashCommandResponse.None
 
 				action {
 					val subId = this.arguments.submission
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
-						ackEphemeral {
-							content = Translations.Commands.Event.Submit.Response.unavailable
+						respond {
+							content = Translations.Commands.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
 						}
@@ -319,7 +304,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 					if (submission == null) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Delete.Response.notfound
 								.withContext(this@action)
 								.translateNamed(
@@ -331,7 +316,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 					platform.withAuth(this.user).deleteSubmission(curEvent, subId)
 
-					ackEphemeral {
+					respond {
 						content = Translations.Commands.Submission.Delete.Response.success
 							.withContext(this@action)
 							.translateNamed(
@@ -345,18 +330,16 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 				description = Translations.Commands.Group.Submission.Update.description
 
 				// Update submission version
-				unsafeSubCommand(::SubmissionArg) {
+				ephemeralSubCommand(::SubmissionArg) {
 					name = Translations.Commands.Submission.Update.Version.name
 					description = Translations.Commands.Submission.Update.Version.description
-
-					initialResponse = InitialSlashCommandResponse.None
 
 					action {
 						val subId = this.arguments.submission
 						val curEvent = platform.getCurrentEvent().event
 						if (curEvent == null) {
-							ackEphemeral {
-								content = Translations.Commands.Event.Submit.Response.unavailable
+							respond {
+								content = Translations.Commands.Submit.Response.unavailable
 									.withContext(this@action)
 									.translateNamed()
 							}
@@ -366,7 +349,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 						if (submission == null) {
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Submission.Update.Version.Response.notfound
 									.withContext(this@action)
 									.translateNamed(
@@ -399,17 +382,17 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 									)
 							}
 						} else if (submission.platform.inner !is Modrinth) {
-								ackEphemeral {
-									content = Translations.Commands.Submission.Update.Version.Response.notmodrinth
-										.withContext(this@action)
-										.translateNamed(
-											"subId" to subId
-										)
-								}
-							} else {
+							respond {
+								content = Translations.Commands.Submission.Update.Version.Response.notmodrinth
+									.withContext(this@action)
+									.translateNamed(
+										"subId" to subId
+									)
+							}
+						} else {
 							val updatedSubmission = platform.withAuth(this.user).updateSubmissionVersion(curEvent, subId)
 
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Submission.Update.Version.Response.success
 									.withContext(this@action)
 									.translateNamed(
@@ -421,18 +404,16 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					}
 				}
 				// Update submission meta
-				unsafeSubCommand(::SubmissionArg) {
+				ephemeralSubCommand(::SubmissionArg) {
 					name = Translations.Commands.Submission.Update.Meta.name
 					description = Translations.Commands.Submission.Update.Meta.description
-
-					initialResponse = InitialSlashCommandResponse.None
 
 					action {
 						val subId = this.arguments.submission
 						val curEvent = platform.getCurrentEvent().event
 						if (curEvent == null) {
-							ackEphemeral {
-								content = Translations.Commands.Event.Submit.Response.unavailable
+							respond {
+								content = Translations.Commands.Submit.Response.unavailable
 									.withContext(this@action)
 									.translateNamed()
 							}
@@ -442,7 +423,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 						if (submission == null) {
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Submission.Update.Meta.Response.notfound
 									.withContext(this@action)
 									.translateNamed(
@@ -453,7 +434,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						}
 
 						if (submission.platform.inner !is Modrinth) {
-							ackEphemeral {
+							respond {
 								content = Translations.Commands.Submission.Update.Meta.Response.notmodrinth
 									.withContext(this@action)
 									.translateNamed(
@@ -465,105 +446,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 						platform.withAuth(this.user).updateSubmissionMeta(curEvent, subId)
 
-						ackEphemeral {
-							content = Translations.Commands.Submission.Update.Meta.Response.success
-								.withContext(this@action)
-								.translateNamed(
-									"subId" to subId
-								)
-						}
-					}
-				}
-				// Update submission claim data
-				unsafeSubCommand(::ClaimArg) {
-					name = Translations.Commands.Submission.Update.Claim.name
-					description = Translations.Commands.Submission.Update.Claim.description
-
-					initialResponse = InitialSlashCommandResponse.None
-
-					action {
-						val subId = this.arguments.submission
-						val curEvent = platform.getCurrentEvent().event
-						if (curEvent == null) {
-							ackEphemeral {
-								content = Translations.Commands.Event.Submit.Response.unavailable
-									.withContext(this@action)
-									.translateNamed()
-							}
-							return@action
-						}
-
-						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
-
-						if (submission == null) {
-							ackEphemeral {
-								content = Translations.Commands.Submission.Update.Meta.Response.notfound
-									.withContext(this@action)
-									.translateNamed(
-										"subId" to subId
-									)
-							}
-							return@action
-						}
-
-						platform.withAuth(this.user).editSubmissionClaimData(curEvent, subId, SubmissionData.ClaimData(
-							SubmissionData.ClaimData.Warp(
-								this.arguments.warpX?.toInt() ?: submission.claimData?.warp?.x ?: 0,
-								this.arguments.warpY?.toInt() ?: submission.claimData?.warp?.y ?: 0,
-								this.arguments.warpZ?.toInt() ?: submission.claimData?.warp?.z ?: 0,
-								SubmissionData.ClaimData.Direction.valueOf(this.arguments.warpDirection?.name ?: submission.claimData?.warp?.direction?.name ?: "NORTH")
-							),
-							SubmissionData.ClaimData.Marker(
-								this.arguments.markerX?.toInt() ?: submission.claimData?.marker?.x ?: 0,
-								this.arguments.markerZ?.toInt() ?: submission.claimData?.marker?.z ?: 0,
-							),
-							this.arguments.itemIcon ?: "gold_nugget"
-						))
-
-						ackEphemeral {
-							content = Translations.Commands.Submission.Update.Meta.Response.success
-								.withContext(this@action)
-								.translateNamed(
-									"subId" to subId
-								)
-						}
-					}
-				}
-				// Update submission booth data
-				unsafeSubCommand(::BoothArg) {
-					name = Translations.Commands.Submission.Update.Booth.name
-					description = Translations.Commands.Submission.Update.Booth.description
-
-					initialResponse = InitialSlashCommandResponse.None
-
-					action {
-						val subId = this.arguments.submission
-						val curEvent = platform.getCurrentEvent().event
-						if (curEvent == null) {
-							ackEphemeral {
-								content = Translations.Commands.Event.Submit.Response.unavailable
-									.withContext(this@action)
-									.translateNamed()
-							}
-							return@action
-						}
-
-						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
-
-						if (submission == null) {
-							ackEphemeral {
-								content = Translations.Commands.Submission.Update.Meta.Response.notfound
-									.withContext(this@action)
-									.translateNamed(
-										"subId" to subId
-									)
-							}
-							return@action
-						}
-
-						platform.withAuth(this.user).editSubmissionBoothData(curEvent, subId, SubmissionData.BoothData(this.arguments.shards.toInt(), this.arguments.eta, SubmissionData.BoothData.BoothStatus.valueOf(this.arguments.status.name)))
-
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Update.Meta.Response.success
 								.withContext(this@action)
 								.translateNamed(
@@ -575,19 +458,17 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			}
 
 			// Leave submission
-			unsafeSubCommand(::SubmissionArg) {
+			ephemeralSubCommand(::SubmissionArg) {
 				name = Translations.Commands.Submission.Leave.name
 				description = Translations.Commands.Submission.Leave.description
-
-				initialResponse = InitialSlashCommandResponse.None
 
 				action {
 					val userId = this.user
 					val subId = this.arguments.submission
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
-						ackEphemeral {
-							content = Translations.Commands.Event.Submit.Response.unavailable
+						respond {
+							content = Translations.Commands.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
 						}
@@ -597,7 +478,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 					if (submission == null) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Leave.Response.notfound
 								.withContext(this@action)
 								.translateNamed(
@@ -610,7 +491,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val author = platform.getUser(userId)
 
 					if (author == null) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Invite.Response.usernotfound
 								.withContext(this@action)
 								.translateNamed(
@@ -621,7 +502,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					}
 
 					if (!submission.authors.contains(author.id)) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Leave.Response.notfound
 								.withContext(this@action)
 								.translateNamed(
@@ -632,7 +513,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					}
 
 					if (submission.authors.size < 2) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Leave.Response.last
 								.withContext(this@action)
 								.translateNamed(
@@ -644,7 +525,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 					platform.withAuth(this.user).leaveSubmission(curEvent, subId)
 
-					ackEphemeral {
+					respond {
 						content = Translations.Commands.Submission.Leave.Response.success
 							.withContext(this@action)
 							.translateNamed(
@@ -655,19 +536,17 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			}
 
 			// Invite user to submission
-			unsafeSubCommand(::InviteSubmissionArgs) {
+			ephemeralSubCommand(::InviteSubmissionArgs) {
 				name = Translations.Commands.Submission.Invite.name
 				description = Translations.Commands.Submission.Invite.description
-
-				initialResponse = InitialSlashCommandResponse.None
 
 				action {
 					val subId = this.arguments.submission
 					val userId = this.arguments.user
 					val curEvent = platform.getCurrentEvent().event
 					if (curEvent == null) {
-						ackEphemeral {
-							content = Translations.Commands.Event.Submit.Response.unavailable
+						respond {
+							content = Translations.Commands.Submit.Response.unavailable
 								.withContext(this@action)
 								.translateNamed()
 						}
@@ -677,7 +556,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
 
 					if (submission == null) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Invite.Response.notfound
 								.withContext(this@action)
 								.translateNamed(
@@ -690,7 +569,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val author = platform.getUser(this.arguments.user)
 
 					if (author == null) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Invite.Response.usernotfound
 								.withContext(this@action)
 								.translateNamed(
@@ -701,7 +580,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					}
 
 					if (submission.authors.contains(author.id)) {
-						ackEphemeral {
+						respond {
 							content = Translations.Commands.Submission.Invite.Response.already
 								.withContext(this@action)
 								.translateNamed(
@@ -714,7 +593,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 					platform.withAuth(this.user).inviteSubmissionAuthor(curEvent, subId, author.id)
 
-					ackEphemeral {
+					respond {
 						content = Translations.Commands.Submission.Invite.Response.success
 							.withContext(this@action)
 							.translateNamed(
@@ -749,29 +628,197 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			}
 
 			ephemeralSubCommand(::ImageArg) {
-				name = Translations.Commands.Submission.EditImage.Claim.label
-				description = Translations.Commands.Submission.EditImage.Claim.description
-
-				action {
-					imageCommandAction("claim")
-				}
-			}
-
-			ephemeralSubCommand(::ImageArg) {
-				name = Translations.Commands.Submission.EditImage.Test.label
-				description = Translations.Commands.Submission.EditImage.Test.description
+				name = Translations.Commands.Submission.Test.name
+				description = Translations.Commands.Submission.Test.description
 
 				action {
 					imageCommandAction("test")
 				}
 			}
 
-			ephemeralSubCommand(::ImageArg) {
-				name = Translations.Commands.Submission.EditImage.Build.label
-				description = Translations.Commands.Submission.EditImage.Build.description
+			ephemeralSubCommand(::ClaimArg) {
+				name = Translations.Commands.Submission.Claim.name
+				description = Translations.Commands.Submission.Claim.description
 
 				action {
-					imageCommandAction("build")
+					val subId = this.arguments.submission
+					val curEvent = platform.getCurrentEvent().event
+					if (curEvent == null) {
+						respond {
+							content = Translations.Commands.Submit.Response.unavailable
+								.withContext(this@action)
+								.translateNamed()
+						}
+						return@action
+					}
+
+					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
+
+					if (submission == null) {
+						respond {
+							content = Translations.Commands.Submission.Edit.Response.notfound
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+						return@action
+					}
+
+					if (submission.boothData == null || submission.boothData?.markerPos == null) {
+						// Must provide ALL data initially
+						if (this.arguments.image == null ||
+							this.arguments.markerX == null ||
+							this.arguments.markerZ == null ||
+							this.arguments.warpX == null ||
+							this.arguments.warpY == null ||
+							this.arguments.warpZ == null ||
+							this.arguments.warpDirection == null
+						) {
+							respond {
+								content = Translations.Commands.Submission.Claim.Response.incomplete
+									.withContext(this@action)
+									.translateNamed(
+										"subId" to subId
+									)
+							}
+							return@action
+						}
+					}
+
+					if (this.arguments.image != null) {
+						platform.withAuth(this.user).editSubmissionImage(curEvent, subId, "claim", this.arguments.image!!.url)
+					}
+
+					if (this.arguments.image != null ||
+						this.arguments.markerX != null ||
+						this.arguments.markerZ != null ||
+						this.arguments.warpX != null ||
+						this.arguments.warpY != null ||
+						this.arguments.warpZ != null ||
+						this.arguments.warpDirection != null
+					) {
+						platform.withAuth(this.user).editSubmissionBoothData(curEvent, subId, BoothData(
+							Column(
+								this.arguments.markerX ?: submission.boothData!!.markerPos!!.x,
+								this.arguments.markerZ ?: submission.boothData!!.markerPos!!.z
+							),
+							BoothData.WarpCoordinates(
+								this.arguments.warpX ?: submission.boothData!!.warp!!.x,
+								this.arguments.warpY ?: submission.boothData!!.warp!!.y,
+								this.arguments.warpZ ?: submission.boothData!!.warp!!.z,
+								BoothData.WarpCoordinates.Direction.valueOf(this.arguments.warpDirection?.name ?: submission.boothData!!.warp!!.direction.name)
+							),
+							null,
+							null,
+							null,
+							null
+						))
+					} else if (this.arguments.image == null) {
+						respond {
+							content = Translations.Commands.Submission.Claim.Response.unchanged
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+						return@action
+					}
+
+					respond {
+						content = Translations.Commands.Submission.Claim.Response.success
+							.withContext(this@action)
+							.translateNamed(
+								"subId" to subId
+							)
+					}
+				}
+			}
+
+			ephemeralSubCommand(::BuildArg) {
+				name = Translations.Commands.Submission.Build.name
+				description = Translations.Commands.Submission.Build.description
+
+				action {
+					val subId = this.arguments.submission
+					val curEvent = platform.getCurrentEvent().event
+					if (curEvent == null) {
+						respond {
+							content = Translations.Commands.Submit.Response.unavailable
+								.withContext(this@action)
+								.translateNamed()
+						}
+						return@action
+					}
+
+					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
+
+					if (submission == null) {
+						respond {
+							content = Translations.Commands.Submission.Edit.Response.notfound
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+						return@action
+					}
+
+					if (submission.boothData == null || submission.boothData?.itemIcon == null) {
+						// Must provide ALL data initially
+						if (this.arguments.image == null ||
+							this.arguments.itemIcon == null ||
+							this.arguments.shards == null ||
+							this.arguments.eta == null ||
+							this.arguments.status == null
+						) {
+							respond {
+								content = Translations.Commands.Submission.Build.Response.incomplete
+									.withContext(this@action)
+									.translateNamed(
+										"subId" to subId
+									)
+							}
+							return@action
+						}
+					}
+
+					if (this.arguments.image != null) {
+						platform.withAuth(this.user).editSubmissionImage(curEvent, subId, "build", this.arguments.image!!.url)
+					}
+
+					if (this.arguments.image != null ||
+						this.arguments.itemIcon != null ||
+						this.arguments.shards != null ||
+						this.arguments.eta != null ||
+						this.arguments.status != null
+					) {
+						platform.withAuth(this.user).editSubmissionBoothData(curEvent, subId, BoothData(
+							null,
+							null,
+							this.arguments.itemIcon,
+							this.arguments.shards?.toInt(),
+							this.arguments.eta,
+							if (this.arguments.status == null) null else BoothData.BoothStatus.valueOf(this.arguments.status!!.name)
+						))
+					} else if (this.arguments.image == null) {
+						respond {
+							content = Translations.Commands.Submission.Build.Response.unchanged
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+						return@action
+					}
+
+					respond {
+						content = Translations.Commands.Submission.Build.Response.success
+							.withContext(this@action)
+							.translateNamed(
+								"subId" to subId
+							)
+					}
 				}
 			}
 		}
@@ -782,7 +829,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		val curEvent = platform.getCurrentEvent().event
 		if (curEvent == null) {
 			respond {
-				content = Translations.Commands.Event.Submit.Response.unavailable
+				content = Translations.Commands.Submit.Response.unavailable
 					.withContext(this@imageCommandAction)
 					.translateNamed()
 			}
@@ -811,26 +858,6 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		}
 	}
 
-	open inner class InviteSubmissionArgs : Arguments() {
-		val submission by string {
-			name = Translations.Arguments.Submission.Edit.name
-			description = Translations.Arguments.Submission.Edit.description
-
-			autoComplete {
-				val curEvent = platform.getCurrentEvent().event ?: return@autoComplete
-				suggestStringCollection(
-					platform.getUserSubmissions(this.user.id)
-						.filter { it.event == curEvent }
-						.map { it.id }
-				)
-			}
-		}
-		val user by user {
-			name = Translations.Arguments.Submission.Invite.User.name
-			description = Translations.Arguments.Submission.Invite.User.description
-		}
-	}
-
 	open inner class SubmissionArg : Arguments() {
 		val submission by string {
 			name = Translations.Arguments.Submission.Edit.name
@@ -847,56 +874,76 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		}
 	}
 
-	inner class ClaimArg : SubmissionArg() {
-		val markerX by optionalNumberChoice {
+	open inner class ModrinthArg : Arguments() {
+		val url by string {
+			name = Translations.Arguments.Submit.Modrinth.Url.name
+			description = Translations.Arguments.Submit.Modrinth.Url.description
+			validate {
+				failIfNot(Translations.Arguments.Submit.Modrinth.Url.Validation.invalid) {
+					MODRINTH_REGEX.matcher(value).find()
+				}
+			}
+		}
+	}
+
+	open inner class InviteSubmissionArgs : SubmissionArg() {
+		val user by user {
+			name = Translations.Arguments.Submission.Invite.User.name
+			description = Translations.Arguments.Submission.Invite.User.description
+		}
+	}
+
+	inner class ClaimArg : OptionalImageArg() {
+		val markerX by optionalInt {
 			name = Translations.Arguments.Submission.Claim.MarkerX.name
 			description = Translations.Arguments.Submission.Claim.MarkerX.description
 		}
-		val markerZ by optionalNumberChoice {
+		val markerZ by optionalInt {
 			name = Translations.Arguments.Submission.Claim.MarkerZ.name
 			description = Translations.Arguments.Submission.Claim.MarkerZ.description
 		}
-		val warpX by optionalNumberChoice {
+		val warpX by optionalInt {
 			name = Translations.Arguments.Submission.Claim.WarpX.name
 			description = Translations.Arguments.Submission.Claim.WarpX.description
 		}
-		val warpY by optionalNumberChoice {
+		val warpY by optionalInt {
 			name = Translations.Arguments.Submission.Claim.WarpY.name
 			description = Translations.Arguments.Submission.Claim.WarpY.description
 		}
-		val warpZ by optionalNumberChoice {
+		val warpZ by optionalInt {
 			name = Translations.Arguments.Submission.Claim.WarpZ.name
 			description = Translations.Arguments.Submission.Claim.WarpZ.description
 		}
 		val warpDirection by optionalEnumChoice<WarpDirection> {
 			name = Translations.Arguments.Submission.Claim.Direction.name
 			description = Translations.Arguments.Submission.Claim.Direction.description
-		}
-		val itemIcon by optionalStringChoice {
-			name = Translations.Arguments.Submission.Claim.ItemIcon.name
-			description = Translations.Arguments.Submission.Claim.ItemIcon.description
+			typeName = Translations.Arguments.Submission.Claim.Direction.type
 		}
 	}
 
-	inner class BoothArg : SubmissionArg() {
-		val shards by numberChoice {
-			name = Translations.Arguments.Submission.Booth.Shards.name
-			description = Translations.Arguments.Submission.Booth.Shards.description
+	inner class BuildArg : OptionalImageArg() {
+		val itemIcon by optionalStringChoice {
+			name = Translations.Arguments.Submission.Build.ItemIcon.name
+			description = Translations.Arguments.Submission.Build.ItemIcon.description
+		}
+		val shards by optionalNumberChoice {
+			name = Translations.Arguments.Submission.Build.Shards.name
+			description = Translations.Arguments.Submission.Build.Shards.description
 			choices = linkedMapOf(
-				Translations.Arguments.Submission.Booth.Shards.Choice.one to 1,
-				Translations.Arguments.Submission.Booth.Shards.Choice.two to 2,
-				Translations.Arguments.Submission.Booth.Shards.Choice.three to 3,
-				Translations.Arguments.Submission.Booth.Shards.Choice.four to 4
+				Translations.Arguments.Submission.Build.Shards.Choice.one to 1,
+				Translations.Arguments.Submission.Build.Shards.Choice.two to 2,
+				Translations.Arguments.Submission.Build.Shards.Choice.three to 3,
+				Translations.Arguments.Submission.Build.Shards.Choice.four to 4
 			)
 		}
-		val eta by defaultingInt {
-			name = Translations.Arguments.Submission.Booth.Eta.name
-			description = Translations.Arguments.Submission.Booth.Eta.description
-			defaultValue = 3
+		val eta by optionalInt {
+			name = Translations.Arguments.Submission.Build.Eta.name
+			description = Translations.Arguments.Submission.Build.Eta.description
 		}
-		val status by enumChoice<BoothStatus> {
-			name = Translations.Arguments.Submission.Booth.Status.name
-			description = Translations.Arguments.Submission.Booth.Status.description
+		val status by optionalEnumChoice<BoothStatus> {
+			name = Translations.Arguments.Submission.Build.Status.name
+			description = Translations.Arguments.Submission.Build.Status.description
+			typeName = Translations.Arguments.Submission.Build.Status.type
 		}
 	}
 
@@ -920,9 +967,21 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 	}
 
 	enum class BoothStatus(override val readableName: Key) : ChoiceEnum {
-		UNDER_CONSTRUCTION(Translations.Arguments.Submission.Booth.Status.Choice.constructing),
-		PLAYABLE(Translations.Arguments.Submission.Booth.Status.Choice.playable),
-		COMPLETE(Translations.Arguments.Submission.Booth.Status.Choice.complete)
+		UNDER_CONSTRUCTION(Translations.Arguments.Submission.Build.Status.Choice.constructing),
+		PLAYABLE(Translations.Arguments.Submission.Build.Status.Choice.playable),
+		COMPLETE(Translations.Arguments.Submission.Build.Status.Choice.complete)
+	}
+
+	open inner class OptionalImageArg : SubmissionArg() {
+		val image by optionalAttachment {
+			name = Translations.Arguments.Submission.EditImage.name
+			description = Translations.Arguments.Submission.EditImage.description
+			validate {
+				failIfNot(Translations.Arguments.Submission.EditImage.Validation.invalid) {
+					value?.isImage ?: true
+				}
+			}
+		}
 	}
 
 	inner class ImageArg : SubmissionArg() {
@@ -930,7 +989,9 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			name = Translations.Arguments.Submission.EditImage.name
 			description = Translations.Arguments.Submission.EditImage.description
 			validate {
-				value.isImage
+				failIfNot(Translations.Arguments.Submission.EditImage.Validation.invalid) {
+					value.isImage
+				}
 			}
 		}
 	}
@@ -977,18 +1038,6 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			placeholder = Translations.Modal.Submission.Downloadurl.placeholder
 			maxLength = 128
 			required = false
-		}
-	}
-
-	class SubmitModalModrinth : ModalForm() {
-		override var title: Key = Translations.Modal.Submit.title
-
-		val modrinthUrl = lineText {
-			label = Translations.Modal.Submit.Url.label
-			placeholder = Translations.Modal.Submit.Url.placeholder
-			minLength = 10
-			maxLength = 1024
-			required = true
 		}
 	}
 
