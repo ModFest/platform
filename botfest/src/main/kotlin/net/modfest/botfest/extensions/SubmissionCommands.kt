@@ -41,7 +41,6 @@ import net.modfest.botfest.i18n.Translations
 import net.modfest.platform.pojo.SubmissionData
 import net.modfest.platform.pojo.SubmissionData.AssociatedData.Modrinth
 import net.modfest.platform.pojo.SubmissionData.AssociatedData.Other
-import net.modfest.platform.pojo.SubmissionData.BoothData.BoothStatus
 import net.modfest.platform.pojo.SubmissionPatchData
 import net.modfest.platform.pojo.SubmitRequestOther
 import org.koin.core.component.inject
@@ -871,6 +870,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		val warpDirection by optionalEnumChoice<WarpDirection> {
 			name = Translations.Arguments.Submission.Claim.Direction.name
 			description = Translations.Arguments.Submission.Claim.Direction.description
+			typeName = Translations.Arguments.Submission.Claim.Direction.type
 		}
 		val itemIcon by optionalStringChoice {
 			name = Translations.Arguments.Submission.Claim.ItemIcon.name
@@ -897,6 +897,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		val status by enumChoice<BoothStatus> {
 			name = Translations.Arguments.Submission.Booth.Status.name
 			description = Translations.Arguments.Submission.Booth.Status.description
+			typeName = Translations.Arguments.Submission.Booth.Status.type
 		}
 	}
 
