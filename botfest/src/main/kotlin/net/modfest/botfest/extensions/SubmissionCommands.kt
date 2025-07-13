@@ -83,7 +83,9 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						return@action
 					}
 
-					val projectSlug = MODRINTH_REGEX.matcher(arguments.url).group(2)
+					val matcher = MODRINTH_REGEX.matcher(arguments.url)
+					matcher.find()
+					val projectSlug = matcher.group(2)
 
 					val eventInfo = platform.getEvent(curEvent)
 					val submission = platform.withAuth(this.user).submitModrinth(curEvent, projectSlug)
