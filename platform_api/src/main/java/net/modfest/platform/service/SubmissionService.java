@@ -65,19 +65,15 @@ public class SubmissionService {
 		return getSubmission(data.event(), data.id());
 	}
 
-	public SubmissionData editSubmissionMarker(SubmissionData data, SubmissionData.MarkerData edit) {
-		data = data.withMarkerData(edit);
-		submissionRepository.save(data);
-		return getSubmission(data.event(), data.id());
-	}
-
-	public SubmissionData editSubmissionWarp(SubmissionData data, SubmissionData.WarpData edit) {
-		data = data.withWarpData(edit);
-		submissionRepository.save(data);
-		return getSubmission(data.event(), data.id());
-	}
-
 	public SubmissionData editSubmissionBooth(SubmissionData data, SubmissionData.BoothData edit) {
+		if (data.boothData() != null) {
+			if (edit.markerPos() == null) edit = edit.withMarkerPos(data.boothData().markerPos());
+			if (edit.warp() == null) edit = edit.withWarp(data.boothData().warp());
+			if (edit.itemIcon() == null) edit = edit.withItemIcon(data.boothData().itemIcon());
+			if (edit.shards() == null) edit = edit.withShards(data.boothData().shards());
+			if (edit.minutesToComplete() == null) edit = edit.withMinutesToComplete(data.boothData().minutesToComplete());
+			if (edit.status() == null) edit = edit.withStatus(data.boothData().status());
+		}
 		data = data.withBoothData(edit);
 		submissionRepository.save(data);
 		return getSubmission(data.event(), data.id());
@@ -238,8 +234,6 @@ public class SubmissionService {
 			),
 			submitData.sourceUrl(),
 			null,
-			null,
-			null,
 			new SubmissionData.Awards(
 				Set.of(),
 				Set.of()
@@ -282,8 +276,6 @@ public class SubmissionService {
 					)
 				),
 				project.sourceUrl,
-				null,
-				null,
 				null,
 				new SubmissionData.Awards(
 					Set.of(),

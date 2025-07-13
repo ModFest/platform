@@ -6,16 +6,14 @@ import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.EphemeralSlashCommand
 import dev.kordex.core.commands.application.slash.EphemeralSlashCommandContext
 import dev.kordex.core.commands.application.slash.converters.ChoiceEnum
-import dev.kordex.core.commands.application.slash.converters.impl.enumChoice
-import dev.kordex.core.commands.application.slash.converters.impl.numberChoice
 import dev.kordex.core.commands.application.slash.converters.impl.optionalEnumChoice
 import dev.kordex.core.commands.application.slash.converters.impl.optionalNumberChoice
 import dev.kordex.core.commands.application.slash.converters.impl.optionalStringChoice
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.application.slash.group
 import dev.kordex.core.commands.converters.impl.attachment
-import dev.kordex.core.commands.converters.impl.defaultingInt
-import dev.kordex.core.commands.converters.impl.int
+import dev.kordex.core.commands.converters.impl.optionalAttachment
+import dev.kordex.core.commands.converters.impl.optionalInt
 import dev.kordex.core.commands.converters.impl.string
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.components
@@ -39,9 +37,10 @@ import kotlinx.serialization.json.putJsonArray
 import net.modfest.botfest.MAIN_GUILD_ID
 import net.modfest.botfest.Platform
 import net.modfest.botfest.i18n.Translations
-import net.modfest.platform.pojo.SubmissionData
 import net.modfest.platform.pojo.SubmissionData.AssociatedData.Modrinth
 import net.modfest.platform.pojo.SubmissionData.AssociatedData.Other
+import net.modfest.platform.pojo.SubmissionData.BoothData
+import net.modfest.platform.pojo.SubmissionData.BoothData.Column
 import net.modfest.platform.pojo.SubmissionPatchData
 import net.modfest.platform.pojo.SubmitRequestOther
 import org.koin.core.component.inject
@@ -468,140 +467,6 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						}
 					}
 				}
-				// Update submission marker data
-				ephemeralSubCommand(::MarkerArg) {
-					name = Translations.Commands.Submission.Update.Marker.name
-					description = Translations.Commands.Submission.Update.Marker.description
-
-					action {
-						val subId = this.arguments.submission
-						val curEvent = platform.getCurrentEvent().event
-						if (curEvent == null) {
-							respond {
-								content = Translations.Commands.Event.Submit.Response.unavailable
-									.withContext(this@action)
-									.translateNamed()
-							}
-							return@action
-						}
-
-						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
-
-						if (submission == null) {
-							respond {
-								content = Translations.Commands.Submission.Update.Meta.Response.notfound
-									.withContext(this@action)
-									.translateNamed(
-										"subId" to subId
-									)
-							}
-							return@action
-						}
-
-						platform.withAuth(this.user).editSubmissionMarkerData(
-							curEvent, subId, SubmissionData.MarkerData(
-								this.arguments.markerX?.toInt() ?: submission.markerData?.x ?: 0,
-								this.arguments.markerZ?.toInt() ?: submission.markerData?.z ?: 0,
-								this.arguments.itemIcon ?: "gold_nugget"
-							)
-						)
-
-						respond {
-							content = Translations.Commands.Submission.Update.Marker.Response.success
-								.withContext(this@action)
-								.translateNamed(
-									"subId" to subId
-								)
-						}
-					}
-				}
-				// Update submission warp data
-				ephemeralSubCommand(::WarpArg) {
-					name = Translations.Commands.Submission.Update.Warp.name
-					description = Translations.Commands.Submission.Update.Warp.description
-
-					action {
-						val subId = this.arguments.submission
-						val curEvent = platform.getCurrentEvent().event
-						if (curEvent == null) {
-							respond {
-								content = Translations.Commands.Event.Submit.Response.unavailable
-									.withContext(this@action)
-									.translateNamed()
-							}
-							return@action
-						}
-
-						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
-
-						if (submission == null) {
-							respond {
-								content = Translations.Commands.Submission.Update.Meta.Response.notfound
-									.withContext(this@action)
-									.translateNamed(
-										"subId" to subId
-									)
-							}
-							return@action
-						}
-
-						platform.withAuth(this.user).editSubmissionWarpData(curEvent, subId, SubmissionData.WarpData(
-								this.arguments.warpX?.toInt() ?: submission.warpData?.x ?: 0,
-								this.arguments.warpY?.toInt() ?: submission.warpData?.y ?: 0,
-								this.arguments.warpZ?.toInt() ?: submission.warpData?.z ?: 0,
-								SubmissionData.WarpData.Direction.valueOf(this.arguments.warpDirection?.name ?: submission.warpData?.direction?.name ?: "NORTH")
-						))
-
-						respond {
-							content = Translations.Commands.Submission.Update.Warp.Response.success
-								.withContext(this@action)
-								.translateNamed(
-									"subId" to subId
-								)
-						}
-					}
-				}
-				// Update submission booth data
-				ephemeralSubCommand(::BoothArg) {
-					name = Translations.Commands.Submission.Update.Booth.name
-					description = Translations.Commands.Submission.Update.Booth.description
-
-					action {
-						val subId = this.arguments.submission
-						val curEvent = platform.getCurrentEvent().event
-						if (curEvent == null) {
-							respond {
-								content = Translations.Commands.Event.Submit.Response.unavailable
-									.withContext(this@action)
-									.translateNamed()
-							}
-							return@action
-						}
-
-						val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
-
-						if (submission == null) {
-							respond {
-								content = Translations.Commands.Submission.Update.Meta.Response.notfound
-									.withContext(this@action)
-									.translateNamed(
-										"subId" to subId
-									)
-							}
-							return@action
-						}
-
-						platform.withAuth(this.user).editSubmissionBoothData(curEvent, subId, SubmissionData.BoothData(this.arguments.shards.toInt(), this.arguments.eta, SubmissionData.BoothData.BoothStatus.valueOf(this.arguments.status.name)))
-
-						respond {
-							content = Translations.Commands.Submission.Update.Booth.Response.success
-								.withContext(this@action)
-								.translateNamed(
-									"subId" to subId
-								)
-						}
-					}
-				}
 			}
 
 			// Leave submission
@@ -775,29 +640,197 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			}
 
 			ephemeralSubCommand(::ImageArg) {
-				name = Translations.Commands.Submission.EditImage.Claim.label
-				description = Translations.Commands.Submission.EditImage.Claim.description
-
-				action {
-					imageCommandAction("claim")
-				}
-			}
-
-			ephemeralSubCommand(::ImageArg) {
-				name = Translations.Commands.Submission.EditImage.Test.label
-				description = Translations.Commands.Submission.EditImage.Test.description
+				name = Translations.Commands.Submission.Test.name
+				description = Translations.Commands.Submission.Test.description
 
 				action {
 					imageCommandAction("test")
 				}
 			}
 
-			ephemeralSubCommand(::ImageArg) {
-				name = Translations.Commands.Submission.EditImage.Build.label
-				description = Translations.Commands.Submission.EditImage.Build.description
+			ephemeralSubCommand(::ClaimArg) {
+				name = Translations.Commands.Submission.Claim.name
+				description = Translations.Commands.Submission.Claim.description
 
 				action {
-					imageCommandAction("build")
+					val subId = this.arguments.submission
+					val curEvent = platform.getCurrentEvent().event
+					if (curEvent == null) {
+						respond {
+							content = Translations.Commands.Event.Submit.Response.unavailable
+								.withContext(this@action)
+								.translateNamed()
+						}
+						return@action
+					}
+
+					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
+
+					if (submission == null) {
+						respond {
+							content = Translations.Commands.Submission.Edit.Response.notfound
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+						return@action
+					}
+
+					if (submission.boothData == null || submission.boothData?.markerPos == null) {
+						// Must provide ALL data initially
+						if (this.arguments.image == null ||
+							this.arguments.markerX == null ||
+							this.arguments.markerZ == null ||
+							this.arguments.warpX == null ||
+							this.arguments.warpY == null ||
+							this.arguments.warpZ == null ||
+							this.arguments.warpDirection == null
+						) {
+							respond {
+								content = Translations.Commands.Submission.Claim.Response.incomplete
+									.withContext(this@action)
+									.translateNamed(
+										"subId" to subId
+									)
+							}
+							return@action
+						}
+					}
+
+					if (this.arguments.image != null) {
+						platform.withAuth(this.user).editSubmissionImage(curEvent, subId, "claim", this.arguments.image!!.url)
+					}
+
+					if (this.arguments.image != null ||
+						this.arguments.markerX != null ||
+						this.arguments.markerZ != null ||
+						this.arguments.warpX != null ||
+						this.arguments.warpY != null ||
+						this.arguments.warpZ != null ||
+						this.arguments.warpDirection != null
+					) {
+						platform.withAuth(this.user).editSubmissionBoothData(curEvent, subId, BoothData(
+							Column(
+								this.arguments.markerX ?: submission.boothData!!.markerPos!!.x,
+								this.arguments.markerZ ?: submission.boothData!!.markerPos!!.z
+							),
+							BoothData.WarpCoordinates(
+								this.arguments.warpX ?: submission.boothData!!.warp!!.x,
+								this.arguments.warpY ?: submission.boothData!!.warp!!.y,
+								this.arguments.warpZ ?: submission.boothData!!.warp!!.z,
+								BoothData.WarpCoordinates.Direction.valueOf(this.arguments.warpDirection?.name ?: submission.boothData!!.warp!!.direction.name)
+							),
+							null,
+							null,
+							null,
+							null
+						))
+					} else if (this.arguments.image == null) {
+						respond {
+							content = Translations.Commands.Submission.Claim.Response.unchanged
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+						return@action
+					}
+
+					respond {
+						content = Translations.Commands.Submission.Claim.Response.success
+							.withContext(this@action)
+							.translateNamed(
+								"subId" to subId
+							)
+					}
+				}
+			}
+
+			ephemeralSubCommand(::BuildArg) {
+				name = Translations.Commands.Submission.Build.name
+				description = Translations.Commands.Submission.Build.description
+
+				action {
+					val subId = this.arguments.submission
+					val curEvent = platform.getCurrentEvent().event
+					if (curEvent == null) {
+						respond {
+							content = Translations.Commands.Event.Submit.Response.unavailable
+								.withContext(this@action)
+								.translateNamed()
+						}
+						return@action
+					}
+
+					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
+
+					if (submission == null) {
+						respond {
+							content = Translations.Commands.Submission.Edit.Response.notfound
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+						return@action
+					}
+
+					if (submission.boothData == null || submission.boothData?.itemIcon == null) {
+						// Must provide ALL data initially
+						if (this.arguments.image == null ||
+							this.arguments.itemIcon == null ||
+							this.arguments.shards == null ||
+							this.arguments.eta == null ||
+							this.arguments.status == null
+						) {
+							respond {
+								content = Translations.Commands.Submission.Build.Response.incomplete
+									.withContext(this@action)
+									.translateNamed(
+										"subId" to subId
+									)
+							}
+							return@action
+						}
+					}
+
+					if (this.arguments.image != null) {
+						platform.withAuth(this.user).editSubmissionImage(curEvent, subId, "build", this.arguments.image!!.url)
+					}
+
+					if (this.arguments.image != null ||
+						this.arguments.itemIcon != null ||
+						this.arguments.shards != null ||
+						this.arguments.eta != null ||
+						this.arguments.status != null
+					) {
+						platform.withAuth(this.user).editSubmissionBoothData(curEvent, subId, BoothData(
+							null,
+							null,
+							this.arguments.itemIcon,
+							this.arguments.shards?.toInt(),
+							this.arguments.eta,
+							if (this.arguments.status == null) null else BoothData.BoothStatus.valueOf(this.arguments.status!!.name)
+						))
+					} else if (this.arguments.image == null) {
+						respond {
+							content = Translations.Commands.Submission.Build.Response.unchanged
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+						return@action
+					}
+
+					respond {
+						content = Translations.Commands.Submission.Build.Response.success
+							.withContext(this@action)
+							.translateNamed(
+								"subId" to subId
+							)
+					}
 				}
 			}
 		}
@@ -860,60 +893,57 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 		}
 	}
 
-	inner class MarkerArg : SubmissionArg() {
-		val markerX by optionalNumberChoice {
+	inner class ClaimArg : OptionalImageArg() {
+		val markerX by optionalInt {
 			name = Translations.Arguments.Submission.Claim.MarkerX.name
 			description = Translations.Arguments.Submission.Claim.MarkerX.description
 		}
-		val markerZ by optionalNumberChoice {
+		val markerZ by optionalInt {
 			name = Translations.Arguments.Submission.Claim.MarkerZ.name
 			description = Translations.Arguments.Submission.Claim.MarkerZ.description
 		}
-		val itemIcon by optionalStringChoice {
-			name = Translations.Arguments.Submission.Claim.ItemIcon.name
-			description = Translations.Arguments.Submission.Claim.ItemIcon.description
-		}
-	}
-
-	inner class WarpArg : SubmissionArg() {
-		val warpX by int {
+		val warpX by optionalInt {
 			name = Translations.Arguments.Submission.Claim.WarpX.name
 			description = Translations.Arguments.Submission.Claim.WarpX.description
 		}
-		val warpY by int {
+		val warpY by optionalInt {
 			name = Translations.Arguments.Submission.Claim.WarpY.name
 			description = Translations.Arguments.Submission.Claim.WarpY.description
 		}
-		val warpZ by int {
+		val warpZ by optionalInt {
 			name = Translations.Arguments.Submission.Claim.WarpZ.name
 			description = Translations.Arguments.Submission.Claim.WarpZ.description
 		}
-		val warpDirection by enumChoice<WarpDirection> {
+		val warpDirection by optionalEnumChoice<WarpDirection> {
 			name = Translations.Arguments.Submission.Claim.Direction.name
 			description = Translations.Arguments.Submission.Claim.Direction.description
 			typeName = Translations.Arguments.Submission.Claim.Direction.type
 		}
 	}
 
-	inner class BoothArg : SubmissionArg() {
-		val shards by numberChoice {
-			name = Translations.Arguments.Submission.Booth.Shards.name
-			description = Translations.Arguments.Submission.Booth.Shards.description
+	inner class BuildArg : OptionalImageArg() {
+		val itemIcon by optionalStringChoice {
+			name = Translations.Arguments.Submission.Build.ItemIcon.name
+			description = Translations.Arguments.Submission.Build.ItemIcon.description
+		}
+		val shards by optionalNumberChoice {
+			name = Translations.Arguments.Submission.Build.Shards.name
+			description = Translations.Arguments.Submission.Build.Shards.description
 			choices = linkedMapOf(
-				Translations.Arguments.Submission.Booth.Shards.Choice.one to 1,
-				Translations.Arguments.Submission.Booth.Shards.Choice.two to 2,
-				Translations.Arguments.Submission.Booth.Shards.Choice.three to 3,
-				Translations.Arguments.Submission.Booth.Shards.Choice.four to 4
+				Translations.Arguments.Submission.Build.Shards.Choice.one to 1,
+				Translations.Arguments.Submission.Build.Shards.Choice.two to 2,
+				Translations.Arguments.Submission.Build.Shards.Choice.three to 3,
+				Translations.Arguments.Submission.Build.Shards.Choice.four to 4
 			)
 		}
-		val eta by int {
-			name = Translations.Arguments.Submission.Booth.Eta.name
-			description = Translations.Arguments.Submission.Booth.Eta.description
+		val eta by optionalInt {
+			name = Translations.Arguments.Submission.Build.Eta.name
+			description = Translations.Arguments.Submission.Build.Eta.description
 		}
-		val status by enumChoice<BoothStatus> {
-			name = Translations.Arguments.Submission.Booth.Status.name
-			description = Translations.Arguments.Submission.Booth.Status.description
-			typeName = Translations.Arguments.Submission.Booth.Status.type
+		val status by optionalEnumChoice<BoothStatus> {
+			name = Translations.Arguments.Submission.Build.Status.name
+			description = Translations.Arguments.Submission.Build.Status.description
+			typeName = Translations.Arguments.Submission.Build.Status.type
 		}
 	}
 
@@ -937,9 +967,19 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 	}
 
 	enum class BoothStatus(override val readableName: Key) : ChoiceEnum {
-		UNDER_CONSTRUCTION(Translations.Arguments.Submission.Booth.Status.Choice.constructing),
-		PLAYABLE(Translations.Arguments.Submission.Booth.Status.Choice.playable),
-		COMPLETE(Translations.Arguments.Submission.Booth.Status.Choice.complete)
+		UNDER_CONSTRUCTION(Translations.Arguments.Submission.Build.Status.Choice.constructing),
+		PLAYABLE(Translations.Arguments.Submission.Build.Status.Choice.playable),
+		COMPLETE(Translations.Arguments.Submission.Build.Status.Choice.complete)
+	}
+
+	open inner class OptionalImageArg : SubmissionArg() {
+		val image by optionalAttachment {
+			name = Translations.Arguments.Submission.EditImage.name
+			description = Translations.Arguments.Submission.EditImage.description
+			validate {
+				value?.isImage ?: true
+			}
+		}
 	}
 
 	inner class ImageArg : SubmissionArg() {

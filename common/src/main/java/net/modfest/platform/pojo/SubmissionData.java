@@ -17,8 +17,6 @@ public record SubmissionData(@NonNull String id,
 							 @NonNull Set<String> authors,
 							 @NonNull AssociatedData platform,
 							 @Nullable String source,
-							 @Nullable MarkerData markerData,
-							 @Nullable WarpData warpData,
 							 @Nullable BoothData boothData,
 							 @NonNull Awards awards
 	) implements Data {
@@ -80,46 +78,49 @@ public record SubmissionData(@NonNull String id,
 		}
 	}
 
+	@With
 	public record BoothData(
-	                        int shards,
-	                        int minutesToComplete,
-	                        @NonNull BoothStatus status
+		@Nullable Column markerPos,
+		@Nullable WarpCoordinates warp,
+		@Nullable String itemIcon,
+		@Nullable Integer shards,
+		@Nullable Integer minutesToComplete,
+		@Nullable BoothStatus status
 	) {
 		public enum BoothStatus {
 			UNDER_CONSTRUCTION,
 			PLAYABLE,
 			COMPLETE
 		}
-	}
 
-	public record WarpData(int x, int y, int z, @NonNull Direction direction) {
-		@Getter
-		public enum Direction {
-			NORTH(180),
-			NORTH_NORTH_EAST(-150),
-			NORTH_EAST(-135),
-			EAST_NORTH_EAST(-120),
-			EAST(-90),
-			EAST_SOUTH_EAST(-60),
-			SOUTH_EAST(-45),
-			SOUTH_SOUTH_EAST(-30),
-			SOUTH(0),
-			SOUTH_SOUTH_WEST(30),
-			SOUTH_WEST(45),
-			WEST_SOUTH_WEST(60),
-			WEST(90),
-			WEST_NORTH_WEST(120),
-			NORTH_WEST(135),
-			NORTH_NORTH_WEST(150);
+		public record Column(int x, int z) {}
 
-			private final int yaw;
+		public record WarpCoordinates(int x, int y, int z, @NonNull Direction direction) {
+			@Getter
+			public enum Direction {
+				NORTH(180),
+				NORTH_NORTH_EAST(-150),
+				NORTH_EAST(-135),
+				EAST_NORTH_EAST(-120),
+				EAST(-90),
+				EAST_SOUTH_EAST(-60),
+				SOUTH_EAST(-45),
+				SOUTH_SOUTH_EAST(-30),
+				SOUTH(0),
+				SOUTH_SOUTH_WEST(30),
+				SOUTH_WEST(45),
+				WEST_SOUTH_WEST(60),
+				WEST(90),
+				WEST_NORTH_WEST(120),
+				NORTH_WEST(135),
+				NORTH_NORTH_WEST(150);
 
-			Direction(int yaw) {
-				this.yaw = yaw;
+				private final int yaw;
+
+				Direction(int yaw) {
+					this.yaw = yaw;
+				}
 			}
 		}
-	}
-
-	public record MarkerData(int x, int z, @NonNull String itemIcon) {
 	}
 }
