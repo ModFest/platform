@@ -15,6 +15,7 @@ import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.application.slash.group
 import dev.kordex.core.commands.converters.impl.attachment
 import dev.kordex.core.commands.converters.impl.defaultingInt
+import dev.kordex.core.commands.converters.impl.int
 import dev.kordex.core.commands.converters.impl.string
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.components
@@ -506,7 +507,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						)
 
 						respond {
-							content = Translations.Commands.Submission.Update.Meta.Response.success
+							content = Translations.Commands.Submission.Update.Marker.Response.success
 								.withContext(this@action)
 								.translateNamed(
 									"subId" to subId
@@ -552,7 +553,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						))
 
 						respond {
-							content = Translations.Commands.Submission.Update.Meta.Response.success
+							content = Translations.Commands.Submission.Update.Warp.Response.success
 								.withContext(this@action)
 								.translateNamed(
 									"subId" to subId
@@ -593,7 +594,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						platform.withAuth(this.user).editSubmissionBoothData(curEvent, subId, SubmissionData.BoothData(this.arguments.shards.toInt(), this.arguments.eta, SubmissionData.BoothData.BoothStatus.valueOf(this.arguments.status.name)))
 
 						respond {
-							content = Translations.Commands.Submission.Update.Meta.Response.success
+							content = Translations.Commands.Submission.Update.Booth.Response.success
 								.withContext(this@action)
 								.translateNamed(
 									"subId" to subId
@@ -875,19 +876,19 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 	}
 
 	inner class WarpArg : SubmissionArg() {
-		val warpX by optionalNumberChoice {
+		val warpX by int {
 			name = Translations.Arguments.Submission.Claim.WarpX.name
 			description = Translations.Arguments.Submission.Claim.WarpX.description
 		}
-		val warpY by optionalNumberChoice {
+		val warpY by int {
 			name = Translations.Arguments.Submission.Claim.WarpY.name
 			description = Translations.Arguments.Submission.Claim.WarpY.description
 		}
-		val warpZ by optionalNumberChoice {
+		val warpZ by int {
 			name = Translations.Arguments.Submission.Claim.WarpZ.name
 			description = Translations.Arguments.Submission.Claim.WarpZ.description
 		}
-		val warpDirection by optionalEnumChoice<WarpDirection> {
+		val warpDirection by enumChoice<WarpDirection> {
 			name = Translations.Arguments.Submission.Claim.Direction.name
 			description = Translations.Arguments.Submission.Claim.Direction.description
 			typeName = Translations.Arguments.Submission.Claim.Direction.type
@@ -905,10 +906,9 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 				Translations.Arguments.Submission.Booth.Shards.Choice.four to 4
 			)
 		}
-		val eta by defaultingInt {
+		val eta by int {
 			name = Translations.Arguments.Submission.Booth.Eta.name
 			description = Translations.Arguments.Submission.Booth.Eta.description
-			defaultValue = 3
 		}
 		val status by enumChoice<BoothStatus> {
 			name = Translations.Arguments.Submission.Booth.Status.name
