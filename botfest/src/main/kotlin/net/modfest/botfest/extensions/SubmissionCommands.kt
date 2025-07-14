@@ -37,6 +37,7 @@ import kotlinx.serialization.json.putJsonArray
 import net.modfest.botfest.MAIN_GUILD_ID
 import net.modfest.botfest.Platform
 import net.modfest.botfest.i18n.Translations
+import net.modfest.platform.pojo.EventData
 import net.modfest.platform.pojo.SubmissionData.AssociatedData.Modrinth
 import net.modfest.platform.pojo.SubmissionData.AssociatedData.Other
 import net.modfest.platform.pojo.SubmissionData.BoothData
@@ -632,7 +633,50 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 				description = Translations.Commands.Submission.Test.description
 
 				action {
-					imageCommandAction("test")
+					val subId = this.arguments.submission
+					val curEvent = platform.getCurrentEvent().event
+					if (curEvent == null) {
+						respond {
+							content = Translations.Commands.Submit.Response.unavailable
+								.withContext(this@action)
+								.translateNamed()
+						}
+						return@action
+					}
+
+					val event = platform.getEvent(curEvent)
+
+					if (event.phase in setOf(EventData.Phase.PLANNING, EventData.Phase.MODDING)) {
+						respond {
+							content = Translations.Commands.Submission.Test.Response.early
+								.withContext(this@action)
+								.translateNamed()
+						}
+						return@action
+					}
+
+					val submission = platform.getEventSubmissions(curEvent).find { it.id == subId }
+
+					if (submission == null) {
+						respond {
+							content = Translations.Commands.Submission.Edit.Response.notfound
+								.withContext(this@action)
+								.translateNamed(
+									"subId" to subId
+								)
+						}
+						return@action
+					}
+
+					platform.withAuth(this.user).editSubmissionImage(curEvent, subId, "test", this.arguments.image.url)
+
+					respond {
+						content = Translations.Commands.Submission.Test.Response.success
+							.withContext(this@action)
+							.translateNamed(
+								"subId" to subId
+							)
+					}
 				}
 			}
 
@@ -646,6 +690,17 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					if (curEvent == null) {
 						respond {
 							content = Translations.Commands.Submit.Response.unavailable
+								.withContext(this@action)
+								.translateNamed()
+						}
+						return@action
+					}
+
+					val event = platform.getEvent(curEvent)
+
+					if (event.phase in setOf(EventData.Phase.PLANNING, EventData.Phase.MODDING)) {
+						respond {
+							content = Translations.Commands.Submission.Claim.Response.early
 								.withContext(this@action)
 								.translateNamed()
 						}
@@ -745,6 +800,17 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					if (curEvent == null) {
 						respond {
 							content = Translations.Commands.Submit.Response.unavailable
+								.withContext(this@action)
+								.translateNamed()
+						}
+						return@action
+					}
+
+					val event = platform.getEvent(curEvent)
+
+					if (event.phase in setOf(EventData.Phase.PLANNING, EventData.Phase.MODDING, EventData.Phase.TESTING)) {
+						respond {
+							content = Translations.Commands.Submission.Build.Response.early
 								.withContext(this@action)
 								.translateNamed()
 						}
