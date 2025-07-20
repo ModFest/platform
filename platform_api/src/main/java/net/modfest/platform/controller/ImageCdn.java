@@ -23,7 +23,7 @@ public class ImageCdn {
 	@Autowired
 	private ImageRepository repository;
 
-	@GetMapping(value = "/imageCdn/{*path}")
+	@GetMapping(value = "/imagecdn/{*path}")
 	public ResponseEntity<FileSystemResource> getImage(@PathVariable String path) {
 		if (path.startsWith("/")) {
 			path = path.substring(1);

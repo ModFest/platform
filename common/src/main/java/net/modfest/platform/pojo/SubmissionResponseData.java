@@ -15,10 +15,11 @@ public record SubmissionResponseData(@NonNull String id,
                                      SubmissionData.@NonNull AssociatedData platform,
                                      @NonNull Images images,
                                      @Nullable String source,
+                                     SubmissionData.@Nullable BoothData boothData,
                                      SubmissionData.@NonNull Awards awards
 	) {
 
-	public record Images(@Nullable String icon, @Nullable String screenshot) {
+	public record Images(@Nullable String icon, @Nullable String screenshot, @Nullable String test, @Nullable String claim, @Nullable String build) {
 	}
 
 	public static SubmissionResponseData fromData(SubmissionData data, Images images) {
@@ -31,6 +32,7 @@ public record SubmissionResponseData(@NonNull String id,
 			data.platform(),
 			images,
 			data.source(),
+			data.boothData(),
 			data.awards()
 		);
 	}

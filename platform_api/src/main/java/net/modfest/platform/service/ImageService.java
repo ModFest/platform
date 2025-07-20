@@ -46,7 +46,11 @@ public class ImageService {
 
 	public enum SubmissionImageType {
 		ICON("icon"),
-		SCREENSHOT("screenshot");
+		SCREENSHOT("screenshot"),
+		TEST("test"),
+		CLAIM("claim"),
+		BUILD("build");
+
 		private final String suffix;
 
 		SubmissionImageType(String suffix) {

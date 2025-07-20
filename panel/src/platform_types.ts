@@ -121,6 +121,9 @@ export interface SubmissionData$FileData$Modrinth {
 export interface SubmissionData$Images {
     icon: string;
     screenshot: string;
+    test: string;
+    claim: string;
+    build: string;
 }
 
 export interface SubmitRequest {
@@ -161,7 +164,7 @@ export interface Whoami {
     permissions: string[];
 }
 
-export type EventData$Phase = "planning" | "modding" | "building" | "showcase" | "complete";
+export type EventData$Phase = "planning" | "modding" | "testing" | "building" | "showcase" | "complete";
 
 export type EventData$Type = "modfest" | "blanketcon";
 

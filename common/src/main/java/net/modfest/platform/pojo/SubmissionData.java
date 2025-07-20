@@ -1,6 +1,7 @@
 package net.modfest.platform.pojo;
 
 import com.google.gson.*;
+import lombok.Getter;
 import lombok.With;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -14,8 +15,9 @@ public record SubmissionData(@NonNull String id,
 							 @NonNull String name,
 							 @NonNull String description,
 							 @NonNull Set<String> authors,
-							 SubmissionData.@NonNull AssociatedData platform,
+							 @NonNull AssociatedData platform,
 							 @Nullable String source,
+							 @Nullable BoothData boothData,
 							 @NonNull Awards awards
 	) implements Data {
 
@@ -72,6 +74,52 @@ public record SubmissionData(@NonNull String id,
 				};
 				jsonObj.addProperty("type", typeKey);
 				return jsonObj;
+			}
+		}
+	}
+
+	@With
+	public record BoothData(
+		@Nullable Column markerPos,
+		@Nullable WarpCoordinates warp,
+		@Nullable String itemIcon,
+		@Nullable Integer shards,
+		@Nullable Integer minutesToComplete,
+		@Nullable BoothStatus status
+	) {
+		public enum BoothStatus {
+			UNDER_CONSTRUCTION,
+			PLAYABLE,
+			COMPLETE
+		}
+
+		public record Column(int x, int z) {}
+
+		public record WarpCoordinates(int x, int y, int z, @NonNull Direction direction) {
+			@Getter
+			public enum Direction {
+				NORTH(180),
+				NORTH_NORTH_EAST(-150),
+				NORTH_EAST(-135),
+				EAST_NORTH_EAST(-120),
+				EAST(-90),
+				EAST_SOUTH_EAST(-60),
+				SOUTH_EAST(-45),
+				SOUTH_SOUTH_EAST(-30),
+				SOUTH(0),
+				SOUTH_SOUTH_WEST(30),
+				SOUTH_WEST(45),
+				WEST_SOUTH_WEST(60),
+				WEST(90),
+				WEST_NORTH_WEST(120),
+				NORTH_WEST(135),
+				NORTH_NORTH_WEST(150);
+
+				private final int yaw;
+
+				Direction(int yaw) {
+					this.yaw = yaw;
+				}
 			}
 		}
 	}

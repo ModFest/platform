@@ -175,6 +175,22 @@ public class EventController {
 		);
 	}
 
+	@PatchMapping("/event/{eventId}/booth/{subId}")
+	public SubmissionResponseData editSubmissionBoothData(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionData.BoothData editData) throws PlatformStandardException {
+		var event = getEvent(eventId);
+		var submission = service.getSubmission(eventId, subId);
+		if (submission == null) {
+			throw new IllegalArgumentException();// TODO
+		}
+
+		checkCanEdit(event, submission);
+
+		return service.addResponseInfo(
+			request,
+			service.editSubmissionBooth(submission, editData)
+		);
+	}
+
 	@PutMapping("/event/{eventId}/submission/{subId}/updateVersion")
 	public SubmissionResponseData updateSubmissionVersion(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId) throws PlatformStandardException {
 		var event = getEvent(eventId);
@@ -272,6 +288,9 @@ public class EventController {
 		var typeEnum = switch (type) {
 			case "icon" -> ImageService.SubmissionImageType.ICON;
 			case "screenshot" -> ImageService.SubmissionImageType.SCREENSHOT;
+			case "test" -> ImageService.SubmissionImageType.TEST;
+			case "claim" -> ImageService.SubmissionImageType.CLAIM;
+			case "build" -> ImageService.SubmissionImageType.BUILD;
 			case null, default -> throw new IllegalArgumentException("Invalid type " + type);
 		};
 
