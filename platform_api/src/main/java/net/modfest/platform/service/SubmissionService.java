@@ -81,6 +81,9 @@ public class SubmissionService {
 		}
 		data = data.withBoothData(edit);
 		submissionRepository.save(data);
+
+		webhookService.editSubmissionBooth(data, edit);
+
 		return getSubmission(data.event(), data.id());
 	}
 

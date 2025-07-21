@@ -31,44 +31,49 @@ public class WebhookService {
 
 	private final RestTemplate restTemplate = new RestTemplate();
 
-	protected record Field(String name, String value) {
+	private record Field(String name, String value) {
 	}
 
-	protected record Footer(String text, @Nullable String icon_url) {
+	private record Footer(String text, @Nullable String icon_url) {
 	}
 
-	protected record Image(String url) {
+	private record Image(String url) {
 	}
 
-	protected record Embed(String title, String description, int color, List<Field> fields, Footer footer,
+	private record Embed(String title, String description, int color, List<Field> fields, Footer footer, Image image,
 						   Image thumbnail) {
 	}
 
-	protected record WebhookPayload(List<Embed> embeds) {
+	private record WebhookPayload(List<Embed> embeds) {
 	}
 
-	Embed embedForSubmission(SubmissionData data, String event, int eventColor) {
+	private Embed embedForSubmission(SubmissionData data, String event, int eventColor) {
 		return embedForSubmission(data, event, eventColor, null, null);
 	}
 
-	Embed embedForSubmission(SubmissionData data, String event, int eventColor, @Nullable List<Field> fields) {
+	private Embed embedForSubmission(SubmissionData data, String event, int eventColor, @Nullable List<Field> fields) {
 		return embedForSubmission(data, event, eventColor, fields, null);
 	}
 
-	Embed embedForSubmission(SubmissionData data, String event, int eventColor, @Nullable List<Field> fields, @Nullable Footer footer) {
+	private Embed embedForSubmission(SubmissionData data, String event, int eventColor, @Nullable List<Field> fields, @Nullable Footer footer) {
+		return embedForSubmission(data, event, eventColor, fields, footer, null);
+	}
+
+	private Embed embedForSubmission(SubmissionData data, String event, int eventColor, @Nullable List<Field> fields, @Nullable Footer footer, @Nullable Image image) {
 		return new Embed(
 			data.name(),
 			event,
 			eventColor,
 			fields,
 			footer,
-			getIcon(data)
+			image,
+			getImage(data, ImageService.SubmissionImageType.ICON)
 		);
 	}
 
-	private @Nullable Image getIcon(SubmissionData data) {
+	private @Nullable Image getImage(SubmissionData data, ImageService.SubmissionImageType type) {
 		var subKey = new SubmissionRepository.SubmissionId(data.event(), data.id());
-		var icon = imageService.getImageUrl(null, subKey, ImageService.SubmissionImageType.ICON);
+		var icon = imageService.getImageUrl(null, subKey, type);
 
 		if (icon == null) {
 			return null;
@@ -77,7 +82,7 @@ public class WebhookService {
 		return new Image(icon);
 	}
 
-	protected void sendEmbed(Embed embed) {
+	private void sendEmbed(Embed embed) {
 		if (discordWebhookUrl == null) {
 			return;
 		}
@@ -97,6 +102,12 @@ public class WebhookService {
 		}
 	}
 
+	private String timestampRelative(int minutes) {
+		var currentTime = System.currentTimeMillis() / 1000L;
+		var time = currentTime + minutes * 60L;
+
+		return "<t:" + time + ":R>";
+	}
 
 	private String maskedLink(String name, String url) {
 		return String.format("[%s](%s)", name, url);
@@ -197,6 +208,55 @@ public class WebhookService {
 	}
 
 	@Async
+	public void submissionImageChanged(SubmissionData data, ImageService.SubmissionImageType type) {
+		var typeString = switch (type) {
+			case TEST -> "Test";
+			case CLAIM -> "Claim";
+			case BUILD -> "Build";
+			default -> null;
+		};
+
+		if (typeString == null) {
+			return;
+		}
+
+		var embed = embedForSubmission(data, typeString + " image set", 16777048, null, null, getImage(data, type));
+		sendEmbed(embed);
+	}
+
+	@Async
+	public void editSubmissionBooth(SubmissionData data, SubmissionData.BoothData edit) {
+		var fields = new ArrayList<Field>();
+
+		if (edit.itemIcon() != null) {
+			fields.add(new Field("Item icon", edit.itemIcon()));
+		}
+
+		if (edit.markerPos() != null) {
+			fields.add(new Field("Marker position", edit.markerPos().toFormattedString()));
+		}
+
+		if (edit.minutesToComplete() != null) {
+			fields.add(new Field("Complete", timestampRelative(edit.minutesToComplete())));
+		}
+
+		if(edit.shards() != null) {
+			fields.add(new Field("Shards", edit.shards().toString()));
+		}
+
+		if(edit.status() != null) {
+			fields.add(new Field("Status", edit.status().name()));
+		}
+
+		if(edit.warp() != null) {
+			fields.add(new Field("Warp", edit.warp().toFormattedString()));
+		}
+
+		var embed = embedForSubmission(data, "Boot data changed", 16777048, fields);
+		sendEmbed(embed);
+	}
+
+	@Async
 	public void phaseChanged(String eventName, String phase, int count) {
 		var embed = new Embed(
 			eventName,
@@ -204,6 +264,7 @@ public class WebhookService {
 			16772110,
 			null,
 			new Footer(String.format("Currently %d submissions", count), null),
+			null,
 			null
 		);
 

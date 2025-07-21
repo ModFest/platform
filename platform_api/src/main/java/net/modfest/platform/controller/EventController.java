@@ -9,6 +9,7 @@ import net.modfest.platform.security.Permissions;
 import net.modfest.platform.service.EventService;
 import net.modfest.platform.service.ImageService;
 import net.modfest.platform.service.SubmissionService;
+import net.modfest.platform.service.WebhookService;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,8 @@ public class EventController {
 	private UserController userController;
 	@Autowired
 	private ImageService imageService;
+	@Autowired
+	private WebhookService webhookService;
 
 	@GetMapping("/events")
 	public Collection<EventData> getAllEvents() {
@@ -295,9 +298,10 @@ public class EventController {
 		};
 
 		imageService.downloadSubmissionImage(url, new SubmissionRepository.SubmissionId(eventId, subId), typeEnum);
+		webhookService.submissionImageChanged(submission, typeEnum);
 
 		return service.addResponseInfo(
-			request, service.getSubmission(eventId, subId)
+			request, submission
 		);
 	}
 

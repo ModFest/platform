@@ -19,7 +19,7 @@ public record SubmissionData(@NonNull String id,
 							 @Nullable String source,
 							 @Nullable BoothData boothData,
 							 @NonNull Awards awards
-	) implements Data {
+) implements Data {
 
 	public record Awards(Set<String> theme, Set<String> extra) {
 	}
@@ -68,8 +68,8 @@ public record SubmissionData(@NonNull String id,
 				var jsonObj = context.serialize(src.inner).getAsJsonObject();
 
 				var typeKey = switch (src.inner) {
-					case Modrinth a -> Modrinth.KEY;
-					case Other a -> Other.KEY;
+					case Modrinth ignored -> Modrinth.KEY;
+					case Other ignored -> Other.KEY;
 					default -> throw new IllegalStateException();
 				};
 				jsonObj.addProperty("type", typeKey);
@@ -93,7 +93,11 @@ public record SubmissionData(@NonNull String id,
 			COMPLETE
 		}
 
-		public record Column(int x, int z) {}
+		public record Column(int x, int z) {
+			public String toFormattedString() {
+				return "x: " + x + ", z: " + z;
+			}
+		}
 
 		public record WarpCoordinates(int x, int y, int z, @NonNull Direction direction) {
 			@Getter
@@ -120,6 +124,10 @@ public record SubmissionData(@NonNull String id,
 				Direction(int yaw) {
 					this.yaw = yaw;
 				}
+			}
+
+			public String toFormattedString() {
+				return "x: " + x + ", z: " + z + ", direction: " + direction.name();
 			}
 		}
 	}
