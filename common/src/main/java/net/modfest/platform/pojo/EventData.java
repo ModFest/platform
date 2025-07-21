@@ -26,6 +26,7 @@ public record EventData(@NonNull String id,
     public enum Phase {
         PLANNING(true, false, false),
         MODDING(true, true, true),
+        TESTING(false, false, true),
         BUILDING(false, false, true),
         SHOWCASE(false, false, false),
         COMPLETE(false, false, false);

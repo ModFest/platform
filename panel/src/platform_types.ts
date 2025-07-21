@@ -164,7 +164,7 @@ export interface Whoami {
     permissions: string[];
 }
 
-export type EventData$Phase = "planning" | "modding" | "building" | "showcase" | "complete";
+export type EventData$Phase = "planning" | "modding" | "testing" | "building" | "showcase" | "complete";
 
 export type EventData$Type = "modfest" | "blanketcon";
 
