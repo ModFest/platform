@@ -49,6 +49,10 @@ public record EventData(@NonNull String id,
         public boolean canSubmit() {
             return submissions;
         }
+
+	    public boolean canUpdateSubmission() {
+		    return updates;
+	    }
     }
 
     public record Images(String full, String transparent, String wordmark, String background) {
