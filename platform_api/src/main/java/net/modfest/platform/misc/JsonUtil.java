@@ -34,7 +34,7 @@ public class JsonUtil {
 			// to unchecked exceptions, since we'd be passing them up the chain any way
 			// Maybe in the future we can assure that io errors are even harder errors,
 			// and will shut the server down.
-			throw new RuntimeException(e);
+			throw new RuntimeException("Failed while parsing: %s".formatted(path.toString()), e);
 		}
 	}
 
