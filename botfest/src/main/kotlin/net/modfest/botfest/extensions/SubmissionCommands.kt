@@ -646,7 +646,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 					val event = platform.getEvent(curEvent)
 
-					if (event.phase in setOf(EventData.Phase.PLANNING, EventData.Phase.MODDING)) {
+					if (event.phase in setOf(EventData.Phase.PLANNING, EventData.Phase.ANNOUNCED, EventData.Phase.MODDING)) {
 						respond {
 							content = Translations.Commands.Submission.Test.Response.early
 								.withContext(this@action)
@@ -698,7 +698,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 					val event = platform.getEvent(curEvent)
 
-					if (event.phase in setOf(EventData.Phase.PLANNING, EventData.Phase.MODDING)) {
+					if (event.phase in setOf(EventData.Phase.PLANNING, EventData.Phase.ANNOUNCED, EventData.Phase.MODDING)) {
 						respond {
 							content = Translations.Commands.Submission.Claim.Response.early
 								.withContext(this@action)
@@ -808,7 +808,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 
 					val event = platform.getEvent(curEvent)
 
-					if (event.phase in setOf(EventData.Phase.PLANNING, EventData.Phase.MODDING, EventData.Phase.TESTING)) {
+					if (event.phase in setOf(EventData.Phase.PLANNING, EventData.Phase.ANNOUNCED, EventData.Phase.MODDING, EventData.Phase.TESTING)) {
 						respond {
 							content = Translations.Commands.Submission.Build.Response.early
 								.withContext(this@action)

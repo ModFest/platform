@@ -24,7 +24,8 @@ public record EventData(@NonNull String id,
     }
 
     public enum Phase {
-        PLANNING(true, false, false),
+        PLANNING(false, false, false),
+        ANNOUNCED(true, false, false),
         MODDING(true, true, true),
         TESTING(false, false, true),
         BUILDING(false, false, true),
@@ -47,11 +48,6 @@ public record EventData(@NonNull String id,
 
         public boolean canSubmit() {
             return submissions;
-        }
-
-        public boolean canUpdateSubmission() {
-			// TODO: hack for bc25, needs removing
-            return false;
         }
     }
 
