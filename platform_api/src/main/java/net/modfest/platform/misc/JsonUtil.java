@@ -1,6 +1,7 @@
 package net.modfest.platform.misc;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,13 +29,13 @@ public class JsonUtil {
 	public <T> T readJson(Path path, Class<T> clazz) {
 		try (var reader = new FileReader(path.toFile(), StandardCharsets.UTF_8)) {
 			return gson.fromJson(reader, clazz);
-		} catch (IOException e) {
+		} catch (IOException | JsonParseException e) {
 			// We don't expect to get any io errors, and we don't really
 			// have a good way of dealing with them. So we can better just promote them
 			// to unchecked exceptions, since we'd be passing them up the chain any way
 			// Maybe in the future we can assure that io errors are even harder errors,
 			// and will shut the server down.
-			throw new RuntimeException("Failed while parsing: %s".formatted(path.toString()), e);
+			throw new RuntimeException("Failed while reading JSON from: %s".formatted(path.toString()), e);
 		}
 	}
 
