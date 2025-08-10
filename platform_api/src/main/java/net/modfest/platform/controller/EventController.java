@@ -50,12 +50,14 @@ public class EventController {
 
 	@PutMapping("/event/{id}/registrations/{userId}")
 	public UserData register(@PathVariable String id, @PathVariable String userId) {
-		return setRegistration(id, userId, true);
+		var data = setRegistration(id, userId, true);
+		return userController.filterSensitiveUserData(data);
 	}
 
 	@DeleteMapping("/event/{id}/registrations/{userId}")
 	public UserData unregister(@PathVariable String id, @PathVariable String userId) {
-		return setRegistration(id, userId, false);
+		var data = setRegistration(id, userId, false);
+		return userController.filterSensitiveUserData(data);
 	}
 
 	private UserData setRegistration(@PathVariable String id, @RequestBody String userId, boolean registered) {

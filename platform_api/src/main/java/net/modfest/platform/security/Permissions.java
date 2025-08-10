@@ -15,6 +15,10 @@ public class Permissions {
 	public static class Users {
 		public static final String LIST_ALL = "users.list";
 		/**
+		 * Allows the user to view other's their minecraft accounts
+		 */
+		public static final String VIEW_MINECRAFT = "users.view_mc";
+		/**
 		 * Allows the user to edit all other users their data
 		 */
 		public static final String EDIT_OTHERS = "users.edit_others";
