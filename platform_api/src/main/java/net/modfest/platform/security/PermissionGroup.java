@@ -12,6 +12,7 @@ public enum PermissionGroup {
 	TEAM_MEMBERS(UNPRIVILEGED_USERS, Set.of(
 		Permissions.Meta.RELOAD,
 		Permissions.Users.LIST_ALL,
+		Permissions.Users.VIEW_MINECRAFT,
 		Permissions.Users.EDIT_OTHERS,
 		Permissions.Users.FORCE_EDIT,
 		Permissions.Event.BYPASS_REGISTRATIONS,
@@ -39,7 +40,8 @@ public enum PermissionGroup {
 	 * Permissions given when the minecraft server logs in
 	 */
 	EVENT_MC_SERVER(null, Set.of(
-		Permissions.Users.LIST_ALL
+		Permissions.Users.LIST_ALL,
+		Permissions.Users.VIEW_MINECRAFT
 	));
 
 	public final @Nullable PermissionGroup parent;
