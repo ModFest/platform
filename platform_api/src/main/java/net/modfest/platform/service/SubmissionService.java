@@ -236,6 +236,7 @@ public class SubmissionService {
 			),
 			submitData.sourceUrl(),
 			null,
+			null,
 			new SubmissionData.Awards(
 				Set.of(),
 				Set.of()
@@ -283,6 +284,7 @@ public class SubmissionService {
 					)
 				),
 				project.sourceUrl,
+				null,
 				null,
 				new SubmissionData.Awards(
 					Set.of(),
