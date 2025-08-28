@@ -17,6 +17,7 @@ public record SubmissionData(@NonNull String id,
 							 @NonNull Set<String> authors,
 							 @NonNull AssociatedData platform,
 							 @Nullable String source,
+							 @Nullable String modId,
 							 @Nullable BoothData boothData,
 							 @NonNull Awards awards
 	) implements Data {
