@@ -109,8 +109,8 @@ docker {
 		from("eclipse-temurin:24-jre-alpine")
 		runShell("apk add --no-cache git")
 
-		runShell("addgroup -S platform")
-		runShell("adduser -S platform -G platform")
+		runShell("addgroup --gid 1001 -S platform")
+		runShell("adduser --uid 1001 -S platform -G platform")
 		runShell("mkdir -p /app")
 		runShell("chown platform /app")
 
