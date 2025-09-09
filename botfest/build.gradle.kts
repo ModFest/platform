@@ -100,7 +100,7 @@ docker {
 		copy("libs/$filename", "/bot/bot.jar")
 
 		entryPointExec(
-			"java", "-XX:+UseCompactObjectHeaders", "-jar", "/bot/bot.jar"
+			"java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCompactObjectHeaders", "-jar", "/bot/bot.jar"
 		)
 	}
 }
