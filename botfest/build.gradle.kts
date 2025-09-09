@@ -85,10 +85,10 @@ docker {
 		// Each function (aside from comment/emptyLine) corresponds to a Dockerfile instruction.
 		// See: https://docs.docker.com/reference/dockerfile/
 
-		from("ghcr.io/graalvm/graalvm-community:23")
+		from("eclipse-temurin:24-jre-alpine")
 
-		runShell("groupadd --system --gid 1001 bot")
-		runShell("useradd --system --gid 1001 --uid 1001 bot")
+		runShell("addgroup -S bot")
+		runShell("adduser -S bot -G bot")
 		user("bot")
 
 		workdir("/bot")
@@ -100,7 +100,7 @@ docker {
 		copy("libs/$filename", "/bot/bot.jar")
 
 		entryPointExec(
-			"java", "-jar", "/bot/bot.jar"
+			"java", "-XX:+UseCompactObjectHeaders", "-jar", "/bot/bot.jar"
 		)
 	}
 }

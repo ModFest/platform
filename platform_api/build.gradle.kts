@@ -106,10 +106,11 @@ docker {
 		// Each function (aside from comment/emptyLine) corresponds to a Dockerfile instruction.
 		// See: https://docs.docker.com/reference/dockerfile/
 
-		from("ghcr.io/graalvm/graalvm-community:23")
+		from("eclipse-temurin:24-jre-alpine")
+		runShell("apk add --no-cache git")
 
-		runShell("groupadd --system --gid 1001 platform")
-		runShell("useradd --system --gid 1001 --uid 1001 platform")
+		runShell("addgroup -S platform")
+		runShell("adduser -S platform -G platform")
 		runShell("mkdir -p /app")
 		runShell("chown platform /app")
 
@@ -132,7 +133,7 @@ docker {
 
 		expose(8080)
 		entryPointExec(
-			"java", "--add-opens=java.base/java.lang=ALL-UNNAMED", "-jar", "/app/app.jar"
+			"java", "-XX:+UseCompactObjectHeaders", "--add-opens=java.base/java.lang=ALL-UNNAMED", "-jar", "/app/app.jar"
 		)
 		healthcheck {
 			check {
