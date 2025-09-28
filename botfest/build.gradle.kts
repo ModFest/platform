@@ -88,7 +88,7 @@ docker {
 		from("eclipse-temurin:24-jre-alpine")
 
 		runShell("addgroup --gid 1001 -S bot")
-		runShell("adduser --uid 101 -S bot -G bot")
+		runShell("adduser --uid 1001 -S bot -G bot")
 		user("bot")
 
 		workdir("/bot")
