@@ -335,7 +335,9 @@ class RoleManager : Extension(), KordExKoinComponent {
 	}
 
 	/**
-	 * Returns all roles that can be managed by platform
+	 * Returns all roles that can be managed by platform. BotFest assumes it has full control
+	 * over assigning and removing these roles. This is potentially dangerous since it may
+	 * remove roles in this set if it thinks someone shouldn't have them.
 	 */
 	suspend fun managedRoles(): Set<Snowflake> {
 		val roles = HashSet<Snowflake>()
