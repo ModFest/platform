@@ -53,6 +53,18 @@ public record EventData(@NonNull String id,
 	    public boolean canUpdateSubmission() {
 		    return updates;
 	    }
+
+		/**
+		 * Determines if an event in this phase grants the participated role (for
+		 * access to the #participant channel and the likes). At the moment, people
+		 * are only eligible for that channel at the end of the event. So if they're
+		 * participating in an event that's still ongoing they're not eligible for that
+		 * channel. But if they participated in an event where this function returns true,
+		 * they are eligible for the channel.
+		 */
+		public boolean grantsParticipatedRole() {
+			return this == Phase.SHOWCASE || this == Phase.COMPLETE;
+		}
     }
 
     public record Images(String full, String transparent, String wordmark, String background) {

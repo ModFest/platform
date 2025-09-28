@@ -16,6 +16,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import net.modfest.botfest.MAIN_GUILD_ID
+import net.modfest.botfest.PARTICIPATED_ROLE
 import net.modfest.botfest.Platform
 import net.modfest.botfest.REGISTERED_ROLE
 import net.modfest.botfest.i18n.Translations
@@ -253,6 +254,7 @@ class RoleManager : Extension(), KordExKoinComponent {
 	/**
 	 * For when we resync with platform. This method will not fetch anything from discord,
 	 * it presumes the cached discord data is correct.
+	 * TODO needs to be called when event phase changes
 	 */
 	suspend fun fixAllUsers() {
 		val users = platform.authenticatedAsBotFest().getUsers()
@@ -345,6 +347,9 @@ class RoleManager : Extension(), KordExKoinComponent {
 		if (REGISTERED_ROLE != null) {
 			roles.add(REGISTERED_ROLE)
 		}
+		if (PARTICIPATED_ROLE != null) {
+			roles.add(PARTICIPATED_ROLE)
+		}
 
 		platform.getEvents().forEach { event ->
 			roles.add(Snowflake(event.discordRoles.participant))
@@ -368,10 +373,20 @@ class RoleManager : Extension(), KordExKoinComponent {
 			roles.add(REGISTERED_ROLE)
 		}
 
+		var hasParticipated = false
+
 		platformData.registered.forEach { event ->
-			val eventRoles = platform.getEvent(event).discordRoles
-			roles.add(Snowflake(eventRoles.participant))
+			val eventData = platform.getEvent(event)
+			roles.add(Snowflake(eventData.discordRoles.participant))
+			if (eventData.phase.grantsParticipatedRole()) {
+				hasParticipated = true
+			}
 		}
+
+		if (hasParticipated && PARTICIPATED_ROLE != null) {
+			roles.add(PARTICIPATED_ROLE)
+		}
+
 		return roles
 	}
 
