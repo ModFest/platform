@@ -1,15 +1,23 @@
 "use client"
 
-export const LOCALSTORAGE_KEY = "mr-token"
+const LOCALSTORAGE_KEY = "mr-token"
 
 export class ModfestAuth {
+	/**
+	 * A modrinth token, which platform accepts as a valid means of authentication
+	 */
 	private mrToken: string
+	/**
+	 * Unix timestamp
+	 */
+	private validUntil: number
 
-	private constructor(mrToken: string) {
+	public constructor(mrToken: string, validUntil: number) {
 		this.mrToken = mrToken
+		this.validUntil = validUntil
 	}
 
-	static readAuthData(): ModfestAuth | undefined {
+	static readLocalStorage(): ModfestAuth | undefined {
 		const token = localStorage.getItem(LOCALSTORAGE_KEY)
 		if (token == null) {
 			return undefined
@@ -19,8 +27,26 @@ export class ModfestAuth {
 		if (typeof mrToken !== "string") {
 			return undefined
 		}
+		var validUntil = tokenData["valid_until"]
+		if (typeof validUntil !== "number") {
+			return undefined
+		}
 	
-		return new ModfestAuth(mrToken)
+		return new ModfestAuth(mrToken, validUntil)
+	}
+
+	public saveLocalStorage() {
+		localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify({
+			"access_token": this.mrToken,
+			"valid_until": this.validUntil,
+		}));
+	}
+
+	/**
+	 * The modfest auth data
+	 */
+	public isValid(): boolean {
+		return this.validUntil > Date.now()
 	}
 
 	public configureFetch(): {headers: Record<string, string>} {
@@ -37,5 +63,5 @@ export function logout() {
 }
 
 export function readAuthData(): ModfestAuth | undefined {
-	return ModfestAuth.readAuthData()
+	return ModfestAuth.readLocalStorage()
 }
