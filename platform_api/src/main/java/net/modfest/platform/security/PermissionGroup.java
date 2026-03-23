@@ -32,15 +32,20 @@ public enum PermissionGroup {
 		// BotFest needs to create users. It cannot perform actions on behalf of a user
 		// if it doesn't exist yet.
 		Permissions.Users.CREATE,
-		// BotFest is able to subscribe to user data changing, to enable
-		// it to give out roles
+		// BotFest is able to subscribe to any changes in user data, and
+		// also list all users. This is to compute the set of roles it
+		// needs to assign to users
 		Permissions.Users.LIST_ALL
 	)),
 	/**
 	 * Permissions given when the minecraft server logs in
 	 */
 	EVENT_MC_SERVER(null, Set.of(
+		// The minecraft server needs to list all users in order to find anyone who
+		// needs to be on the whitelist
 		Permissions.Users.LIST_ALL,
+		// The minecraft server needs to know the minecraft accounts associated with
+		// modfest accounts in order to whitelist them
 		Permissions.Users.VIEW_MINECRAFT
 	));
 
