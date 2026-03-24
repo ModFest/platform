@@ -8,7 +8,7 @@ export class ModfestAuth {
 	 */
 	private mrToken: string
 	/**
-	 * Unix timestamp
+	 * Unix timestamp (seconds since 1970)
 	 */
 	private validUntil: number
 
@@ -46,7 +46,7 @@ export class ModfestAuth {
 	 * The modfest auth data
 	 */
 	public isValid(): boolean {
-		return this.validUntil > Date.now()
+		return this.validUntil > (Date.now() / 1000)
 	}
 
 	public configureFetch(): {headers: Record<string, string>} {

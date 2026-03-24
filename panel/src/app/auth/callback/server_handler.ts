@@ -22,7 +22,7 @@ export async function getToken(code: string, redirect_uri: string): Promise<Modr
 		access_token: data.access_token,
 		token_type: data.token_type,
 		// Subtract 5 minutes to account for latency between us and modrinth
-		expires_at: Date.now() + data.expires_in - 60*5
+		expires_at: (Date.now() / 1000) + data.expires_in - 60*5
 	}
 }
 
