@@ -7,8 +7,7 @@ import java.util.Set;
 
 public enum PermissionGroup {
 	UNPRIVILEGED_USERS(null, Set.of(
-		Permissions.Event.SUBMIT,
-		Permissions.Users.VIEW_DISCORD
+		Permissions.Event.SUBMIT
 	)),
 	TEAM_MEMBERS(UNPRIVILEGED_USERS, Set.of(
 		Permissions.Meta.RELOAD,
