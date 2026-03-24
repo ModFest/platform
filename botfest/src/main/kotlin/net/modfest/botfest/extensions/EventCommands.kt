@@ -90,7 +90,7 @@ class EventCommands : Extension(), KordExKoinComponent {
 				}
 
 				val eventData = platform.getEvent(curEvent)
-				val platformUser = platform.getUser(user)
+				val platformUser = platform.authenticatedAsBotFest().getUser(user)
 				if (platformUser == null || !platformUser.registered.contains(curEvent)) {
 					respond {
 						content = Translations.Commands.Event.Unregister.Response.none
@@ -126,7 +126,7 @@ class EventCommands : Extension(), KordExKoinComponent {
 			return // Do *not* try to send any modals, we've already replied
 		}
 
-		var platformUser = platform.getUser(user)
+		var platformUser = platform.authenticatedAsBotFest().getUser(user)
 
 		val message = if (platformUser == null) {
 			val modal = RegisterModal()

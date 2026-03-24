@@ -113,39 +113,6 @@ class Platform(baseUrl: String) {
 	suspend fun getEventSubmissions(eventId: String): List<SubmissionResponseData> {
 		return client.get("/event/${eventId}/submissions").unwrapErrors().body()
 	}
-
-	suspend fun getUserSubmissions(user: Snowflake): List<SubmissionResponseData> {
-		return client.get("/user/dc:${user.value}/submissions").unwrapErrors().body()
-	}
-
-	/**
-	 * Retrieve a user by their discord id. Will be null if the user does not exist
-	 */
-	suspend fun getUser(user: UserBehavior): UserData? {
-		return getUser(user.id)
-	}
-
-	/**
-	 * Retrieve a user by their discord id. Will be null if the user does not exist
-	 */
-	suspend fun getUser(user: Snowflake): UserData? {
-		return client.get("/user/dc:$user").apply {
-			// Map 404 errors to be null
-			if (status == HttpStatusCode.NotFound) {
-				return@getUser null
-			}
-		}.unwrapErrors().body()
-	}
-
-	/**
-	 * Retrieve a user by their modfest id. Will be null if the user does not exist
-	 */
-	suspend fun getUser(user: String): UserData? {
-		return client.get("/user/$user").apply {
-			// Map 404 errors to be null
-			if (status == HttpStatusCode.NotFound) return null
-		}.unwrapErrors().body()
-	}
 }
 
 /**
@@ -204,6 +171,10 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		}.unwrapErrors().body()
 	}
 
+	suspend fun getSubmissions(): List<SubmissionResponseData> {
+		return client.get("/user/@me/submissions").unwrapErrors().body()
+	}
+
 	suspend fun editSubmissionData(eventId: String, subId: String, edit: SubmissionPatchData): SubmissionResponseData {
 		return client.patch("/event/$eventId/submission/$subId") {
 			addAuth()
@@ -256,13 +227,13 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 	}
 
 	suspend fun registerMe(event: EventData): UserData {
-		return client.put("/event/"+event.id+"/registrations/dc:"+discordUser.value) {
+		return client.put("/event/"+event.id+"/registrations/@me") {
 			addAuth()
 		}.unwrapErrors().body()
 	}
 
 	suspend fun unregisterMe(event: EventData): UserData {
-		return client.delete("/event/"+event.id+"/registrations/dc:"+discordUser.value) {
+		return client.delete("/event/"+event.id+"/registrations/@me") {
 			addAuth()
 		}.unwrapErrors().body()
 	}
@@ -351,6 +322,41 @@ class PlatformBotFestAuthenticated(val client: HttpClient, val base_url: String)
 	suspend fun getUsers(): List<UserData> {
 		return client.get("/users") {
 			addAuth()
+		}.unwrapErrors().body()
+	}
+
+	/**
+	 * Retrieve a user by their discord id. Will be null if the user does not exist
+	 */
+	suspend fun getUser(user: UserBehavior): UserData? {
+		return getUser(user.id)
+	}
+
+	/**
+	 * Retrieve a user by their discord id. Will be null if the user does not exist
+	 */
+	suspend fun getUser(user: Snowflake): UserData? {
+		return client.get("/user/dc:$user") {
+			addAuth()
+		}.apply {
+			// Map 404 errors to be null
+			if (status == HttpStatusCode.NotFound) {
+				return@getUser null
+			}
+		}.unwrapErrors().body()
+	}
+
+	/**
+	 * Retrieve a user by their modfest id. Will be null if the user does not exist
+	 */
+	suspend fun getUser(user: String): UserData? {
+		// We want to be authenticated as the botfest user here, since then
+		// we get permission to view the user's discord id
+		return client.get("/user/$user") {
+			addAuth()
+		}.apply {
+			// Map 404 errors to be null
+			if (status == HttpStatusCode.NotFound) return null
 		}.unwrapErrors().body()
 	}
 }

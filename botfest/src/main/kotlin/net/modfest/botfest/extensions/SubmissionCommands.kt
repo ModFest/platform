@@ -123,7 +123,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 					val submission = platform.withAuth(this.user).submitOther(curEvent, SubmitRequestOther(
 						modal.name.value!!,
 						modal.description.value!!,
-						setOf("dc:"+user.id),
+						setOf("@me"),
 						modal.homepage.value.convertBlankToNull(),
 						modal.sourcecode.value.convertBlankToNull(),
 						modal.downloadUrl.value.convertBlankToNull()
@@ -489,7 +489,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						return@action
 					}
 
-					val author = platform.getUser(userId)
+					val author = platform.authenticatedAsBotFest().getUser(userId)
 
 					if (author == null) {
 						respond {
@@ -567,7 +567,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 						return@action
 					}
 
-					val author = platform.getUser(this.arguments.user)
+					val author = platform.authenticatedAsBotFest().getUser(this.arguments.user)
 
 					if (author == null) {
 						respond {
@@ -932,7 +932,7 @@ class SubmissionCommands : Extension(), KordExKoinComponent {
 			autoComplete {
 				val curEvent = platform.getCurrentEvent().event ?: return@autoComplete
 				suggestStringCollection(
-					platform.getUserSubmissions(this.user.id)
+					platform.withAuth(this.user).getSubmissions()
 						.filter { it.event == curEvent }
 						.map { it.id }
 				)

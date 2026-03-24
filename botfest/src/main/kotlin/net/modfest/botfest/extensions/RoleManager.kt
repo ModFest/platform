@@ -91,7 +91,7 @@ class RoleManager : Extension(), KordExKoinComponent {
 				logger.debug { "Platform informed us that $userId changed" }
 				runBlocking {
 					launch(Dispatchers.Default) {
-						val userData = platform.getUser(userId)!!
+						val userData = platform.authenticatedAsBotFest().getUser(userId)!!
 						if (userData.discordId != null) {
 							fixUser(Snowflake(userData.discordId!!))
 						}
@@ -284,7 +284,7 @@ class RoleManager : Extension(), KordExKoinComponent {
 	}
 
 	suspend fun fixUser(user: Snowflake) {
-		return fixUser(user, platform.getUser(user))
+		return fixUser(user, platform.authenticatedAsBotFest().getUser(user))
 	}
 
 	suspend fun fixUser(user: Snowflake, platformData: UserData?) {

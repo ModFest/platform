@@ -120,6 +120,10 @@ public class UserController {
 			}
 			user = service.getByModrinthId(mrId);
 		} else if (id.startsWith("dc:")) {
+			var principal = SecurityUtils.getSubject();
+			if (!principal.isPermitted(Permissions.Users.VIEW_DISCORD)) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not permitted to view discord ids");
+			}
 			user = service.getByDiscordId(id.substring(3));
 		} else {
 			user = service.getByMfId(id);
@@ -234,9 +238,14 @@ public class UserController {
 		var subject = SecurityUtils.getSubject();
 		var owns = PermissionUtils.owns(subject, data);
 		var view_mc = subject.isPermitted(Permissions.Users.VIEW_MINECRAFT);
+		var view_discord = subject.isPermitted(Permissions.Users.VIEW_DISCORD);
 
 		if (!owns && !view_mc) {
 			data = data.withMinecraftAccounts(null);
+		}
+
+		if (!owns && !view_discord) {
+			data = data.withDiscordId(null);
 		}
 
 		return data;

@@ -7,12 +7,14 @@ import java.util.Set;
 
 public enum PermissionGroup {
 	UNPRIVILEGED_USERS(null, Set.of(
-		Permissions.Event.SUBMIT
+		Permissions.Event.SUBMIT,
+		Permissions.Users.VIEW_DISCORD
 	)),
 	TEAM_MEMBERS(UNPRIVILEGED_USERS, Set.of(
 		Permissions.Meta.RELOAD,
 		Permissions.Users.LIST_ALL,
 		Permissions.Users.VIEW_MINECRAFT,
+		Permissions.Users.VIEW_DISCORD,
 		Permissions.Users.EDIT_OTHERS,
 		Permissions.Users.FORCE_EDIT,
 		Permissions.Event.BYPASS_REGISTRATIONS,
@@ -35,7 +37,10 @@ public enum PermissionGroup {
 		// BotFest is able to subscribe to any changes in user data, and
 		// also list all users. This is to compute the set of roles it
 		// needs to assign to users
-		Permissions.Users.LIST_ALL
+		Permissions.Users.LIST_ALL,
+		// BotFest needs to look up people by their discord id, and view
+		// people their discord ids
+		Permissions.Users.VIEW_DISCORD
 	)),
 	/**
 	 * Permissions given when the minecraft server logs in
