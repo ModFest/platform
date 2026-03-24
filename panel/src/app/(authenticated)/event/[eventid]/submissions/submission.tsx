@@ -4,6 +4,7 @@ import Image from "next/image";
 import styles from "./submission.module.css";
 import globalStyles from "@/globalstyles.module.css";
 import { ReactNode } from "react";
+import { getCredits } from "./credits";
 
 export type SubmissionProps = {
 	data: SubmissionData,
@@ -19,6 +20,16 @@ export default function Submission(props: SubmissionProps) {
 		if (authorsIsPartial) return; // Shouldn't happen, the button should be disabled if we don't have author data yet
 		const pings = authors.map(a => `<@${a.discord_id}>`);
 		navigator.clipboard.writeText(pings.join(", "));
+	}
+
+	const copyId = () => {
+		navigator.clipboard.writeText(submission.id);
+	}
+
+	const copyCredits = () => {
+		getCredits(platform, submission).then(credits => {
+			navigator.clipboard.writeText(JSON.stringify(credits, null, 4));
+		})
 	}
 
 	// Check if platform refused to provide a discord id for someone, this indicates a permission issue
@@ -42,6 +53,7 @@ export default function Submission(props: SubmissionProps) {
 			<p className={styles["description"]}>
 				{submission.description}
 			</p>
+
 			<button
 				disabled={copyPingsDisabled}
 				className={copyPingsDisabled ? globalStyles["disabled"] : ""}
@@ -49,6 +61,8 @@ export default function Submission(props: SubmissionProps) {
 			>
 				{discordPermIssues ? "Copy pings (no permissions)" : "Copy pings"}
 			</button>
+			<button onClick={copyId}>Copy id</button>
+			<button onClick={copyCredits}>Copy credits</button>
 		</div>
 	</div>
 }

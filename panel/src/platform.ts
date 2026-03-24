@@ -115,12 +115,16 @@ export class Platform {
 	public useUser(userId: string): UserData | undefined {
 		const [user, setUser] = useState<UserData | undefined>()
 		useEffect(() => {
-			fetch(`${PLATFORM}/user/${userId}`)
-				.then(throwIfNotOk)
-				.then(r => r.json())
+			this.getUser(userId)
 				.then(d => setUser(d))
 		}, [this.auth, userId])
 		return user;
+	}
+
+	public getUser(userId: string): Promise<UserData> {
+		return fetch(`${PLATFORM}/user/${userId}`)
+				.then(throwIfNotOk)
+				.then(r => r.json());
 	}
 
 	/**
