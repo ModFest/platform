@@ -1,12 +1,17 @@
 import type { NextConfig } from "next";
 import { PHASE_DEVELOPMENT_SERVER } from "next/constants"
 import fs from 'node:fs/promises';
+import { env } from "node:process";
 
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
 	enabled: process.env.ANALYZE === 'true',
 })
 
 async function getDevUrl(): Promise<string> {
+	if (env["DEV_SERVER_URL"]) {
+		return env["DEV_SERVER_URL"];
+	}
+
 	const gradlePropsPath = __dirname+"/../gradle.properties"
 	const gradleProps = await fs.readFile(gradlePropsPath, {encoding: "utf-8"})
 	var lines = gradleProps.split("\n")
@@ -20,17 +25,17 @@ async function getDevUrl(): Promise<string> {
 }
 
 export default async function createConfig(phase: string): Promise<NextConfig> {
-	var env = {}
+	var env_vars = {}
 	if (phase === PHASE_DEVELOPMENT_SERVER) {
-		env = {
+		env_vars = {
 			"DEV_SERVER_URL": await getDevUrl(),
-			...env
+			...env_vars
 		}
 	}
 
 	return withBundleAnalyzer({
 		output: "standalone",
-		env: env,
+		env: env_vars,
 		// Enable source maps in prod
 		productionBrowserSourceMaps: true,
 		// TODO these shouldn't really be ignored

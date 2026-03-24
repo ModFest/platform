@@ -19,8 +19,11 @@ A conscious choice was made to have the discord bot interact via the http endpoi
 the http api and ensure it's capable. It also means that they can be hosted and restarted separately.
 
 ## Running the projects in dev
-Use `./gradlew bootRun` to run the platform api and `./gradlew dev` to run BotFest. Panel uses `pnpm dev`.
+Use `./gradlew bootRun` to run the platform api and `./gradlew dev` to run BotFest.
 Platform api and panel will run without any configuration, whilst BotFest needs some setup (see [here](./botfest/about.md#dev-env)).
+
+Panel can be started with `pnpm dev`. It tries to connect to the local backend by default but you can run it on the
+production backend using `DEV_SERVER_URL="https://platform.modfest.net" pnpm dev`
 
 You can configure the port and address that the platform api will use in dev in the `gradle.properties` file. This
 file is used in all subprojects.
