@@ -5,16 +5,33 @@ import { useLogout } from "./template";
 import Image from "next/image";
 import { usePlatform } from "@/platform";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 export default function Sidebar() {
+	const pathname = usePathname();
 	const logout = useLogout();
 	const platform = usePlatform();
 	const currentEvent = platform.useCurrentEvent();
 	const allEvents = platform.useAllEvents();
 	const [selectedEvent, setSelectedEvent] = useState<string | undefined>();
 	
-	if (selectedEvent == undefined && currentEvent?.event) {
-		setSelectedEvent(currentEvent.event);
+	if (selectedEvent == undefined) {
+		// If we're on an event page, the event-select dropdown will default to that event
+		// Otherwise, it'll default to the currently running event
+		const eventMatch = pathname.match(/\/event\/([^/]+)/);
+		if (eventMatch) {
+			setSelectedEvent(eventMatch[1]);
+		} else if (currentEvent?.event) {
+			setSelectedEvent(currentEvent.event);
+		}
+	}
+
+	const onSelectedEventChange = (newEvent: string) => {
+		setSelectedEvent(newEvent);
+		// If we're currently on an event page, we redirect to the one that was selected
+		if (window.location.pathname.startsWith("/event")) {
+			window.location.pathname = window.location.pathname.replace(/\/event\/[^/]+/, `/event/${newEvent}`);
+		}
 	}
 
 	return <nav className={styles["sidebar"]}>
@@ -30,7 +47,7 @@ export default function Sidebar() {
 		</h1>
 		<Link className={styles["navelem"]} href="/users">Users</Link>
 		<Link className={styles["navelem"]} href="/tokens">Tokens</Link>
-		<select className={styles["navelem"]} value={selectedEvent} onChange={e => setSelectedEvent(e.target.value)}>
+		<select className={styles["navelem"]} value={selectedEvent} onChange={e => onSelectedEventChange(e.target.value)}>
 			{allEvents?.map((event) => 
 				<option key={event.id} value={event.id}>{event.name}</option>
 			)}
