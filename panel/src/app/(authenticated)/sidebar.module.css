@@ -20,7 +20,7 @@
 
 .navelem {
 	display: block;
-	width: 100%;
+	width: auto;
 	margin: 2px;
 	padding: 5px;
 	background-color: var(--panel);
@@ -39,4 +39,10 @@
 	width: auto;
 	padding: 0;
 	margin-top: 3em;
+}
+
+.sidebar-logo {
+	height: 3rem;
+	width: auto;
+	vertical-align:-0.7rem;
 }

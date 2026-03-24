@@ -45,5 +45,8 @@ export default async function createConfig(phase: string): Promise<NextConfig> {
 		typescript: {
 			ignoreBuildErrors: true,
 		},
+		images: {
+			dangerouslyAllowSVG: true,
+		}
 	})
 }
