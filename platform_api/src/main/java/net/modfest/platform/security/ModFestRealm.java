@@ -1,5 +1,7 @@
 package net.modfest.platform.security;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import net.modfest.platform.configuration.PlatformConfig;
 import net.modfest.platform.pojo.EventData;
 import net.modfest.platform.pojo.UserData;
@@ -18,8 +20,11 @@ import org.apache.shiro.authc.credential.AllowAllCredentialsMatcher;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -32,6 +37,10 @@ public class ModFestRealm extends AuthorizingRealm {
 	private PlatformConfig platformConfig;
 	@Autowired
 	private ModrinthApi modrinthApi;
+	private LoadingCache<@NonNull String, String> modrinthTokenCache = Caffeine.newBuilder()
+		.maximumSize(1_000)
+		.expireAfterWrite(Duration.ofMinutes(30))
+		.build(this::modrinthTokenToId);
 
 	public ModFestRealm() {
 		this.setCredentialsMatcher(new AllowAllCredentialsMatcher());
@@ -66,22 +75,19 @@ public class ModFestRealm extends AuthorizingRealm {
 			}
 			case ModrinthToken modrinthToken -> {
 				try {
-					try {
-						var user = modrinthApi.withAuth(modrinthToken.token()).self();
-						var festUser = userService.getByModrinthId(user.id);
-						if (festUser == null) {
-							throw new AuthenticationException("Modrinth user "+user.id+" is not registered in ModFest");
-						}
-						return new SimpleAuthenticationInfo(festUser, modrinthToken, "platform");
-					} catch (ModrinthApiException e) {
-						if (e.httpResponse.statusCode() == 401) {
-							throw new AuthenticationException("Token is invalid");
-						} else {
-							throw e;
-						}
+					var modrinthId = this.modrinthTokenCache.get(modrinthToken.token());
+					if (modrinthId == null) {
+						throw new AuthenticationException("Token is invalid");
 					}
+					var festUser = userService.getByModrinthId(modrinthId);
+					if (festUser == null) {
+						throw new AuthenticationException("Modrinth user "+modrinthId+" is not registered in ModFest");
+					}
+					return new SimpleAuthenticationInfo(festUser, modrinthToken, "platform");
 				} catch (ModrinthApiException e) {
-					throw new AuthenticationException(e);
+					throw new AuthenticationException("Modrinth return status code "+e.httpResponse.statusCode()+", couldn't check token", e);
+				} catch (Exception e) {
+					throw new AuthenticationException("Error checking modrinth token", e);
 				}
 			}
 			case EventToken eventToken -> {
@@ -122,6 +128,24 @@ public class ModFestRealm extends AuthorizingRealm {
 			return new GroupBasedAuthorizationInfo(PermissionGroup.EVENT_MC_SERVER);
 		}
 		return null;
+	}
+
+	/**
+	 * Looks up a modrinth id associated with a token. Will
+	 * return {@code null} if the token is invalid
+	 */
+	private @Nullable String modrinthTokenToId(@NonNull String token) {
+		System.out.println("Modrinth auth request "+token);
+		try {
+			var user = modrinthApi.withAuth(token).self();
+			return user.id;
+		} catch (ModrinthApiException e) {
+			if (e.httpResponse.statusCode() == 401) {
+				return null;
+			} else {
+				throw e;
+			}
+		}
 	}
 
 	/**

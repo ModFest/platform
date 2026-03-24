@@ -41,6 +41,9 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
+	// A caching library
+	implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
+
 	// Swagger ui
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
 
