@@ -12,10 +12,7 @@ import net.modfest.platform.service.EventTokenService;
 import net.modfest.platform.service.UserService;
 import nl.theepicblock.dukerinth.ModrinthApi;
 import nl.theepicblock.dukerinth.ModrinthApiException;
-import org.apache.shiro.authc.AuthenticationException;
-import org.apache.shiro.authc.AuthenticationInfo;
-import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.SimpleAuthenticationInfo;
+import org.apache.shiro.authc.*;
 import org.apache.shiro.authc.credential.AllowAllCredentialsMatcher;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
@@ -61,7 +58,7 @@ public class ModFestRealm extends AuthorizingRealm {
 		switch (authenticationToken) {
 			case BotFestToken botFestToken -> {
 				if (!Objects.equals(botFestToken.sharedSecret(), platformConfig.getBotFestSecret())) {
-					throw new AuthenticationException("BotFest secret is invalid");
+					throw new IncorrectCredentialsException("BotFest secret is invalid");
 				}
 				if (Objects.equals(botFestToken.targetUser(), "@self")) {
 					// BotFest is logging in as itself, and not on behalf of a different user
@@ -77,7 +74,7 @@ public class ModFestRealm extends AuthorizingRealm {
 				try {
 					var modrinthId = this.modrinthTokenCache.get(modrinthToken.token());
 					if (modrinthId == null) {
-						throw new AuthenticationException("Token is invalid");
+						throw new IncorrectCredentialsException("Token is invalid");
 					}
 					var festUser = userService.getByModrinthId(modrinthId);
 					if (festUser == null) {
@@ -98,7 +95,7 @@ public class ModFestRealm extends AuthorizingRealm {
 						"platform"
 					);
 				} else {
-					throw new AuthenticationException("Invalid event token");
+					throw new IncorrectCredentialsException("Invalid event token");
 				}
 			}
 			default -> {
