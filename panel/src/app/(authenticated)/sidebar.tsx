@@ -17,6 +17,7 @@ export default function Sidebar() {
 			Panel
 		</h1>
 		<Link className={styles["navelem"]} href="/users">Users</Link>
+		<Link className={styles["navelem"]} href="/tokens">Tokens</Link>
 		<Link className={styles["navelem"]} href="/event">Event</Link>
 		<div className={styles["sidebar-vertical-padding"]}></div>
 		<button className={styles["navelem"]} onClick={() => logout()}>Logout</button>

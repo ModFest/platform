@@ -1,6 +1,7 @@
 "use client"
 
 import { usePlatform } from "@/platform"
+import styles from "./tokens.module.css"
 
 export default function Page() {
 	const platform = usePlatform()
@@ -14,25 +15,25 @@ export default function Page() {
 	return <table>
 		<tbody>
 			{eventIds.map(id => 
-				<tr key={id}>
+				<tr key={id} className={styles["row"]}>
 					<td>{id}</td>
 					<td><pre style={{margin: 0}}>{tokens.mc_server_tokens[id] ?? ""}</pre></td>
-					<td>
-						<button 
-							onClick={() => platform.regenerateToken(id)}
-							title="Regenerate">R</button>
+					<td className={styles["regenCell"]}>
+						<button onClick={() => platform.regenerateToken(id)}>
+							Regenerate
+						</button>
 					</td>
 					<td>
 						{tokens.mc_server_tokens[id] !== undefined &&
-							<button
-								onClick={() => platform.deprecateToken(id)}
-								title="Delete">X</button>}
+							<button onClick={() => platform.deprecateToken(id)}>
+								Delete
+							</button>}
 					</td>
 					<td>
 						{tokens.mc_server_tokens[id] !== undefined &&
-							<button
-								onClick={() => navigator.clipboard.writeText(tokens.mc_server_tokens[id])}
-								title="Copy">C</button>}
+							<button onClick={() => navigator.clipboard.writeText(tokens.mc_server_tokens[id])}>
+								Copy to Clipboard
+							</button>}
 					</td>
 				</tr>
 			)}
