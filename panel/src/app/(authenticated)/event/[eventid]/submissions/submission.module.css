@@ -1,0 +1,51 @@
+.card {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: stretch;
+
+	border-style: solid;
+	border-width: 1px;
+	border-radius: 5px;
+	padding: 2mm;
+	margin: 2mm 0;
+
+}
+
+.icon {
+	flex: none;
+	width: 6em;
+	min-height: 6em;
+	vertical-align: top;
+
+	margin-right: 1em;
+}
+
+.icon img {
+	width: 100%;
+	height: auto;
+}
+
+.info {
+	flex: 1;
+	width: 0;
+	vertical-align: top;
+}
+
+.info h2 {
+	margin-top: 0px;
+	margin-bottom: 0.2em;
+}
+
+.info p {
+	margin: 0;
+}
+
+.description {
+	text-emphasis: 1;
+
+	/* Only a single line, use ellipsis if it's longer */
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
