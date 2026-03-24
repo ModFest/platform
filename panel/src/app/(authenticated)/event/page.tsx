@@ -12,17 +12,13 @@ type SearchParamProps = {
 export default function Home() {
 	const router = useRouter()
 	const platform = usePlatform()
-	const [noCurrent, setNoCurrent] = useState(false)
+	const currentEvent = platform.useCurrentEvent();
+	
+	const noCurrent = currentEvent && currentEvent.event == null;
 
-	useEffect(() => {
-		platform.getCurrentEvent().then(curEvent => {
-			if (curEvent.event === null) {
-				setNoCurrent(true)
-			} else {
-				router.push("/event/"+curEvent.event)
-			}
-		})
-	}, [platform])
+	if (currentEvent && currentEvent.event) {
+		router.push("/event/"+currentEvent.event);
+	}
 
 	return <main>
 		{noCurrent ? <h1>Please select an event from the nav bar</h1> : <h1>Redirecting...</h1>}

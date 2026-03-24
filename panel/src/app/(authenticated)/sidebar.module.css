@@ -34,6 +34,10 @@
 	box-sizing: content-box;
 }
 
+.subnavelem {
+	margin-left: 5mm;
+}
+
 .content {
 	margin-left: 16em;
 	width: auto;
@@ -45,4 +49,8 @@
 	height: 3rem;
 	width: auto;
 	vertical-align:-0.7rem;
+}
+
+.disabled {
+	cursor: not-allowed;
 }

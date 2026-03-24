@@ -101,8 +101,15 @@ export class Platform {
 		}).then(throwIfNotOk);
 	}
 
-	public async getCurrentEvent(): Promise<CurrentEventData> {
-		return fetch(`${PLATFORM}/currentevent/`).then(throwIfNotOk).then(r => r.json())
+	public useCurrentEvent(): CurrentEventData | undefined {
+		const [user, setCurrentEvent] = useState<CurrentEventData | undefined>()
+		useEffect(() => {
+			fetch(`${PLATFORM}/currentevent/`)
+				.then(throwIfNotOk)
+				.then(r => r.json())
+				.then(c => setCurrentEvent(c))
+		}, [])
+		return user;
 	}
 
 	public useUser(userId: string): UserData | undefined {
