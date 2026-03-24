@@ -1,9 +1,10 @@
 import Link from "next/link";
 import styles from "./sidebar.module.css"
+import globalStyles from "@/globalstyles.module.css";
 import { useLogout } from "./template";
 import Image from "next/image";
 import { usePlatform } from "@/platform";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function Sidebar() {
 	let logout = useLogout();
@@ -47,7 +48,7 @@ export default function Sidebar() {
 function EventLink(props: { selectedEvent: string | undefined, subpage: string, children: React.ReactNode}) {
 	let style = `${styles["navelem"]} ${styles["subnavelem"]}`
 	if (props.selectedEvent == undefined) {
-		return <div className={`${style} ${styles["disabled"]}`} role="link" aria-disabled={true}>{props.children}</div>
+		return <div className={`${style} ${globalStyles["disabled"]}`} role="link" aria-disabled={true}>{props.children}</div>
 	}
 	return <Link 
 		className={style}

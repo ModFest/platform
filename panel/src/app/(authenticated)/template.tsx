@@ -2,8 +2,8 @@
 
 import { readAuthData, logout, ModfestAuth } from "@/auth_context"
 import { Platform, PlatformContext } from "@/platform";
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { createContext, use, useContext, useEffect, useReducer, useState } from "react";
+import { useRouter } from "next/navigation"
+import { createContext, useContext, useEffect, useState } from "react";
 import styles from "./sidebar.module.css"
 import Sidebar from "./sidebar";
 

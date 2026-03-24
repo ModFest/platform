@@ -123,6 +123,35 @@ export class Platform {
 		return user;
 	}
 
+	/**
+	 * Fetches a list of users. Users are still fetched individually, you might get partial data.
+	 * `partial` will be true if there's partial data.
+	 */
+	public useUsers(userIds: string[]): [partial: false, UserData[]] | [partial: true, (UserData | undefined)[]] {
+		const [users, setUsers] = useState<(UserData | undefined)[]>([])
+		useEffect(() => {
+			setUsers(Array(userIds.length).fill(undefined))
+			userIds.forEach((uid, i) => {
+				fetch(`${PLATFORM}/user/${uid}`)
+					.then(throwIfNotOk)
+					.then(r => r.json())
+					.then(d => {
+						setUsers(u => {
+							const copy = [...u]
+							copy[i] = d
+							return copy
+						})
+					})
+			})
+		}, [this.auth, userIds])
+
+		if (users.includes(undefined)) {
+			return [true, users];
+		} else {
+			return [false, users as UserData[]];
+		}
+	}
+
 	public useAllEvents(): EventData[] | undefined {
 		const [events, setEvents] = useState<EventData[] | undefined>(undefined)
 		useEffect(() => {
