@@ -4,6 +4,8 @@ import { readAuthData, logout, ModfestAuth } from "@/auth_context"
 import { Platform, PlatformContext } from "@/platform";
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { createContext, use, useContext, useEffect, useReducer, useState } from "react";
+import styles from "./sidebar.module.css"
+import Sidebar from "./sidebar";
 
 export default function Template({ children }: { children: React.ReactNode }) {
 	const [auth, setAuth] = useState<ModfestAuth | undefined>(undefined)
@@ -37,7 +39,12 @@ export default function Template({ children }: { children: React.ReactNode }) {
 	const platform = Platform.new(auth, platformCache, setPlatformCache)
 	return <PlatformContext.Provider value={platform}>
 		<LogoutCtx.Provider value={logoutCtx}>
-			{children}
+			<div>
+				<Sidebar></Sidebar>
+				<div className={styles["content"]}>
+					{children}
+				</div>
+			</div>
 		</LogoutCtx.Provider>
 	</PlatformContext.Provider>
 }
@@ -48,5 +55,5 @@ type LogoutCtx = {
 };
 
 export function useLogout(): () => void {
-	return useContext(LogoutCtx)?.onLogout!
+	return useContext(LogoutCtx)!.onLogout
 }
