@@ -1,26 +1,16 @@
-"use client"
-
-import { getRedirectUrl } from "../auth";
+import Inner from "./inner";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
 type SearchParamProps = {
 	searchParams: SearchParams;
 };
 
-export default function Home(props: SearchParamProps) {
-	const modrinthSite = process.env.NEXT_PUBLIC_MODRINTH_SITE
-	const clientId = process.env.NEXT_PUBLIC_MODRINTH_APP_ID!
-	const callback = getRedirectUrl()
-	const scope = `USER_READ`
-
-  	const oathUrl = `${modrinthSite}/auth/authorize?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(callback)}&scope=${encodeURIComponent(scope)}`
-
-	return (
-		<main>
-			<center>
-				<h1>ModFest panel</h1>
-				<a href={oathUrl}>Log in with Modrinth</a>
-			</center>
-		</main>
-	);
+export default async function Home(props: SearchParamProps) {
+	// We obtain the page to redirect to after this whole ordeal.
+	// If it's not specified we set it to ""
+	var redirect = (await props.searchParams)["r"] ?? ""
+	if (typeof(redirect) !== "string") {
+		redirect = redirect[0]
+	}
+	return <Inner redirect_url={redirect}></Inner>
 }

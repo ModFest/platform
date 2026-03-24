@@ -2,7 +2,7 @@
 
 import { readAuthData, logout, ModfestAuth } from "@/auth_context"
 import { Platform, PlatformContext } from "@/platform";
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { createContext, use, useContext, useEffect, useReducer, useState } from "react";
 
 export default function Template({ children }: { children: React.ReactNode }) {
@@ -16,7 +16,8 @@ export default function Template({ children }: { children: React.ReactNode }) {
 			if (a && a.isValid()) {
 				setAuth(a)
 			} else {
-				router.push("/auth/login")
+				var currentUrl = window.location.pathname + window.location.search + window.location.hash
+				router.push(`/auth/login?r=${encodeURIComponent(currentUrl)}`)
 			}
 		}
 	}, [auth])
