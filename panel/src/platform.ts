@@ -122,7 +122,7 @@ export class Platform {
 	}
 
 	public getUser(userId: string): Promise<UserData> {
-		return fetch(`${PLATFORM}/user/${userId}`)
+		return fetch(`${PLATFORM}/user/${userId}`, this.auth.configureFetch())
 				.then(throwIfNotOk)
 				.then(r => r.json());
 	}
@@ -136,7 +136,7 @@ export class Platform {
 		useEffect(() => {
 			setUsers(Array(userIds.length).fill(undefined))
 			userIds.forEach((uid, i) => {
-				fetch(`${PLATFORM}/user/${uid}`)
+				fetch(`${PLATFORM}/user/${uid}`, this.auth.configureFetch())
 					.then(throwIfNotOk)
 					.then(r => r.json())
 					.then(d => {
