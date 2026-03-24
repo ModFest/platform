@@ -27,7 +27,7 @@ export class ModfestAuth {
 		if (typeof mrToken !== "string") {
 			return undefined
 		}
-		var validUntil = tokenData["valid_until"]
+		const validUntil = tokenData["valid_until"]
 		if (typeof validUntil !== "number") {
 			return undefined
 		}

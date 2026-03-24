@@ -13,7 +13,7 @@ export function getCallbackUrl(): string {
  * The resulting value is guaranteed to be alphanumeric
  */
 export function getOauthBrowserKey(): string {
-	var key = localStorage.getItem("oauthbrowserkey");
+	let key = localStorage.getItem("oauthbrowserkey");
 	if (!key) {
 		key = crypto.randomUUID().replace("-", "");
 		localStorage.setItem("oauthbrowserkey", key);

@@ -4,7 +4,7 @@ export async function getToken(code: string, redirect_uri: string): Promise<Modr
 	// This function is run on the server, it needs access to the client secret
 	const modrinthApi = process.env.NEXT_PUBLIC_MODRINTH_API
 
-	var result = await fetch(`${modrinthApi}/_internal/oauth/token`, {
+	const result = await fetch(`${modrinthApi}/_internal/oauth/token`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/x-www-form-urlencoded",

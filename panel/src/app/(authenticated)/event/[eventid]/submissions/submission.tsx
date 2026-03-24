@@ -48,7 +48,7 @@ export default function Submission(props: SubmissionProps) {
 		<div className={styles["info"]}>
 			<h2>{submission.name}</h2>
 			<p>
-				By {joinReactElements(authors.map(a => <Author userData={a}/>), ", ")}
+				By {joinReactElements(authors.map((a,i) => <Author userData={a} key={i}/>), ", ")}
 			</p>
 			<p className={styles["description"]}>
 				{submission.description}

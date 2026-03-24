@@ -20,7 +20,7 @@ export interface EventData {
     mod_loader: string;
     minecraft_version: string;
     modpack: string;
-    description: any[];
+    description: unknown[];
 }
 
 export interface EventData$Colors {
@@ -55,7 +55,7 @@ export interface HealthData {
 
 export interface PlatformErrorResponse {
     type: PlatformErrorResponse$ErrorType;
-    data: any;
+    data: unknown;
 }
 
 export interface PlatformErrorResponse$AlreadyExists {
@@ -105,7 +105,7 @@ export interface SubmissionData$Awards {
 }
 
 export interface SubmissionData$FileData {
-    inner: any;
+    inner: unknown;
 }
 
 export interface SubmissionData$FileData$Github {

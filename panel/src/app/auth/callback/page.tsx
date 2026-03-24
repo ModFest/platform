@@ -16,7 +16,7 @@ export default function Home() {
 
 	useEffect(() => {
 		authWithModrinthOAuth(router, setFailed)
-	}, [])
+	}, [router])
 
 	if (failed) {
 		return <main>
@@ -52,7 +52,7 @@ async function authWithModrinthOAuth(router: AppRouterInstance, setFailed: (v: b
 		return
 	}
 
-	var modrinthToken = await getToken(code!, getCallbackUrl())
+	const modrinthToken = await getToken(code!, getCallbackUrl())
 	if (!("access_token" in modrinthToken) || !("expires_at" in modrinthToken)) {
 		setFailed(true)
 		return

@@ -7,11 +7,11 @@ import { usePlatform } from "@/platform";
 import { useState } from "react";
 
 export default function Sidebar() {
-	let logout = useLogout();
-	let platform = usePlatform();
-	let currentEvent = platform.useCurrentEvent();
-	let allEvents = platform.useAllEvents();
-	let [selectedEvent, setSelectedEvent] = useState<string | undefined>();
+	const logout = useLogout();
+	const platform = usePlatform();
+	const currentEvent = platform.useCurrentEvent();
+	const allEvents = platform.useAllEvents();
+	const [selectedEvent, setSelectedEvent] = useState<string | undefined>();
 	
 	if (selectedEvent == undefined && currentEvent?.event) {
 		setSelectedEvent(currentEvent.event);
@@ -46,7 +46,7 @@ export default function Sidebar() {
  * A link to a page under /event/
  */
 function EventLink(props: { selectedEvent: string | undefined, subpage: string, children: React.ReactNode}) {
-	let style = `${styles["navelem"]} ${styles["subnavelem"]}`
+	const style = `${styles["navelem"]} ${styles["subnavelem"]}`
 	if (props.selectedEvent == undefined) {
 		return <div className={`${style} ${globalStyles["disabled"]}`} role="link" aria-disabled={true}>{props.children}</div>
 	}

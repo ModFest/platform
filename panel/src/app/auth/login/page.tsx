@@ -8,7 +8,7 @@ type SearchParamProps = {
 export default async function Home(props: SearchParamProps) {
 	// We obtain the page to redirect to after this whole ordeal.
 	// If it's not specified we set it to ""
-	var redirect = (await props.searchParams)["r"] ?? ""
+	let redirect = (await props.searchParams)["r"] ?? ""
 	if (typeof(redirect) !== "string") {
 		redirect = redirect[0]
 	}

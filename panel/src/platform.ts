@@ -1,4 +1,6 @@
 "use client"
+/* eslint-disable react-hooks/rules-of-hooks */
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { ModfestAuth } from "./auth_context";
@@ -24,27 +26,25 @@ export function usePlatform(): Platform {
 
 export class Platform {
 	private readonly auth: ModfestAuth
-	private readonly cachedState: Record<string, any>
-	private readonly setCachedState: ((f: (o: Record<string, any>) => Record<string, any>) => void)
+	private readonly cachedState: Record<string, unknown>
+	private readonly setCachedState: ((f: (o: Record<string, unknown>) => Record<string, unknown>) => void)
 
-	private constructor(auth: ModfestAuth, cachedState: Record<string, any>, setCachedState: (f: (o: Record<string, any>) => Record<string, any>) => void) {
+	private constructor(auth: ModfestAuth, cachedState: Record<string, unknown>, setCachedState: (f: (o: Record<string, unknown>) => Record<string, unknown>) => void) {
 		this.auth = auth
 		this.cachedState = cachedState;
 		this.setCachedState = setCachedState;
 	}
 
-	static new(auth: ModfestAuth, cachedState: Record<string, any>, setCachedState: (f: (o: Record<string, any>) => Record<string, any>) => void): Platform {
+	static new(auth: ModfestAuth, cachedState: Record<string, unknown>, setCachedState: (f: (o: Record<string, unknown>) => Record<string, unknown>) => void): Platform {
 		return new Platform(auth, cachedState, setCachedState)
 	}
 
 	public useAllUsers(): UserData[] {
 		const [users, setUsers] = useState<UserData[]>([])
-		var usersCache = users
 		useEffect(() => {
 			const refetchAllUsers = () => {
 				// Resync completely
 				fetch(`${PLATFORM}/users`, this.auth.configureFetch()).then(d => d.json()).then(data => {
-					usersCache = data
 					setUsers(data)
 				})
 			}
@@ -55,25 +55,22 @@ export class Platform {
 				onMessage: (event) => {
 					const userId = event.data
 					fetch(`${PLATFORM}/user/${userId}`, this.auth.configureFetch()).then(d => d.json()).then(newUser => {
-						for (var i = 0; i < usersCache.length; i++) {
-							if (usersCache[i].id === userId) {
-								const newData = [...usersCache]
-								if (newUser) {
-									newData[i] = newUser
-									usersCache = newData
-									setUsers(newData)
-								} else {
-									newData.splice(i, 1)
-									usersCache = newData
-									setUsers(newData)
+						setUsers(oldUsers => {
+							for (var i = 0; i < oldUsers.length; i++) {
+								if (oldUsers[i].id === userId) {
+									const newData = [...oldUsers]
+									if (newUser) {
+										newData[i] = newUser
+									} else {
+										newData.splice(i, 1)
+									}
+									return newData
 								}
-								return
 							}
-						}
-						// User did not previously exist
-						const newData = [newUser, ...usersCache]
-						usersCache = newData
-						setUsers(newData)
+							// User did not previously exist
+							const newData = [newUser, ...oldUsers]
+							return newData
+						})
 					})
 				},
 				...this.auth.configureFetch()
@@ -180,7 +177,7 @@ export class Platform {
 		useEffect(() => {
 			this.refetchEventTokens()
 		}, [this.auth])
-		return this.cachedState["event_tokens"]
+		return this.cachedState["event_tokens"] as EventTokenData
 	}
 
 	private refetchEventTokens() {

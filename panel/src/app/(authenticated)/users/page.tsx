@@ -40,14 +40,6 @@ export default function Home() {
 	</>;
 }
 
-function asString(d: FormData, key: string): string {
-	const v = d.get(key)!
-	if (typeof v !== "string") {
-		throw `${key} was weird type`
-	}
-	return v
-}
-
 function UserEdit(props: {user: UserData | undefined}) {
 	const platform = usePlatform()
 	const [success, setSuccess] = useState<boolean | undefined>(undefined)

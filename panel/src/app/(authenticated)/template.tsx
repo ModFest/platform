@@ -18,11 +18,11 @@ export default function Template({ children }: { children: React.ReactNode }) {
 			if (a && a.isValid()) {
 				setAuth(a)
 			} else {
-				var currentUrl = window.location.pathname + window.location.search + window.location.hash
+				const currentUrl = window.location.pathname + window.location.search + window.location.hash
 				router.push(`/auth/login?r=${encodeURIComponent(currentUrl)}`)
 			}
 		}
-	}, [auth])
+	}, [auth, router])
 	if (!auth) {
 		return <main>
 			<h1>Loading...</h1>

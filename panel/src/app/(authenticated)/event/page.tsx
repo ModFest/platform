@@ -2,12 +2,6 @@
 
 import { usePlatform } from "@/platform";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-
-type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
-type SearchParamProps = {
-	searchParams: SearchParams;
-};
 
 export default function Home() {
 	const router = useRouter()

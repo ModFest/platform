@@ -1,7 +1,7 @@
 "use client"
 import { readAuthData } from "@/auth_context";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getOauthBrowserKey, getCallbackUrl } from "../auth";
 import { redirectBack } from "../callback/page";
 
@@ -23,13 +23,13 @@ export default function Inner(props: {redirect_url: string}) {
 
 	// We want to check if the user got sent here erroneously,
 	// aka if they got authenticated in the meantime
-	const checkLoggedIn = () => {
+	const checkLoggedIn = useCallback(() => {
 		const a = readAuthData()
 		if (a && a.isValid()) {
 			redirectBack(router, redirect)
 		}
-	};
-	useEffect(() => checkLoggedIn(), []); // Wrapped in useEffect so it only runs on client
+	}, [router, redirect]);
+	useEffect(() => checkLoggedIn(), [checkLoggedIn]); // Wrapped in useEffect so it only runs on client
 
 	// We also want to keep an eye on localStorage. It might be that the user has multiple tabs open,
 	// and logged in on aNextRouter different tab.
@@ -39,7 +39,7 @@ export default function Inner(props: {redirect_url: string}) {
 			checkLoggedIn()
 		}, { signal: controller.signal })
 		return () => controller.abort()
-	}, [])
+	}, [checkLoggedIn])
 
 	// These need to be in a useEffect because they must run on the client and not the server
 	const [oauthBrowserKey, setOauthBrowserKey] = useState<string | undefined>(undefined)
