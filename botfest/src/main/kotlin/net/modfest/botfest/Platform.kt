@@ -172,7 +172,9 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 	}
 
 	suspend fun getSubmissions(): List<SubmissionResponseData> {
-		return client.get("/user/@me/submissions").unwrapErrors().body()
+		return client.get("/user/@me/submissions") {
+			addAuth()
+		}.unwrapErrors().body()
 	}
 
 	suspend fun editSubmissionData(eventId: String, subId: String, edit: SubmissionPatchData): SubmissionResponseData {
