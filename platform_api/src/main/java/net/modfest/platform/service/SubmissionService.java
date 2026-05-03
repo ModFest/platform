@@ -1,6 +1,7 @@
 package net.modfest.platform.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import net.modfest.platform.misc.PlatformStandardException;
 import net.modfest.platform.pojo.*;
 import net.modfest.platform.repository.SubmissionRepository;
 import nl.theepicblock.dukerinth.ModrinthApi;
@@ -52,7 +53,7 @@ public class SubmissionService {
 				var newInner = o.withHomepageUrl(edit.homepage().isBlank() ? null : edit.homepage());
 				data = data.withPlatform(new SubmissionData.AssociatedData(newInner));
 			} else {
-				throw new IllegalStateException();
+				throw new IllegalStateException("Editing homepage is only allowed for 'other' submissions");
 			}
 		}
 		if (edit.downloadUrl() != null) {
@@ -60,7 +61,7 @@ public class SubmissionService {
 				var newInner = o.withDownloadUrl(edit.downloadUrl().isBlank() ? null : edit.downloadUrl());
 				data = data.withPlatform(new SubmissionData.AssociatedData(newInner));
 			} else {
-				throw new IllegalStateException();
+				throw new IllegalStateException("Editing download url is only allowed for 'other' submissions");
 			}
 		}
 		submissionRepository.save(data);
@@ -81,15 +82,15 @@ public class SubmissionService {
 		return getSubmission(data.event(), data.id());
 	}
 
-	public SubmissionData updateSubmissionVersion(SubmissionData data) {
+	public SubmissionData updateSubmissionVersion(SubmissionData data) throws PlatformStandardException {
 		if (!(data.platform().inner() instanceof SubmissionData.AssociatedData.Modrinth mr)) {
-			throw new IllegalArgumentException("Update only works for modrinth submissions!");
+			throw new PlatformStandardException(PlatformErrorResponse.ErrorType.UPDATE_NON_MODRINTH, null);
 		}
 
 		var project = modrinth.projects().getProject(mr.projectId());
 
 		if (project == null) {
-			throw new IllegalArgumentException("Modrinth project not found!");
+			throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.MRPROJECT, mr.projectId());
 		}
 
 		var latest = getLatestModrinth(mr.projectId(), eventService.getEventById(data.event()), project.projectType);
@@ -105,15 +106,15 @@ public class SubmissionService {
 		return getSubmission(newData.event(), newData.id());
 	}
 
-	public SubmissionData updateSubmissionMeta(SubmissionData data) {
+	public SubmissionData updateSubmissionMeta(SubmissionData data) throws PlatformStandardException {
 		if (!(data.platform().inner() instanceof SubmissionData.AssociatedData.Modrinth mr)) {
-			throw new IllegalArgumentException("Update only works for modrinth submissions!");
+			throw new PlatformStandardException(PlatformErrorResponse.ErrorType.UPDATE_NON_MODRINTH, null);
 		}
 
 		var project = modrinth.projects().getProject(mr.projectId());
 
 		if (project == null) {
-			throw new IllegalArgumentException("Modrinth project not found!");
+			throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.MRPROJECT, mr.projectId());
 		}
 
 		var subKey = new SubmissionRepository.SubmissionId(data.event(), data.id());
@@ -132,15 +133,15 @@ public class SubmissionService {
 		return getSubmission(newData.event(), newData.id());
 	}
 
-	public SubmissionData updateSubmissionBooth(SubmissionData data) {
+	public SubmissionData updateSubmissionBooth(SubmissionData data) throws PlatformStandardException {
 		if (!(data.platform().inner() instanceof SubmissionData.AssociatedData.Modrinth mr)) {
-			throw new IllegalArgumentException("Update only works for modrinth submissions!");
+			throw new PlatformStandardException(PlatformErrorResponse.ErrorType.UPDATE_NON_MODRINTH, null);
 		}
 
 		var project = modrinth.projects().getProject(mr.projectId());
 
 		if (project == null) {
-			throw new IllegalArgumentException("Modrinth project not found!");
+			throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.MRPROJECT, mr.projectId());
 		}
 
 		var subKey = new SubmissionRepository.SubmissionId(data.event(), data.id());
@@ -220,8 +221,7 @@ public class SubmissionService {
 		}
 		var idKey = new SubmissionRepository.SubmissionId(event.id(), subId);
 		if (submissionRepository.contains(idKey)) {
-			// TODO friendlier error message for duplicates
-			throw new IllegalStateException();
+			throw new IllegalStateException("Submission id already exists");
 		}
 		var submission = new SubmissionData(
 			subId,

@@ -76,12 +76,27 @@ suspend fun main() {
 			if (type.error is PlatformException) {
 				var data = (type.error as PlatformException).data
 				content = when (data.type) {
-					PlatformErrorResponse.ErrorType.EVENT_NO_EXIST -> Translations.Apierror.eventNoExists
-						.translateNamed("n" to data.data.stringified())
-					PlatformErrorResponse.ErrorType.USER_NO_EXIST -> Translations.Apierror.userNoExists
-						.translateNamed("n" to data.data.stringified())
-					PlatformErrorResponse.ErrorType.MR_PROJECT_NO_EXIST -> Translations.Apierror.mrProjectNoExists
-						.translateNamed("n" to data.data.stringified())
+					PlatformErrorResponse.ErrorType.SUBMISSION_NO_EXIST -> {
+						val data = Gson().fromJson(data.data, PlatformErrorResponse.SubmissionNoExist::class.java)
+						Translations.Apierror.submissionDoesntExist.translateNamed(
+								"id" to data.subid(),
+								"event" to data.eventid()
+							)
+					}
+					PlatformErrorResponse.ErrorType.DOESNT_EXIST -> {
+						val data = Gson().fromJson(data.data, PlatformErrorResponse.DoesntExist::class.java)
+						Translations.Apierror.submissionDoesntExist.translateNamed(
+							"type" to when(data.type) {
+								PlatformErrorResponse.IdType.EVENT -> Translations.Apierror.Idtype.event.translate()
+								PlatformErrorResponse.IdType.MFUSER -> Translations.Apierror.Idtype.mfuser.translate()
+								PlatformErrorResponse.IdType.MRUSER -> Translations.Apierror.Idtype.mruser.translate()
+								PlatformErrorResponse.IdType.MCACCOUNT -> Translations.Apierror.Idtype.mcaccount.translate()
+								PlatformErrorResponse.IdType.MRPROJECT -> Translations.Apierror.Idtype.mrproject.translate()
+							},
+							"id" to data.id()
+						)
+					}
+					PlatformErrorResponse.ErrorType.MC_ALREADY_DELETED -> Translations.Apierror.mcAlreadyDeleted.translate()
 					PlatformErrorResponse.ErrorType.ALREADY_USED -> Translations.Apierror.alreadyUsed
 						.translateNamed(
 							"fieldname" to Gson().fromJson(data.data, AlreadyExists::class.java).fieldName,
@@ -91,6 +106,8 @@ suspend fun main() {
 						.translateNamed("err" to data.data.stringified())
 					PlatformErrorResponse.ErrorType.INTERNAL -> Translations.Apierror.internal
 						.translateNamed("error" to data.data.stringified())
+
+					PlatformErrorResponse.ErrorType.UPDATE_NON_MODRINTH -> Translations.Apierror.updateNonModrinth.translate()
 				}
 			} else {
 				content = message.translate()

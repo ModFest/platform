@@ -10,9 +10,7 @@ import nl.theepicblock.dukerinth.ModrinthApi;
 import nl.theepicblock.dukerinth.internal.GsonBodyHandler;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.URI;
@@ -56,10 +54,10 @@ public class UserService {
 		return userRepository.getAll();
 	}
 
-	public String create(UserCreateData data) throws InvalidModrinthIdException, PlatformStandardException {
+	public String create(UserCreateData data) throws PlatformStandardException {
 		var mrUser = modrinthApi.users().getUser(data.modrinthId());
 
-		if (mrUser == null) throw new InvalidModrinthIdException();
+		if (mrUser == null) throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.MRUSER, data.modrinthId());
 
 		if (userRepository.getByModrinthId(mrUser.id) != null) {
 			throw new PlatformStandardException(
@@ -119,7 +117,7 @@ public class UserService {
 		var uuid = getMinecraftId(username);
 		var accounts = new HashSet<>(user.minecraftAccounts());
 		if (!accounts.contains(uuid)) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "That minecraft account isn't associated with this user");
+			throw new PlatformStandardException(PlatformErrorResponse.ErrorType.MC_ALREADY_DELETED, null);
 		}
 		accounts.remove(uuid);
 		userRepository.save(user.withMinecraftAccounts(accounts));
@@ -130,21 +128,11 @@ public class UserService {
 		try(HttpClient client = HttpClient.newHttpClient()) {
 			var uuid = client.send(HttpRequest.newBuilder(URI.create("https://api.minecraftservices.com/minecraft/profile/lookup/name/%s".formatted(username))).build(), new GsonBodyHandler<>(MinecraftProfile.class, new Gson())).body().id();
 			if (uuid == null) {
-				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "A minecraft profile with that username does not exist");
+				throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.MCACCOUNT, username);
 			}
 			return uuid;
 		} catch (IOException | InterruptedException e) {
 			throw new PlatformStandardException(PlatformErrorResponse.ErrorType.INTERNAL, "Mojang api unavailable");
-		}
-	}
-
-	public static class InvalidModrinthIdException extends Exception {
-
-	}
-
-	public static class UserAlreadyExistsException extends Exception {
-		public UserAlreadyExistsException(String message) {
-			super(message);
 		}
 	}
 }

@@ -2,6 +2,7 @@ package net.modfest.platform.service;
 
 import net.modfest.platform.misc.MfUserId;
 import net.modfest.platform.misc.PlatformStandardException;
+import net.modfest.platform.pojo.PlatformErrorResponse;
 import net.modfest.platform.pojo.ScheduleEntryCreate;
 import net.modfest.platform.pojo.ScheduleEntryData;
 import net.modfest.platform.repository.ScheduleRepository;
@@ -10,9 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 import java.util.stream.Stream;
-
-import static net.modfest.platform.pojo.PlatformErrorResponse.ErrorType.EVENT_NO_EXIST;
-import static net.modfest.platform.pojo.PlatformErrorResponse.ErrorType.USER_NO_EXIST;
 
 @Service
 public class ScheduleService {
@@ -26,7 +24,7 @@ public class ScheduleService {
 	public ScheduleEntryData createEntry(ScheduleEntryCreate createData) throws PlatformStandardException {
 		var eventId = Objects.requireNonNull(createData.event());
 		if (eventService.getEventById(eventId) == null) {
-			throw new PlatformStandardException(EVENT_NO_EXIST, eventId);
+			throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.EVENT, eventId);
 		}
 
 		// Create a new id, we reuse the user id generation
@@ -49,7 +47,7 @@ public class ScheduleService {
 
 		for (var a : createData.authors()) {
 			if (userService.getByMfId(a) == null) {
-				throw new PlatformStandardException(USER_NO_EXIST, a);
+				throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.MFUSER, a);
 			}
 		}
 
@@ -69,13 +67,13 @@ public class ScheduleService {
 		}
 
 		if (updateData.event() != null && eventService.getEventById(updateData.event()) == null) {
-			throw new PlatformStandardException(EVENT_NO_EXIST, updateData.event());
+			throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.EVENT, updateData.event());
 		}
 
 		if (updateData.authors() != null) {
 			for (var a : updateData.authors()) {
 				if (userService.getByMfId(a) == null) {
-					throw new PlatformStandardException(USER_NO_EXIST, a);
+					throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.MFUSER, a);
 				}
 			}
 		}

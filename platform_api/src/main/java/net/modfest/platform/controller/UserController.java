@@ -82,24 +82,17 @@ public class UserController {
 	@PostMapping("/users")
 	@RequiresPermissions(Permissions.Users.CREATE)
 	public UserData createUser(@RequestBody UserCreateData data) throws PlatformStandardException {
-		try {
-			var id = service.create(data);
-			return filterSensitiveUserData(service.getByMfId(id));
-		} catch (UserService.InvalidModrinthIdException e) {
-			throw new ResponseStatusException(
-				HttpStatus.BAD_REQUEST,
-				"Unknown modrinth id: "+data.modrinthId()
-			);
-		}
+		var id = service.create(data);
+		return filterSensitiveUserData(service.getByMfId(id));
 	}
 
 	@GetMapping("/user/{id}")
-	public UserData getSingleUserRoute(@PathVariable String id) {
+	public UserData getSingleUserRoute(@PathVariable String id) throws PlatformStandardException {
 		var user = getSingleUser(id);
 		return filterSensitiveUserData(user);
 	}
 
-	public UserData getSingleUser(@PathVariable String id) {
+	public UserData getSingleUser(@PathVariable String id) throws PlatformStandardException {
 		if (Objects.equals(id, "@me")) {
 			var principal = SecurityUtils.getSubject().getPrincipal();
 			if (principal instanceof UserData user) {
@@ -130,13 +123,13 @@ public class UserController {
 		}
 
 		if (user == null) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such user exists");
+			throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.MFUSER, id);
 		}
 		return user;
 	}
 
 	@GetMapping("/user/{id}/submissions")
-	public List<SubmissionResponseData> getUserSubmissions(HttpServletRequest request, @PathVariable String id, @RequestParam(required = false) String eventFilter) {
+	public List<SubmissionResponseData> getUserSubmissions(HttpServletRequest request, @PathVariable String id, @RequestParam(required = false) String eventFilter) throws PlatformStandardException {
 		var user = getSingleUser(id);
 		EventData filter = null;
 		if (eventFilter != null) {
@@ -150,19 +143,10 @@ public class UserController {
 	}
 
 	@PatchMapping("/user/{id}")
-	public UserData editUserData(@PathVariable String id, @RequestBody UserPatchData data) {
+	public UserData editUserData(@PathVariable String id, @RequestBody UserPatchData data) throws PlatformStandardException {
 		var user = getSingleUser(id);
 
-		// Check permissions
-		// In order for the request to be allowed, the person making the request needs
-		// to either be editing their own data, or they need to have the EDIT_OTHERS permission
-		var subject = SecurityUtils.getSubject();
-		var edit_others = subject.isPermitted(Permissions.Users.EDIT_OTHERS);
-		var owns = PermissionUtils.owns(subject, user);
-
-		if (!owns && !edit_others) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not edit this user");
-		}
+		checkUserCanEdit(user);
 
 		// Perform operation
 		var newUser = user;
@@ -184,16 +168,7 @@ public class UserController {
 	public MinecraftEditResponse addUserMinecraft(@PathVariable String id, @PathVariable String username) throws PlatformStandardException {
 		var user = getSingleUser(id);
 
-		// Check permissions
-		// In order for the request to be allowed, the person making the request needs
-		// to either be editing their own data, or they need to have the EDIT_OTHERS permission
-		var subject = SecurityUtils.getSubject();
-		var edit_others = subject.isPermitted(Permissions.Users.EDIT_OTHERS);
-		var owns = PermissionUtils.owns(subject, user);
-
-		if (!owns && !edit_others) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not edit this user");
-		}
+		checkUserCanEdit(user);
 
 		return service.addMinecraftAccount(user, username);
 	}
@@ -202,33 +177,31 @@ public class UserController {
 	public MinecraftEditResponse deleteUserMinecraft(@PathVariable String id, @PathVariable String username) throws PlatformStandardException {
 		var user = getSingleUser(id);
 
-		// Check permissions
-		// In order for the request to be allowed, the person making the request needs
-		// to either be editing their own data, or they need to have the EDIT_OTHERS permission
-		var subject = SecurityUtils.getSubject();
-		var edit_others = subject.isPermitted(Permissions.Users.EDIT_OTHERS);
-		var owns = PermissionUtils.owns(subject, user);
-
-		if (!owns && !edit_others) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not edit this user");
-		}
+		checkUserCanEdit(user);
 
 		return service.removeMinecraftAccount(user, username);
 	}
 
 	@PostMapping("/admin/update_user")
 	@RequiresPermissions(Permissions.Users.FORCE_EDIT)
-	public UserData forceUpdateUser(@RequestBody UserData data) {
-		var subject = SecurityUtils.getSubject();
-		var edit_others = subject.isPermitted(Permissions.Users.EDIT_OTHERS);
-		var owns = PermissionUtils.owns(subject, data);
-
-		if (!owns && !edit_others) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not edit this user");
-		}
+	public UserData forceUpdateUser(@RequestBody UserData data) throws PlatformStandardException {
+		checkUserCanEdit(data);
 
 		service.save(data);
 		return filterSensitiveUserData(data);
+	}
+
+	public void checkUserCanEdit(UserData target) throws PlatformStandardException {
+		// Check permissions
+		// In order for the request to be allowed, the person making the request needs
+		// to either be editing their own data, or they need to have the EDIT_OTHERS permission
+		var authContext = SecurityUtils.getSubject();
+		var edit_others = authContext.isPermitted(Permissions.Users.EDIT_OTHERS);
+		var owns = PermissionUtils.owns(authContext, target);
+
+		if (!owns && !edit_others) {
+			throw new PlatformStandardException(PlatformErrorResponse.ErrorType.PERMISSION_ERROR, "You may not edit this user");
+		}
 	}
 
 	/**

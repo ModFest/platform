@@ -11,6 +11,7 @@ import net.modfest.platform.service.ImageService;
 import net.modfest.platform.service.SubmissionService;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,9 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -49,18 +50,18 @@ public class EventController {
 	}
 
 	@PutMapping("/event/{id}/registrations/{userId}")
-	public UserData register(@PathVariable String id, @PathVariable String userId) {
+	public UserData register(@PathVariable String id, @PathVariable String userId) throws PlatformStandardException {
 		var data = setRegistration(id, userId, true);
 		return userController.filterSensitiveUserData(data);
 	}
 
 	@DeleteMapping("/event/{id}/registrations/{userId}")
-	public UserData unregister(@PathVariable String id, @PathVariable String userId) {
+	public UserData unregister(@PathVariable String id, @PathVariable String userId) throws PlatformStandardException {
 		var data = setRegistration(id, userId, false);
 		return userController.filterSensitiveUserData(data);
 	}
 
-	private UserData setRegistration(@PathVariable String id, @RequestBody String userId, boolean registered) {
+	private UserData setRegistration(@PathVariable String id, @RequestBody String userId, boolean registered) throws PlatformStandardException {
 		var event = getEvent(id);
 		// Get the user as if we were requesting them from /user/{id}
 		var user = userController.getSingleUser(userId);
@@ -106,23 +107,28 @@ public class EventController {
 
 	@PostMapping(value = "/event/{eventId}/submissions", params = "type=other")
 	@RequiresPermissions(Permissions.Event.SUBMIT)
-	public SubmissionResponseData makeSubmissionOther(HttpServletRequest request, @PathVariable String eventId, @RequestBody SubmitRequestOther submission) {
+	public SubmissionResponseData makeSubmissionOther(HttpServletRequest request, @PathVariable String eventId, @RequestBody SubmitRequestOther submission) throws PlatformStandardException {
 		var event = getEvent(eventId);
 		var subject = SecurityUtils.getSubject();
 		var bypass = subject.isPermitted(Permissions.Event.SUBMIT_BYPASS);
 		var can_others = subject.isPermitted(Permissions.Event.SUBMIT_OTHER);
 
-		var authors = submission.authors()
-			.stream()
-			.map(id -> userController.getSingleUser(id)).collect(Collectors.toSet());
+		var authors = new HashSet<UserData>();
+		for (String id : submission.authors()) {
+			UserData singleUser = userController.getSingleUser(id);
+			authors.add(singleUser);
+		}
 		var self = authors.stream().anyMatch(d -> PermissionUtils.owns(subject, d));
 
 		if (!event.phase().canSubmit() && !bypass) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Event does not accept submissions");
+			throw new PlatformStandardException(
+				PlatformErrorResponse.ErrorType.PERMISSION_ERROR,
+				"Event does not accept submissions at this point in time");
 		}
 
 		if (!self && !can_others) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+			throw new PlatformStandardException(
+				PlatformErrorResponse.ErrorType.PERMISSION_ERROR,
 				"You don't have permissions to submit for people other than yourself");
 		}
 
@@ -139,9 +145,7 @@ public class EventController {
 
 		var authors = service.getUsersForRinthProject(submission.modrinthProject());
 		if (authors == null) {
-			throw new PlatformStandardException(
-				PlatformErrorResponse.ErrorType.MR_PROJECT_NO_EXIST,
-				submission.modrinthProject());
+			throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.MRPROJECT, submission.modrinthProject());
 		}
 
 		var self = authors.anyMatch(d -> PermissionUtils.owns(subject, d));
@@ -155,7 +159,7 @@ public class EventController {
 		if (!self && !can_others) {
 			throw new PlatformStandardException(
 				PlatformErrorResponse.ErrorType.PERMISSION_ERROR,
-				"You do not own this project, and you don't have permissions to submit for people other than yourself");
+				"You do not own this modrinth project, and you don't have permissions to submit for people other than yourself");
 		}
 
 		return service.addResponseInfo(
@@ -169,10 +173,7 @@ public class EventController {
 	@PatchMapping("/event/{eventId}/submission/{subId}")
 	public SubmissionResponseData editSubmissionData(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionPatchData editData) throws PlatformStandardException {
 		var event = getEvent(eventId);
-		var submission = service.getSubmission(eventId, subId);
-		if (submission == null) {
-			throw new IllegalArgumentException();// TODO
-		}
+		var submission = getSubmissionOrError(eventId, subId);
 
 		checkCanEdit(event, submission);
 
@@ -185,10 +186,7 @@ public class EventController {
 	@PatchMapping("/event/{eventId}/booth/{subId}")
 	public SubmissionResponseData editSubmissionBoothData(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @RequestBody SubmissionData.BoothData editData) throws PlatformStandardException {
 		var event = getEvent(eventId);
-		var submission = service.getSubmission(eventId, subId);
-		if (submission == null) {
-			throw new IllegalArgumentException();// TODO
-		}
+		var submission = getSubmissionOrError(eventId, subId);
 
 		checkCanEdit(event, submission);
 
@@ -201,10 +199,7 @@ public class EventController {
 	@PutMapping("/event/{eventId}/submission/{subId}/updateVersion")
 	public SubmissionResponseData updateSubmissionVersion(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId) throws PlatformStandardException {
 		var event = getEvent(eventId);
-		var submission = service.getSubmission(eventId, subId);
-		if (submission == null) {
-			throw new IllegalArgumentException();// TODO
-		}
+		var submission = getSubmissionOrError(eventId, subId);
 
 		checkCanEdit(event, submission);
 
@@ -217,10 +212,7 @@ public class EventController {
 	@PutMapping("/event/{eventId}/submission/{subId}/updateMeta")
 	public SubmissionResponseData updateSubmissionMeta(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId) throws PlatformStandardException {
 		var event = getEvent(eventId);
-		var submission = service.getSubmission(eventId, subId);
-		if (submission == null) {
-			throw new IllegalArgumentException();// TODO
-		}
+		var submission = getSubmissionOrError(eventId, subId);
 
 		checkCanEdit(event, submission);
 
@@ -233,10 +225,7 @@ public class EventController {
 	@DeleteMapping("/event/{eventId}/submission/{subId}/authors/{userId}")
 	public SubmissionResponseData deleteSubmissionAuthor(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) throws PlatformStandardException {
 		var event = getEvent(eventId);
-		var submission = service.getSubmission(eventId, subId);
-		if (submission == null) {
-			throw new IllegalArgumentException();// TODO
-		}
+		var submission = getSubmissionOrError(eventId, subId);
 
 		checkCanEdit(event, submission);
 
@@ -252,7 +241,9 @@ public class EventController {
 		var owns = PermissionUtils.owns(subject, user);
 
 		if (!owns && !edit_others) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You may not edit this user");
+			throw new PlatformStandardException(
+				PlatformErrorResponse.ErrorType.PERMISSION_ERROR,
+				"You can only remove yourself from submissions");
 		}
 
 		return service.addResponseInfo(
@@ -263,10 +254,7 @@ public class EventController {
 	@PutMapping("/event/{eventId}/submission/{subId}/authors/{userId}")
 	public SubmissionResponseData addSubmissionAuthor(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @PathVariable String userId) throws PlatformStandardException {
 		var event = getEvent(eventId);
-		var submission = service.getSubmission(eventId, subId);
-		if (submission == null) {
-			throw new IllegalArgumentException();// TODO
-		}
+		var submission = getSubmissionOrError(eventId, subId);
 
 		checkCanEdit(event, submission);
 
@@ -285,10 +273,7 @@ public class EventController {
 	@PatchMapping("/event/{eventId}/submission/{subId}/image/{type}")
 	public SubmissionResponseData editSubmissionImage(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId, @PathVariable String type, @RequestBody String url) throws PlatformStandardException {
 		var event = getEvent(eventId);
-		var submission = service.getSubmission(eventId, subId);
-		if (submission == null) {
-			throw new IllegalArgumentException();// TODO
-		}
+		var submission = getSubmissionOrError(eventId, subId);
 
 		checkCanEdit(event, submission);
 
@@ -311,14 +296,19 @@ public class EventController {
 	@DeleteMapping("/event/{eventId}/submission/{subId}")
 	public void deleteSubmission(HttpServletRequest request, @PathVariable String eventId, @PathVariable String subId) throws PlatformStandardException {
 		var event = getEvent(eventId);
-		var submission = service.getSubmission(eventId, subId);
-		if (submission == null) {
-			throw new IllegalArgumentException();// TODO
-		}
+		var submission = getSubmissionOrError(eventId, subId);
 
 		checkCanEdit(event, submission);
 
 		service.deleteSubmission(eventId, subId);
+	}
+
+	private @NonNull SubmissionData getSubmissionOrError(String eventId, String subId) throws PlatformStandardException {
+		var submission = service.getSubmission(eventId, subId);
+		if (submission == null) {
+			throw new PlatformStandardException(PlatformErrorResponse.ErrorType.SUBMISSION_NO_EXIST, new PlatformErrorResponse.SubmissionNoExist(eventId, subId));
+		}
+		return submission;
 	}
 
 	/**

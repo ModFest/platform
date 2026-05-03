@@ -27,7 +27,10 @@ public class Permissions {
 		 */
 		public static final String EDIT_OTHERS = "users.edit_others";
 		/**
-		 * Allows editing data that's not normally editable
+		 * Allows editing data that's not normally editable.
+		 * Someone who has this permission would be able to arbitrarily
+		 * overwrite their own userdata. This should only be trusted to
+		 * people who already have the highest role available.
 		 */
 		public static final String FORCE_EDIT = "users.force_edit";
 		/**

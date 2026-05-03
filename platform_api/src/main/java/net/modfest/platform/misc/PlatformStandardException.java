@@ -17,4 +17,8 @@ public class PlatformStandardException extends Exception {
 	public String getMessage() {
 		return this.type+": "+this.data;
 	}
+
+	public static PlatformStandardException doesntExist(PlatformErrorResponse.IdType type, String id) {
+		return new PlatformStandardException(PlatformErrorResponse.ErrorType.DOESNT_EXIST, new PlatformErrorResponse.DoesntExist(type, id));
+	}
 }

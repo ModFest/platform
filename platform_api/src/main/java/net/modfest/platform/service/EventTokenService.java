@@ -36,7 +36,7 @@ public class EventTokenService {
 
 	public void generateNewToken(String eventId) throws PlatformStandardException {
 		if (eventService.getEventById(eventId) == null) {
-			throw new PlatformStandardException(PlatformErrorResponse.ErrorType.EVENT_NO_EXIST, eventId);
+			throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.EVENT, eventId);
 		}
 
 		var randomBytes = new byte[64];

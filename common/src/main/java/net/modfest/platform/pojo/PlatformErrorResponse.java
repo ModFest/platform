@@ -12,19 +12,23 @@ public record PlatformErrorResponse(
 ) {
 	public enum ErrorType {
 		/**
-		 * An event was provided, but it doesn't exist. {@code data} will be a string of the provided event
+		 * An id was provided, but that id doesn't exist. {@code data} will be of type {@link DoesntExist}
 		 */
-		EVENT_NO_EXIST(400),
+		DOESNT_EXIST(400),
 		/**
-		 * A user was provided, but it doesn't exist. {@code data} will be a string of the provided user
+		 * A submision id was provided, but it doesn't exist. {@code data} will be of type {@link SubmissionNoExist}
 		 */
-		USER_NO_EXIST(400),
+		SUBMISSION_NO_EXIST(400),
 		/**
-		 * A modrinth project was provided, but it doesn't exist. {@code data} will be a string of the provided user
+		 * Tried to remove a minecraft account, but it was already gone. {@code data} will be null
 		 */
-		MR_PROJECT_NO_EXIST(400),
+		MC_ALREADY_DELETED(400),
 		/**
-		 * An attempt was made to use an id that was already used. {@code data} will an of type {@link AlreadyExists}
+		 * Tried to update a submission that didn't have modrinth data. {@code data} will be null
+		 */
+		UPDATE_NON_MODRINTH(400),
+		/**
+		 * An attempt was made to use an id that was already used. {@code data} will be of type {@link AlreadyExists}
 		 */
 		ALREADY_USED(400),
 		/**
@@ -52,6 +56,24 @@ public record PlatformErrorResponse(
 		 * The content of that field (eg: a modrinth or discord id)
 		 */
 		String content
+	) {}
+
+	public enum IdType {
+		EVENT,
+		MFUSER,
+		MRUSER,
+		MCACCOUNT,
+		MRPROJECT,
+	}
+
+	public record DoesntExist(
+		IdType type,
+		String id
+	) {}
+
+	public record SubmissionNoExist(
+		String eventid,
+		String subid
 	) {}
 
 	@Override

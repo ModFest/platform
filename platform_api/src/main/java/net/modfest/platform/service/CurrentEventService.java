@@ -25,7 +25,7 @@ public class CurrentEventService {
 		// Validate that the data is correct
 		if (data.event() != null && !eventRepository.contains(data.event())) {
 			// Note that null *is* a valid event
-			throw new PlatformStandardException(PlatformErrorResponse.ErrorType.EVENT_NO_EXIST, data.event());
+			throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.EVENT, data.event());
 		}
 
 		// It's good!
