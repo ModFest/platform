@@ -1,6 +1,7 @@
 package net.modfest.botfest
 
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
 import dev.kord.common.entity.Snowflake
@@ -12,6 +13,7 @@ import dev.kordex.core.utils.envOrNull
 import dev.kordex.core.utils.loadModule
 import net.modfest.botfest.extensions.*
 import net.modfest.botfest.i18n.Translations
+import net.modfest.platform.gson.GsonCommon
 import net.modfest.platform.pojo.PlatformErrorResponse
 import net.modfest.platform.pojo.PlatformErrorResponse.AlreadyExists
 
@@ -70,6 +72,11 @@ suspend fun main() {
 			add(::SubmissionCommands)
 		}
 
+		val gson = run {
+			val b = GsonBuilder()
+			GsonCommon.configureGson(b)
+			b.create()
+		}
 		errorResponse { message, type ->
 			allowedMentions { }
 
@@ -77,14 +84,14 @@ suspend fun main() {
 				var data = (type.error as PlatformException).data
 				content = when (data.type) {
 					PlatformErrorResponse.ErrorType.SUBMISSION_NO_EXIST -> {
-						val data = Gson().fromJson(data.data, PlatformErrorResponse.SubmissionNoExist::class.java)
+						val data = gson.fromJson(data.data, PlatformErrorResponse.SubmissionNoExist::class.java)
 						Translations.Apierror.submissionDoesntExist.translateNamed(
 								"id" to data.subid(),
 								"event" to data.eventid()
 							)
 					}
 					PlatformErrorResponse.ErrorType.DOESNT_EXIST -> {
-						val data = Gson().fromJson(data.data, PlatformErrorResponse.DoesntExist::class.java)
+						val data = gson.fromJson(data.data, PlatformErrorResponse.DoesntExist::class.java)
 						Translations.Apierror.submissionDoesntExist.translateNamed(
 							"type" to when(data.type) {
 								PlatformErrorResponse.IdType.EVENT -> Translations.Apierror.Idtype.event.translate()
@@ -99,8 +106,8 @@ suspend fun main() {
 					PlatformErrorResponse.ErrorType.MC_ALREADY_DELETED -> Translations.Apierror.mcAlreadyDeleted.translate()
 					PlatformErrorResponse.ErrorType.ALREADY_USED -> Translations.Apierror.alreadyUsed
 						.translateNamed(
-							"fieldname" to Gson().fromJson(data.data, AlreadyExists::class.java).fieldName,
-							"content" to Gson().fromJson(data.data, AlreadyExists::class.java).content
+							"fieldname" to gson.fromJson(data.data, AlreadyExists::class.java).fieldName,
+							"content" to gson.fromJson(data.data, AlreadyExists::class.java).content
 						)
 					PlatformErrorResponse.ErrorType.PERMISSION_ERROR -> Translations.Apierror.permissions
 						.translateNamed("err" to data.data.stringified())
