@@ -92,7 +92,7 @@ suspend fun main() {
 					}
 					PlatformErrorResponse.ErrorType.DOESNT_EXIST -> {
 						val data = gson.fromJson(data.data, PlatformErrorResponse.DoesntExist::class.java)
-						Translations.Apierror.submissionDoesntExist.translateNamed(
+						Translations.Apierror.doesntExist.translateNamed(
 							"type" to when(data.type) {
 								PlatformErrorResponse.IdType.EVENT -> Translations.Apierror.Idtype.event.translate()
 								PlatformErrorResponse.IdType.MFUSER -> Translations.Apierror.Idtype.mfuser.translate()
