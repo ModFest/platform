@@ -20,6 +20,10 @@ public record PlatformErrorResponse(
 		 */
 		USER_NO_EXIST(400),
 		/**
+		 * A modrinth project was provided, but it doesn't exist. {@code data} will be a string of the provided user
+		 */
+		MR_PROJECT_NO_EXIST(400),
+		/**
 		 * An attempt was made to use an id that was already used. {@code data} will an of type {@link AlreadyExists}
 		 */
 		ALREADY_USED(400),

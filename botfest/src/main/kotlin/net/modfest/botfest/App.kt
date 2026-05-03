@@ -80,6 +80,8 @@ suspend fun main() {
 						.translateNamed("n" to data.data.stringified())
 					PlatformErrorResponse.ErrorType.USER_NO_EXIST -> Translations.Apierror.userNoExists
 						.translateNamed("n" to data.data.stringified())
+					PlatformErrorResponse.ErrorType.MR_PROJECT_NO_EXIST -> Translations.Apierror.mrProjectNoExists
+						.translateNamed("n" to data.data.stringified())
 					PlatformErrorResponse.ErrorType.ALREADY_USED -> Translations.Apierror.alreadyUsed
 						.translateNamed(
 							"fieldname" to Gson().fromJson(data.data, AlreadyExists::class.java).fieldName,

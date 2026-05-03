@@ -197,10 +197,11 @@ public class SubmissionService {
 
 	public Stream<UserData> getUsersForRinthProject(String modrinthProjectId) {
 		var members = modrinth.projects().getProjectMembers(modrinthProjectId);
-		var organization = modrinth.projects().getProjectOrganization(modrinthProjectId);
 
 		// Returns null if project no does exist
 		if (members == null) return null;
+
+		var organization = modrinth.projects().getProjectOrganization(modrinthProjectId);
 
 		return Stream.concat(
 			members.stream(),

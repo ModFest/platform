@@ -131,7 +131,7 @@ public class EventController {
 
 	@PostMapping(value = "/event/{eventId}/submissions", params = "type=modrinth")
 	@RequiresPermissions(Permissions.Event.SUBMIT)
-	public SubmissionResponseData makeSubmissionModrinth(HttpServletRequest request, @PathVariable String eventId, @RequestBody SubmitRequestModrinth submission) {
+	public SubmissionResponseData makeSubmissionModrinth(HttpServletRequest request, @PathVariable String eventId, @RequestBody SubmitRequestModrinth submission) throws PlatformStandardException {
 		var event = getEvent(eventId);
 		var subject = SecurityUtils.getSubject();
 		var bypass = subject.isPermitted(Permissions.Event.SUBMIT_BYPASS);
@@ -139,18 +139,23 @@ public class EventController {
 
 		var authors = service.getUsersForRinthProject(submission.modrinthProject());
 		if (authors == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Project doesn't exist");
+			throw new PlatformStandardException(
+				PlatformErrorResponse.ErrorType.MR_PROJECT_NO_EXIST,
+				submission.modrinthProject());
 		}
 
 		var self = authors.anyMatch(d -> PermissionUtils.owns(subject, d));
 
 		if (!event.phase().canSubmit() && !bypass) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Event does not accept submissions");
+			throw new PlatformStandardException(
+				PlatformErrorResponse.ErrorType.PERMISSION_ERROR,
+				"Event does not accept submissions at this point in time");
 		}
 
 		if (!self && !can_others) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-				"You don't have permissions to submit for people other than yourself");
+			throw new PlatformStandardException(
+				PlatformErrorResponse.ErrorType.PERMISSION_ERROR,
+				"You do not own this project, and you don't have permissions to submit for people other than yourself");
 		}
 
 		return service.addResponseInfo(
