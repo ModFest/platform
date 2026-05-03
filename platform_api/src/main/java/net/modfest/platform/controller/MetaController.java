@@ -57,7 +57,8 @@ public class MetaController {
 
 
 	@Operation(summary = "Get information about the currently logged-in user",
-			   description = "This route is intended to allow you to debug if you're logged in")
+			   description = "This route is intended to allow you to debug if you're logged in. " +
+				   "Do not rely on this information for non-debugging purposes")
 	@GetMapping("/meta/me")
 	public Whoami aboutLoggedInUser() {
 		var subject = SecurityUtils.getSubject();
@@ -78,6 +79,9 @@ public class MetaController {
 			case null, default -> {}
 		}
 
+		// `getPermissions` is deprecated because it's only for debugging. Luckily we are in fact
+		// using it for debugging. This route shouldn't be relied upon for anything but debugging
+		//noinspection deprecation
 		Collection<String> permissions = realm.getPermissions(subject.getPrincipals());
 
 		return new Whoami(
