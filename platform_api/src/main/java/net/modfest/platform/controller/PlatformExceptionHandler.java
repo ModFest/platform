@@ -30,7 +30,8 @@ public class PlatformExceptionHandler {
 	private ResponseEntity<PlatformErrorResponse> platformException(PlatformStandardException t) {
 		return toResponse(new PlatformErrorResponse(
 			t.getType(),
-			gson.toJsonTree(t.getData())
+			gson.toJsonTree(t.getData()),
+			t.getStatusCodeOverride()
 		));
 	}
 
@@ -38,7 +39,8 @@ public class PlatformExceptionHandler {
 	private ResponseEntity<PlatformErrorResponse> unauthenticatedException(UnauthenticatedException e) {
 		return toResponse(new PlatformErrorResponse(
 			PlatformErrorResponse.ErrorType.PERMISSION_ERROR,
-			gson.toJsonTree("user is not logged in")
+			gson.toJsonTree("user is not logged in"),
+			null
 		));
 	}
 
@@ -46,7 +48,8 @@ public class PlatformExceptionHandler {
 	private ResponseEntity<PlatformErrorResponse> authorizationException(ShiroException e) {
 		return toResponse(new PlatformErrorResponse(
 			PlatformErrorResponse.ErrorType.PERMISSION_ERROR,
-			gson.toJsonTree(e.toString())
+			gson.toJsonTree(e.toString()),
+			null
 		));
 	}
 
@@ -59,7 +62,8 @@ public class PlatformExceptionHandler {
 			return new ResponseEntity<>(
 				new PlatformErrorResponse(
 					PlatformErrorResponse.ErrorType.INTERNAL,
-					gson.toJsonTree(e.getBody())
+					gson.toJsonTree(e.getBody()),
+					null
 				),
 				e.getStatusCode()
 			);
@@ -67,14 +71,15 @@ public class PlatformExceptionHandler {
 		t.printStackTrace();
 		return toResponse(new PlatformErrorResponse(
 			PlatformErrorResponse.ErrorType.INTERNAL,
-			gson.toJsonTree(t.toString())
+			gson.toJsonTree(t.toString()),
+			null
 		));
 	}
 
 	private static ResponseEntity<PlatformErrorResponse> toResponse(PlatformErrorResponse errorResponse) {
 		return new ResponseEntity<>(
 			errorResponse,
-			HttpStatusCode.valueOf(errorResponse.type().httpStatus)
+			HttpStatusCode.valueOf(errorResponse.overrideStatusCode() == null ? errorResponse.type().httpStatus : errorResponse.overrideStatusCode())
 		);
 	}
 }

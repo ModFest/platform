@@ -7,6 +7,7 @@ import net.modfest.platform.pojo.PlatformErrorResponse;
 public class PlatformStandardException extends Exception {
 	private final PlatformErrorResponse.ErrorType type;
 	private final Object data;
+	private Integer statusCodeOverride = null;
 
 	public PlatformStandardException(PlatformErrorResponse.ErrorType type, Object data) {
 		this.type = type;
@@ -16,6 +17,11 @@ public class PlatformStandardException extends Exception {
 	@Override
 	public String getMessage() {
 		return this.type+": "+this.data;
+	}
+
+	public PlatformStandardException statusCode(int code) {
+		statusCodeOverride = code;
+		return this;
 	}
 
 	public static PlatformStandardException doesntExist(PlatformErrorResponse.IdType type, String id) {

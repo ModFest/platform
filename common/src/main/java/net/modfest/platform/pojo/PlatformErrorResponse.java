@@ -2,13 +2,15 @@ package net.modfest.platform.pojo;
 
 import com.google.gson.JsonElement;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The standard way that platform returns errors
  */
 public record PlatformErrorResponse(
 	@NonNull ErrorType type,
-	@NonNull JsonElement data
+	@NonNull JsonElement data,
+	@Nullable Integer overrideStatusCode
 ) {
 	public enum ErrorType {
 		/**

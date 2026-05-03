@@ -123,7 +123,7 @@ public class UserController {
 		}
 
 		if (user == null) {
-			throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.MFUSER, id);
+			throw PlatformStandardException.doesntExist(PlatformErrorResponse.IdType.MFUSER, id).statusCode(404);
 		}
 		return user;
 	}
