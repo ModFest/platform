@@ -92,12 +92,6 @@ class Platform(baseUrl: String) {
 		return client.get("/currentevent/").unwrapErrors().body()
 	}
 
-	suspend fun setCurrentEvent(data: CurrentEventData) {
-		client.put("/currentevent/") {
-			setBody(data)
-		}.unwrapErrors()
-	}
-
 	suspend fun getEvents(): List<EventData> {
 		return client.get("/events").unwrapErrors().body()
 	}
@@ -238,6 +232,12 @@ class PlatformAuthenticated(var client: HttpClient, var discordUser: Snowflake) 
 		return client.delete("/event/"+event.id+"/registrations/@me") {
 			addAuth()
 		}.unwrapErrors().body()
+	}
+
+	suspend fun setCurrentEvent(data: CurrentEventData) {
+		client.put("/currentevent/") {
+			setBody(data)
+		}.unwrapErrors()
 	}
 }
 

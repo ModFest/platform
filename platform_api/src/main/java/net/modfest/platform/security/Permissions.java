@@ -65,6 +65,10 @@ public class Permissions {
 		 */
 		public static final String EDIT_OTHER_SUBMISSION = "submission.edit.others";
 		/**
+		 * Allows the user to edit what the current event is set to
+		 */
+		public static final String EDIT_CURRENT = "event.current.edit";
+		/**
 		 * Allows the user to bypass phase restrictions on editing submissions
 		 */
 		public static final String EDIT_PHASE_BYPASS = "submission.edit.phase.bypass";

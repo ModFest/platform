@@ -45,7 +45,7 @@ class AdminCommands : Extension(), KordExKoinComponent {
 				description = Translations.Commands.Setcurrentevent.description
 
 				action {
-					platform.setCurrentEvent(
+					platform.withAuth(this.user).setCurrentEvent(
 						CurrentEventData(arguments.event)
 					)
 
