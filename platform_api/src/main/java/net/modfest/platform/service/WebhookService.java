@@ -140,7 +140,7 @@ public class WebhookService {
 	}
 
 	@Async
-	public void updateSubmissionVersion(EventData event, SubmissionData data, @Nullable Version newVersion, SubmissionData.AssociatedData.Modrinth mr, @Nullable List<Version> versions) {
+	public void updateSubmissionVersion(EventData event, SubmissionData data, @Nullable Version newVersion, SubmissionData.AssociatedData.Modrinth mrPrevious, @Nullable List<Version> versions) {
 		var fields = new ArrayList<Field>();
 
 		if (newVersion != null) {
@@ -149,7 +149,7 @@ public class WebhookService {
 		}
 
 		if (versions != null) {
-			var previousVersion = versions.stream().filter(v -> v.id.equals(mr.versionId())).findAny();
+			var previousVersion = versions.stream().filter(v -> v.id.equals(mrPrevious.versionId())).findAny();
 			previousVersion.ifPresent(version -> fields.add(new Field("Previous Version", formatVersion(version))));
 		}
 

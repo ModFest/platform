@@ -112,7 +112,9 @@ public class SubmissionService {
 			)
 		));
 
-		webhookService.updateSubmissionVersion(event, newData, latest, mr, versions);
+		if(latest != null && !Objects.equals(mr.versionId(), latest.id)) {
+			webhookService.updateSubmissionVersion(event, newData, latest, mr, versions);
+		}
 		submissionRepository.save(newData);
 		return getSubmission(newData.event(), newData.id());
 	}
