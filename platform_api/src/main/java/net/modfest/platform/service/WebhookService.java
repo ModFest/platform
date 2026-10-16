@@ -70,13 +70,13 @@ public class WebhookService {
 
 	private @Nullable Image getImage(SubmissionData data, ImageService.SubmissionImageType type) {
 		var subKey = new SubmissionRepository.SubmissionId(data.event(), data.id());
-		var icon = imageService.getImageUrl(null, subKey, type);
+		var url = imageService.getImageUrl(null, subKey, type);
 
-		if (icon == null) {
+		if (url == null) {
 			return null;
 		}
 
-		return new Image(icon);
+		return new Image(url);
 	}
 
 	private void sendEmbed(EventData event, Embed embed) {
