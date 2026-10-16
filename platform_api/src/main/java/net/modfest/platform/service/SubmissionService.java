@@ -25,6 +25,8 @@ public class SubmissionService {
 	private SubmissionRepository submissionRepository;
 	@Autowired
 	private UserService userService;
+	@Autowired
+	private WebhookService webhookService;
 	@Lazy
 	@Autowired
 	private EventService eventService;
@@ -63,6 +65,8 @@ public class SubmissionService {
 				throw new IllegalStateException();
 			}
 		}
+
+		webhookService.editSubmission(eventService.getEventById(data.event()), edit, data);
 		submissionRepository.save(data);
 		return getSubmission(data.event(), data.id());
 	}
@@ -73,11 +77,15 @@ public class SubmissionService {
 			if (edit.warp() == null) edit = edit.withWarp(data.boothData().warp());
 			if (edit.itemIcon() == null) edit = edit.withItemIcon(data.boothData().itemIcon());
 			if (edit.shards() == null) edit = edit.withShards(data.boothData().shards());
-			if (edit.minutesToComplete() == null) edit = edit.withMinutesToComplete(data.boothData().minutesToComplete());
+			if (edit.minutesToComplete() == null)
+				edit = edit.withMinutesToComplete(data.boothData().minutesToComplete());
 			if (edit.status() == null) edit = edit.withStatus(data.boothData().status());
 		}
 		data = data.withBoothData(edit);
 		submissionRepository.save(data);
+
+		webhookService.editSubmissionBooth(eventService.getEventById(data.event()), data, edit);
+
 		return getSubmission(data.event(), data.id());
 	}
 
@@ -92,7 +100,10 @@ public class SubmissionService {
 			throw new IllegalArgumentException("Modrinth project not found!");
 		}
 
-		var latest = getLatestModrinth(mr.projectId(), eventService.getEventById(data.event()), project.projectType);
+		var event = eventService.getEventById(data.event());
+
+		var versions = getModrinthVersions(mr.projectId(), event, project.projectType);
+		var latest = pickModrinthLatest(versions);
 
 		var newData = data.withPlatform(new SubmissionData.AssociatedData(
 			new SubmissionData.AssociatedData.Modrinth(
@@ -101,6 +112,9 @@ public class SubmissionService {
 			)
 		));
 
+		if(latest != null && !Objects.equals(mr.versionId(), latest.id)) {
+			webhookService.updateSubmissionVersion(event, newData, latest, mr, versions);
+		}
 		submissionRepository.save(newData);
 		return getSubmission(newData.event(), newData.id());
 	}
@@ -172,11 +186,13 @@ public class SubmissionService {
 	}
 
 	public void deleteSubmission(String eventId, String subId) {
-		submissionRepository.delete(new SubmissionRepository.SubmissionId(eventId, subId));
+		var data = submissionRepository.delete(new SubmissionRepository.SubmissionId(eventId, subId));
+		webhookService.deleteSubmission(eventService.getEventById(eventId), data);
 	}
 
 	/**
 	 * Retrieve all submissions made by a user
+	 *
 	 * @param filter If non-null, only submissions associated with that event will be returned
 	 */
 	public Stream<SubmissionData> getSubmissionsFromUser(UserData user, @Nullable EventData filter) {
@@ -191,8 +207,8 @@ public class SubmissionService {
 
 	public Stream<SubmissionData> getSubmissionsFromEvent(EventData event) {
 		return submissionRepository.getAll()
-				.stream()
-				.filter(s -> s.event().equals(event.id()));
+			.stream()
+			.filter(s -> s.event().equals(event.id()));
 	}
 
 	public Stream<UserData> getUsersForRinthProject(String modrinthProjectId) {
@@ -203,9 +219,9 @@ public class SubmissionService {
 		if (members == null) return null;
 
 		return Stream.concat(
-			members.stream(),
-			(organization == null ? List.<TeamMember>of() : organization.members).stream()
-		).map(mrData -> userService.getByModrinthId(mrData.user.id))
+				members.stream(),
+				(organization == null ? List.<TeamMember>of() : organization.members).stream()
+			).map(mrData -> userService.getByModrinthId(mrData.user.id))
 			.filter(Objects::nonNull);
 	}
 
@@ -243,6 +259,7 @@ public class SubmissionService {
 			)
 		);
 		submissionRepository.save(submission);
+		webhookService.makeSubmission(event, submission, submissionRepository.size());
 		return submission;
 	}
 
@@ -256,12 +273,14 @@ public class SubmissionService {
 			throw new RuntimeException("submission already exists");
 		}
 
+		var event = eventService.getEventById(eventId);
+
+		var versions = getModrinthVersions(subId, event, project.projectType);
+		var latest = pickModrinthLatest(versions);
 		if (project.sourceUrl == null || project.sourceUrl.isBlank()) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
 				"Modrinth submissions MUST have visible source code!");
 		}
-
-		var latest = getLatestModrinth(subId, eventService.getEventById(eventId), project.projectType);
 
 		if (project.iconUrl != null) {
 			imageService.downloadSubmissionImage(project.iconUrl, subKey, ImageService.SubmissionImageType.ICON);
@@ -270,28 +289,31 @@ public class SubmissionService {
 		if (galleryUrl != null) {
 			imageService.downloadSubmissionImage(galleryUrl, subKey, ImageService.SubmissionImageType.SCREENSHOT);
 		}
-		submissionRepository.save(
-			new SubmissionData(
-				subId,
-				eventId,
-				project.title,
-				project.description,
-				authors.stream().map(UserData::id).collect(Collectors.toSet()),
-				new SubmissionData.AssociatedData(
-					new SubmissionData.AssociatedData.Modrinth(
-						project.id,
-						latest == null ? null : latest.id
-					)
-				),
-				project.sourceUrl,
-				null,
-				null,
-				new SubmissionData.Awards(
-					Set.of(),
-					Set.of()
+
+		var submission = new SubmissionData(
+			subId,
+			eventId,
+			project.title,
+			project.description,
+			authors.stream().map(UserData::id).collect(Collectors.toSet()),
+			new SubmissionData.AssociatedData(
+				new SubmissionData.AssociatedData.Modrinth(
+					project.id,
+					latest == null ? null : latest.id
 				)
+			),
+			project.sourceUrl,
+			null,
+			null,
+			new SubmissionData.Awards(
+				Set.of(),
+				Set.of()
 			)
 		);
+
+		submissionRepository.save(submission);
+		webhookService.makeSubmission(event, submission, submissionRepository.size());
+
 		return submissionRepository.get(subKey);
 	}
 
@@ -305,17 +327,25 @@ public class SubmissionService {
 	}
 
 	/**
-	 * Retrieves the most recent version of a modrinth project
+	 * Retrieves fitting versions of a modrinth project
 	 *
 	 * @param event       The event this version will be for. Used for filtering
 	 * @param projectType The modrinth project type. Used for filtering
 	 */
-	private @Nullable Version getLatestModrinth(String mrProject, EventData event, String projectType) {
+	private @Nullable List<Version> getModrinthVersions(String mrProject, EventData event, String projectType) {
 		if (projectType.equals("modpack")) return null;
 		var filter = VersionFilter.ofLoaders(List.of(event.mod_loader(), "minecraft", "datapack", "iris"))
 			.andGameVersion(event.minecraft_version());
-		return modrinth.projects().getVersions(mrProject, filter)
-			.stream()
+
+		return modrinth.projects().getVersions(mrProject, filter);
+	}
+
+	private @Nullable Version pickModrinthLatest(@Nullable List<Version> versions) {
+		if (versions == null) {
+			return null;
+		}
+
+		return versions.stream()
 			.max(Comparator.comparing(v -> v.datePublished))
 			.orElse(null);
 	}

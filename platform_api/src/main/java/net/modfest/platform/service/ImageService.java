@@ -1,5 +1,6 @@
 package net.modfest.platform.service;
 
+import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import net.modfest.platform.configuration.PlatformConfig;
 import net.modfest.platform.repository.ImageRepository;
@@ -25,7 +26,7 @@ public class ImageService {
 		}
 	}
 
-	public String getImageUrl(HttpServletRequest request, SubmissionRepository.SubmissionId subKey, SubmissionImageType type) {
+	public String getImageUrl(@Nullable HttpServletRequest request, SubmissionRepository.SubmissionId subKey, SubmissionImageType type) {
 		var imageInfo = repository.getImageInfo(getImageLocationKey(subKey, type));
 		if (imageInfo == null) {
 			return null;
@@ -33,6 +34,10 @@ public class ImageService {
 
 		String imageCdn = config.getImageCdnUrl();
 		if (imageCdn == null) {
+			if(request == null) {
+				return null;
+			}
+
 			// Platform will be acting as the cdn
 			var baseUrl = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort();
 			imageCdn = baseUrl+"/imagecdn/";

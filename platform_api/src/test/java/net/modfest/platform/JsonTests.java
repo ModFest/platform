@@ -63,7 +63,8 @@ public class JsonTests {
 				),
 				"optifine",
 				"1.34",
-				"boop"
+				"boop",
+				"https://discord.com/api/webhooks/123/123"
 			),
 			new SubmissionData(
 				"a",

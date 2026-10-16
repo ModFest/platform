@@ -2,6 +2,7 @@ package net.modfest.platform.pojo;
 
 import lombok.With;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.List;
@@ -17,7 +18,9 @@ public record EventData(@NonNull String id,
                         @NonNull DiscordRoles discordRoles,
                         @NonNull String mod_loader,
                         @NonNull String minecraft_version,
-                        @NonNull String modpack) implements Data {
+                        @NonNull String modpack,
+						@Nullable String discordWebhookUrl
+) implements Data {
     public enum Type {
         MODFEST,
         BLANKETCON
