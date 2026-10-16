@@ -66,7 +66,7 @@ public class SubmissionService {
 			}
 		}
 
-		webhookService.editSubmission(edit, data);
+		webhookService.editSubmission(eventService.getEventById(data.event()), edit, data);
 		submissionRepository.save(data);
 		return getSubmission(data.event(), data.id());
 	}
@@ -84,7 +84,7 @@ public class SubmissionService {
 		data = data.withBoothData(edit);
 		submissionRepository.save(data);
 
-		webhookService.editSubmissionBooth(data, edit);
+		webhookService.editSubmissionBooth(eventService.getEventById(data.event()), data, edit);
 
 		return getSubmission(data.event(), data.id());
 	}
@@ -100,7 +100,9 @@ public class SubmissionService {
 			throw new IllegalArgumentException("Modrinth project not found!");
 		}
 
-		var versions = getModrinthVersions(mr.projectId(), eventService.getEventById(data.event()), project.projectType);
+		var event = eventService.getEventById(data.event());
+
+		var versions = getModrinthVersions(mr.projectId(), event, project.projectType);
 		var latest = pickModrinthLatest(versions);
 
 		var newData = data.withPlatform(new SubmissionData.AssociatedData(
@@ -110,7 +112,7 @@ public class SubmissionService {
 			)
 		));
 
-		webhookService.updateSubmissionVersion(newData, latest, mr, versions);
+		webhookService.updateSubmissionVersion(event, newData, latest, mr, versions);
 		submissionRepository.save(newData);
 		return getSubmission(newData.event(), newData.id());
 	}
@@ -183,7 +185,7 @@ public class SubmissionService {
 
 	public void deleteSubmission(String eventId, String subId) {
 		var data = submissionRepository.delete(new SubmissionRepository.SubmissionId(eventId, subId));
-		webhookService.deleteSubmission(data);
+		webhookService.deleteSubmission(eventService.getEventById(eventId), data);
 	}
 
 	/**
@@ -255,7 +257,7 @@ public class SubmissionService {
 			)
 		);
 		submissionRepository.save(submission);
-		webhookService.makeSubmission(submission, submissionRepository.size());
+		webhookService.makeSubmission(event, submission, submissionRepository.size());
 		return submission;
 	}
 
@@ -269,7 +271,9 @@ public class SubmissionService {
 			throw new RuntimeException("submission already exists");
 		}
 
-		var versions = getModrinthVersions(subId, eventService.getEventById(eventId), project.projectType);
+		var event = eventService.getEventById(eventId);
+
+		var versions = getModrinthVersions(subId, event, project.projectType);
 		var latest = pickModrinthLatest(versions);
 		if (project.sourceUrl == null || project.sourceUrl.isBlank()) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -306,7 +310,7 @@ public class SubmissionService {
 		);
 
 		submissionRepository.save(submission);
-		webhookService.makeSubmission(submission, submissionRepository.size());
+		webhookService.makeSubmission(event, submission, submissionRepository.size());
 
 		return submissionRepository.get(subKey);
 	}

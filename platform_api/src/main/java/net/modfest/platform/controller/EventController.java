@@ -300,7 +300,7 @@ public class EventController {
 		};
 
 		imageService.downloadSubmissionImage(url, new SubmissionRepository.SubmissionId(eventId, subId), typeEnum);
-		webhookService.submissionImageChanged(submission, typeEnum);
+		webhookService.submissionImageChanged(event, submission, typeEnum);
 
 		return service.addResponseInfo(
 			request, submission

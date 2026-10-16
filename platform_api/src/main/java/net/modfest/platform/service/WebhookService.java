@@ -1,13 +1,13 @@
 package net.modfest.platform.service;
 
-import jakarta.annotation.Nullable;
+import net.modfest.platform.pojo.EventData;
 import net.modfest.platform.pojo.SubmissionData;
 import net.modfest.platform.pojo.SubmissionPatchData;
 import net.modfest.platform.repository.SubmissionRepository;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -22,9 +22,6 @@ import java.util.*;
 @Service
 public class WebhookService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(WebhookService.class);
-
-	@Value("${webhook.discord.url}")
-	private String discordWebhookUrl;
 
 	@Autowired
 	private ImageService imageService;
@@ -82,8 +79,8 @@ public class WebhookService {
 		return new Image(icon);
 	}
 
-	private void sendEmbed(Embed embed) {
-		if (discordWebhookUrl == null) {
+	private void sendEmbed(EventData event, Embed embed) {
+		if (event.discordWebhookUrl() == null) {
 			return;
 		}
 
@@ -93,7 +90,7 @@ public class WebhookService {
 		var payload = new WebhookPayload(List.of(embed));
 
 		try {
-			ResponseEntity<String> response = restTemplate.postForEntity(discordWebhookUrl, new HttpEntity<>(payload, headers), String.class);
+			ResponseEntity<String> response = restTemplate.postForEntity(event.discordWebhookUrl(), new HttpEntity<>(payload, headers), String.class);
 			if (!response.getStatusCode().is2xxSuccessful()) {
 				LOGGER.error("Failed to send Discord embed: {}", response.getStatusCode());
 			}
@@ -122,7 +119,7 @@ public class WebhookService {
 	}
 
 	@Async
-	public void makeSubmission(SubmissionData data, int submissionCount) {
+	public void makeSubmission(EventData event, SubmissionData data, int submissionCount) {
 		var fields = new ArrayList<Field>();
 
 		fields.add(new Field("Source", data.source()));
@@ -139,11 +136,11 @@ public class WebhookService {
 			new Footer(submissionCount + " submissions so far", null)
 		);
 
-		sendEmbed(embed);
+		sendEmbed(event, embed);
 	}
 
 	@Async
-	public void updateSubmissionVersion(SubmissionData data, @Nullable Version newVersion, SubmissionData.AssociatedData.Modrinth mr, @Nullable List<Version> versions) {
+	public void updateSubmissionVersion(EventData event, SubmissionData data, @Nullable Version newVersion, SubmissionData.AssociatedData.Modrinth mr, @Nullable List<Version> versions) {
 		var fields = new ArrayList<Field>();
 
 		if (newVersion != null) {
@@ -163,11 +160,11 @@ public class WebhookService {
 			fields
 		);
 
-		sendEmbed(embed);
+		sendEmbed(event, embed);
 	}
 
 	@Async
-	public void editSubmission(SubmissionPatchData edit, SubmissionData data) {
+	public void editSubmission(EventData event, SubmissionPatchData edit, SubmissionData data) {
 		var fields = new ArrayList<Field>();
 
 		if (edit.sourceUrl() != null) {
@@ -193,22 +190,22 @@ public class WebhookService {
 			fields
 		);
 
-		sendEmbed(embed);
+		sendEmbed(event, embed);
 	}
 
 	@Async
-	public void deleteSubmission(SubmissionData data) {
+	public void deleteSubmission(EventData event, SubmissionData data) {
 		var embed = embedForSubmission(
 			data,
 			"Submission revoked",
 			16715365
 		);
 
-		sendEmbed(embed);
+		sendEmbed(event, embed);
 	}
 
 	@Async
-	public void submissionImageChanged(SubmissionData data, ImageService.SubmissionImageType type) {
+	public void submissionImageChanged(EventData event, SubmissionData data, ImageService.SubmissionImageType type) {
 		var typeString = switch (type) {
 			case TEST -> "Test";
 			case CLAIM -> "Claim";
@@ -221,11 +218,11 @@ public class WebhookService {
 		}
 
 		var embed = embedForSubmission(data, typeString + " image set", 16777048, null, null, getImage(data, type));
-		sendEmbed(embed);
+		sendEmbed(event, embed);
 	}
 
 	@Async
-	public void editSubmissionBooth(SubmissionData data, SubmissionData.BoothData edit) {
+	public void editSubmissionBooth(EventData event, SubmissionData data, SubmissionData.BoothData edit) {
 		var fields = new ArrayList<Field>();
 
 		if (edit.itemIcon() != null) {
@@ -253,13 +250,13 @@ public class WebhookService {
 		}
 
 		var embed = embedForSubmission(data, "Boot data changed", 16777048, fields);
-		sendEmbed(embed);
+		sendEmbed(event, embed);
 	}
 
 	@Async
-	public void phaseChanged(String eventName, String phase, int count) {
+	public void phaseChanged(EventData event, String phase, int count) {
 		var embed = new Embed(
-			eventName,
+			event.name(),
 			String.format("Phase switched to \"%s\"", phase),
 			16772110,
 			null,
@@ -268,6 +265,6 @@ public class WebhookService {
 			null
 		);
 
-		sendEmbed(embed);
+		sendEmbed(event, embed);
 	}
 }
