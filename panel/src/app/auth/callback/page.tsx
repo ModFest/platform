@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { getRedirectUrl } from "../auth";
 import { getToken } from "./server_handler";
-import { LOCALSTORAGE_KEY } from "@/auth_context";
+import { ModfestAuth } from "@/auth_context";
 
 export default function Home() {
 	const [failed, setFailed] = useState(false)
@@ -34,14 +34,14 @@ async function authWithModrinthOAuth(setFailed: (v: boolean) => void) {
 	const urlParams = new URLSearchParams(window.location.search);
 	const code = urlParams.get("code")
 
-	var token = await getToken(code!, getRedirectUrl())
-	if (!("access_token" in token)) {
-		// Fail!
+	var modrinthToken = await getToken(code!, getRedirectUrl())
+	if (!("access_token" in modrinthToken) || !("expires_in" in modrinthToken)) {
 		setFailed(true)
 		return
 	}
 
-	localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(token))
+	const token = new ModfestAuth(modrinthToken["access_token"], modrinthToken["expires_in"])
+	token.saveLocalStorage()
 
 	// TODO redirect anywhere on site
 	window.location.replace(window.location.origin)

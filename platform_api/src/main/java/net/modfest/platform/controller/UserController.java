@@ -40,7 +40,7 @@ public class UserController {
 	@GetMapping("/users")
 	@RequiresPermissions(Permissions.Users.LIST_ALL)
 	public Collection<UserData> listAll() {
-		return service.getAll();
+		return service.getAll().stream().map(this::filterSensitiveUserData).toList();
 	}
 
 	@GetMapping(value = "/users/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -84,7 +84,7 @@ public class UserController {
 	public UserData createUser(@RequestBody UserCreateData data) throws PlatformStandardException {
 		try {
 			var id = service.create(data);
-			return service.getByMfId(id);
+			return filterSensitiveUserData(service.getByMfId(id));
 		} catch (UserService.InvalidModrinthIdException e) {
 			throw new ResponseStatusException(
 				HttpStatus.BAD_REQUEST,
@@ -94,6 +94,11 @@ public class UserController {
 	}
 
 	@GetMapping("/user/{id}")
+	public UserData getSingleUserRoute(@PathVariable String id) {
+		var user = getSingleUser(id);
+		return filterSensitiveUserData(user);
+	}
+
 	public UserData getSingleUser(@PathVariable String id) {
 		if (Objects.equals(id, "@me")) {
 			var principal = SecurityUtils.getSubject().getPrincipal();
@@ -168,7 +173,7 @@ public class UserController {
 		}
 
 		service.save(newUser);
-		return newUser;
+		return filterSensitiveUserData(newUser);
 	}
 
 	@PutMapping("/user/{id}/minecraft/{username}")
@@ -219,6 +224,21 @@ public class UserController {
 		}
 
 		service.save(data);
+		return filterSensitiveUserData(data);
+	}
+
+	/**
+	 * Removes any data the user does not have access to
+	 */
+	public UserData filterSensitiveUserData(UserData data) {
+		var subject = SecurityUtils.getSubject();
+		var owns = PermissionUtils.owns(subject, data);
+		var view_mc = subject.isPermitted(Permissions.Users.VIEW_MINECRAFT);
+
+		if (!owns && !view_mc) {
+			data = data.withMinecraftAccounts(null);
+		}
+
 		return data;
 	}
 }

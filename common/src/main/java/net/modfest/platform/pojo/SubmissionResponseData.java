@@ -15,6 +15,7 @@ public record SubmissionResponseData(@NonNull String id,
                                      SubmissionData.@NonNull AssociatedData platform,
                                      @NonNull Images images,
                                      @Nullable String source,
+                                     @Nullable String modId,
                                      SubmissionData.@Nullable BoothData boothData,
                                      SubmissionData.@NonNull Awards awards
 	) {
@@ -32,6 +33,7 @@ public record SubmissionResponseData(@NonNull String id,
 			data.platform(),
 			images,
 			data.source(),
+			data.modId(),
 			data.boothData(),
 			data.awards()
 		);

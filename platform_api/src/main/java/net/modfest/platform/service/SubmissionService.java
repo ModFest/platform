@@ -11,7 +11,9 @@ import nl.theepicblock.dukerinth.models.Version;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -246,6 +248,7 @@ public class SubmissionService {
 			),
 			submitData.sourceUrl(),
 			null,
+			null,
 			new SubmissionData.Awards(
 				Set.of(),
 				Set.of()
@@ -268,6 +271,10 @@ public class SubmissionService {
 
 		var versions = getModrinthVersions(subId, eventService.getEventById(eventId), project.projectType);
 		var latest = pickModrinthLatest(versions);
+		if (project.sourceUrl == null || project.sourceUrl.isBlank()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+				"Modrinth submissions MUST have visible source code!");
+		}
 
 		if (project.iconUrl != null) {
 			imageService.downloadSubmissionImage(project.iconUrl, subKey, ImageService.SubmissionImageType.ICON);
@@ -276,6 +283,7 @@ public class SubmissionService {
 		if (galleryUrl != null) {
 			imageService.downloadSubmissionImage(galleryUrl, subKey, ImageService.SubmissionImageType.SCREENSHOT);
 		}
+
 		var submission = new SubmissionData(
 			subId,
 			eventId,
@@ -290,6 +298,7 @@ public class SubmissionService {
 			),
 			project.sourceUrl,
 			null,
+			null,
 			new SubmissionData.Awards(
 				Set.of(),
 				Set.of()
@@ -297,8 +306,8 @@ public class SubmissionService {
 		);
 
 		submissionRepository.save(submission);
-
 		webhookService.makeSubmission(submission, submissionRepository.size());
+
 		return submissionRepository.get(subKey);
 	}
 

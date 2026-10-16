@@ -21,7 +21,18 @@ val PLATFORM_SHARED_SECRET = env("PLATFORM_SECRET")
 val MAIN_GUILD_ID = Snowflake(
 	env("MAIN_GUILD").toLong()  // Get the test server ID from the env vars or a .env file
 )
+
+/**
+ * The role people get when they've got a registered modfest account
+ */
 val REGISTERED_ROLE = envOrNull("REGISTERED_ROLE")?.let {
+	if (it.isBlank()) { null } else { Snowflake(it.toLong()) }
+}
+
+/**
+ * The role people get when they've been a participant in at least one fest
+ */
+val PARTICIPATED_ROLE = envOrNull("PARTICIPATED_ROLE")?.let {
 	if (it.isBlank()) { null } else { Snowflake(it.toLong()) }
 }
 

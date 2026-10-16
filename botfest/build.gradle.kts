@@ -41,7 +41,7 @@ dependencies {
 	// Custom added dependencies (these are not part of the kordex template)
 	implementation("io.ktor:ktor-serialization-gson:3.0.2")
 	implementation("org.xerial:sqlite-jdbc:3.48.0.0")
-	implementation("nl.theepicblock:java-sse-client:0.2.0")
+	implementation("nl.theepicblock:java-sse-client:0.4.0")
 	implementation(project(":common"))
 }
 
@@ -85,10 +85,10 @@ docker {
 		// Each function (aside from comment/emptyLine) corresponds to a Dockerfile instruction.
 		// See: https://docs.docker.com/reference/dockerfile/
 
-		from("ghcr.io/graalvm/graalvm-community:23")
+		from("eclipse-temurin:24-jre-alpine")
 
-		runShell("groupadd --system --gid 1001 bot")
-		runShell("useradd --system --gid 1001 --uid 1001 bot")
+		runShell("addgroup --gid 1001 -S bot")
+		runShell("adduser --uid 1001 -S bot -G bot")
 		user("bot")
 
 		workdir("/bot")
@@ -100,7 +100,7 @@ docker {
 		copy("libs/$filename", "/bot/bot.jar")
 
 		entryPointExec(
-			"java", "-jar", "/bot/bot.jar"
+			"java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCompactObjectHeaders", "-jar", "/bot/bot.jar"
 		)
 	}
 }

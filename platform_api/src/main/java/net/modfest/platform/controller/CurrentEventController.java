@@ -20,6 +20,6 @@ public class CurrentEventController {
 
 	@PutMapping("/currentevent/")
 	public void setCurrentEvent(@RequestBody CurrentEventData data) throws PlatformStandardException {
-		service.setCurrentEvent(data);
+		// service.setCurrentEvent(data);
 	}
 }

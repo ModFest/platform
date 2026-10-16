@@ -32,6 +32,7 @@ import nl.theepicblock.sseclient.SseClient
 import nl.theepicblock.sseclient.SseEvent
 import java.net.URI
 import java.net.http.HttpRequest
+import kotlin.math.min
 import kotlin.time.Duration
 
 val LOGGER = KotlinLogging.logger("Platform API")
@@ -294,6 +295,7 @@ class PlatformBotFestAuthenticated(val client: HttpClient, val base_url: String)
 		return object : SseClient() {
 			init {
 			    this.retryDelayMillis = 5_000
+				this.connect()
 			}
 
 			override fun onEvent(e: SseEvent) {
@@ -328,11 +330,9 @@ class PlatformBotFestAuthenticated(val client: HttpClient, val base_url: String)
 					java.time.Duration.ofMinutes(1)
 				} else {
 					// TODO need to expose the number of retries made in the SSE api
-					java.time.Duration.ofMillis(when (1) {
-						in 0..1 -> retryDelayMillis!!
-						in 2..5 -> retryDelayMillis!! * retryDelayMillis!!
-						else -> retryDelayMillis!! * 7
-					})
+					java.time.Duration.ofMillis(
+						retryDelayMillis!! * min(reconnectionInfo.numberOfRetries(), 7)
+					)
 				}
 				LOGGER.debug { "Attempting to reconnect to platform SSE in $reconnTime. " +
 					"(did connect = ${!reconnectionInfo.connectionFailed()}, " +

@@ -1,15 +1,19 @@
 package net.modfest.platform.misc;
 
+import lombok.Locked;
+
 import java.util.HashSet;
 import java.util.Set;
 
 public class EventSource<T> {
 	private final Set<Subscriber<T>> subscribers = new HashSet<>();
 
+	@Locked
 	public void unsubscribe(Subscriber<T> subscriber) {
 		subscribers.remove(subscriber);
 	}
 
+	@Locked
 	public void subscribe(Subscriber<T> subscriber) {
 		subscribers.add(subscriber);
 	}
@@ -17,6 +21,7 @@ public class EventSource<T> {
 	/**
 	 * Emit a new event
 	 */
+	@Locked
 	public void emit(T event) {
 		var iterator = subscribers.iterator();
 		while (iterator.hasNext()) {

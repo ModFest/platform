@@ -13,10 +13,10 @@ export default function Template({ children }: { children: React.ReactNode }) {
 	useEffect(() => {
 		if (!auth) {
 			const a = readAuthData()
-			if (!a) {
-				router.push("/auth/login")
-			} else {
+			if (a && a.isValid()) {
 				setAuth(a)
+			} else {
+				router.push("/auth/login")
 			}
 		}
 	}, [auth])

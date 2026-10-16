@@ -1,2 +1,4 @@
 packages:
   - "panel"
+allowBuilds:
+  sharp: true
