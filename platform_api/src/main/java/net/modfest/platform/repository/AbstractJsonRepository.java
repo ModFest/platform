@@ -122,7 +122,7 @@ public abstract class AbstractJsonRepository<Data, Id> implements DiskCachedData
 	}
 
 	@Locked.Write("dataLock")
-	public void delete(@NonNull Id id) {
+	public Data delete(@NonNull Id id) {
 		var data = this.get(id);
 		this.root.write(p -> {
 			try {
@@ -136,6 +136,8 @@ public abstract class AbstractJsonRepository<Data, Id> implements DiskCachedData
 
 		this.store.remove(id);
 		onDataUpdated.emit(id);
+
+		return data;
 	}
 
 	@Locked.Read("dataLock")
@@ -153,6 +155,11 @@ public abstract class AbstractJsonRepository<Data, Id> implements DiskCachedData
 	@NonNull
 	public Collection<Data> getAll() {
 		return this.store.values();
+	}
+
+	@Locked.Read("dataLock")
+	public int size() {
+		return this.store.size();
 	}
 
 	private void validateId(@NonNull String id) throws ConstraintViolationException {
