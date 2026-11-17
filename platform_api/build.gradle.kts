@@ -109,7 +109,7 @@ docker {
 		// Each function (aside from comment/emptyLine) corresponds to a Dockerfile instruction.
 		// See: https://docs.docker.com/reference/dockerfile/
 
-		from("eclipse-temurin:24-jre-alpine")
+		from("eclipse-temurin:25-jre-alpine")
 		runShell("apk add --no-cache git")
 
 		runShell("addgroup --gid 1001 -S platform")
