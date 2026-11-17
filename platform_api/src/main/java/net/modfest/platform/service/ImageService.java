@@ -26,7 +26,19 @@ public class ImageService {
 		}
 	}
 
-	public String getImageUrl(@Nullable HttpServletRequest request, SubmissionRepository.SubmissionId subKey, SubmissionImageType type) {
+	/**
+	 * Retrieves a public url for a given image. When running in a local dev environment, it uses
+	 * the {@code request} parameter to look up the url this page was accessed from and determine
+	 * a link to platform from there.
+	 * In prod, {@link PlatformConfig#getImageCdnUrl()} will be set and the URL will be determined
+	 * relative to that.
+	 * @param request Used to help find a public url from which platform is accessible. Used only if there is no image CDN configured
+	 * @param subKey The key to the submission we want to look up an image for
+	 * @param type The type of image to retrieve.
+	 * @return A url at which this image is available. May be {@code null} when running in dev without proper
+	 * context. May also be null if the image does not exist.
+	 */
+	public @Nullable String getImageUrl(@Nullable HttpServletRequest request, SubmissionRepository.SubmissionId subKey, SubmissionImageType type) {
 		var imageInfo = repository.getImageInfo(getImageLocationKey(subKey, type));
 		if (imageInfo == null) {
 			return null;
