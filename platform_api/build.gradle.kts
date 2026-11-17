@@ -136,7 +136,7 @@ docker {
 
 		expose(8080)
 		entryPointExec(
-			"java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCompactObjectHeaders", "--add-opens=java.base/java.lang=ALL-UNNAMED", "-jar", "/app/app.jar"
+			"java", "-XX:-UseBASE64Intrinsics", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCompactObjectHeaders", "--add-opens=java.base/java.lang=ALL-UNNAMED", "-jar", "/app/app.jar"
 		)
 		healthcheck {
 			check {
