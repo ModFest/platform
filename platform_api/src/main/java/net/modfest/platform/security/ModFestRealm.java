@@ -89,8 +89,19 @@ public class ModFestRealm extends AuthorizingRealm {
 			}
 			case EventToken eventToken -> {
 				if (eventTokenService.isTokenValid(eventToken.token())) {
+					Object principal;
+					if (eventToken.getPrincipal() != null) {
+						var data = userService.getByMfId(eventToken.targetUser());
+						if (data == null) {
+							throw new AuthenticationException("Can't find user with id " + eventToken.targetUser());
+						}
+						principal = data;
+					} else {
+						principal = eventTokenService.getEventFromToken(eventToken.token());
+					}
+
 					return new SimpleAuthenticationInfo(
-						eventTokenService.getEventFromToken(eventToken.token()),
+						principal,
 						eventToken,
 						"platform"
 					);

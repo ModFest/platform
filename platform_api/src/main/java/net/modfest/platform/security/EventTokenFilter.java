@@ -25,8 +25,9 @@ public class EventTokenFilter extends AdviceFilter {
 		var httpRequest = WebUtils.toHttp(request);
 
 		var eventToken = httpRequest.getHeader("Mf-Event-Token");
+		var targetUser = httpRequest.getHeader("Mf-Event-Target-User");
 		if (eventToken != null) {
-			return new EventToken(eventToken);
+			return new EventToken(eventToken, targetUser);
 		}
 		return null;
 	}
