@@ -1,11 +1,12 @@
 package net.modfest.platform.security.token;
 
 import org.apache.shiro.authc.AuthenticationToken;
+import org.jspecify.annotations.Nullable;
 
-public record EventToken(String token) implements AuthenticationToken {
+public record EventToken(String token, @Nullable String targetUser) implements AuthenticationToken {
 	@Override
 	public Object getPrincipal() {
-		return null;
+		return targetUser();
 	}
 
 	@Override
@@ -15,6 +16,6 @@ public record EventToken(String token) implements AuthenticationToken {
 
 	@Override
 	public String toString() {
-		return "EventToken[token=***]";
+		return "EventToken[token=***,targetUser="+targetUser+"]";
 	}
 }
